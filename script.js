@@ -1291,7 +1291,7 @@ function parseTDOTWrapper(order) {
 
 function parseZ1Wrapper(order) {
   const items = extractItemsZ1(order);
-  const addr = extractAddressGeneric(order);
+  const addr = extractAddressZ1(text);
   return buildRow(order, "z1", items, addr);
 }
 
@@ -1299,6 +1299,69 @@ function parseNewDealerWrapper(order) {
   const items = extractItemsNewDealer(order);
   const addr = extractAddressNewDealer(order);
   return buildRow(order, "newdealer", items, addr);
+}
+
+function extractAddressZ1(text) {
+  const lines = text
+    .split("\n")
+    .map(l => l.trim())
+    .filter(Boolean);
+
+  const start = lines.findIndex(l =>
+    /deliver to|ship to/i.test(l)
+  );
+
+  if (start === -1) return {};
+
+  const block = lines.slice(start + 1, start + 10);
+
+  const phoneLine = block.find(l =>
+    /\d{3}[-.\s]?\d{3}[-.\s]?\d{4}/.test(l)
+  ) || "";
+
+  const phone = phoneLine.replace(/\D/g, "");
+
+  const clean = block.filter(l => l !== phoneLine);
+
+  let name = clean[0] || "";
+  let addr1 = clean[1] || "";
+  let city = "";
+  let state = "";
+  let zip = "";
+
+  for (let i = 0; i < clean.length; i++) {
+
+    let parsed = parseCityStateZip(clean[i]);
+
+    if (parsed.city) {
+      city = parsed.city;
+      state = parsed.state;
+      zip = parsed.zip;
+      break;
+    }
+
+    if (
+      clean[i + 2] &&
+      /^[A-Z]{2}$/i.test(clean[i + 1]) &&
+      /^\d{5}/.test(clean[i + 2])
+    ) {
+      city = clean[i];
+      state = normalizeState(clean[i + 1]);
+      zip = clean[i + 2];
+      break;
+    }
+  }
+
+  return {
+    name,
+    addr1,
+    addr2: "",
+    city,
+    state,
+    zip,
+    country: "",
+    phone
+  };
 }
 
 function buildRow(order, dealer, items, addr) {
