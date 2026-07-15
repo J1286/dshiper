@@ -555,20 +555,31 @@ function extractAddressZ1(text) {
   );
 
   if (start === -1) return {};
+  const block = lines.slice(start + 1, start + 10);
 
-  const block = lines.slice(start + 1, start + 8);
+  const phone =
+    block.find(l =>
+      /^\d{10}$/.test(l.replace(/\D/g, ""))
+    )?.replace(/\D/g, "") || "";
 
-  const name = block[0] || "";
-  const addr1 = block[1] || "";
+  const countryIndex = block.findIndex(l =>
+    /^United States$/i.test(l)
+  );
+
+  const usableLines =
+    countryIndex !== -1
+      ? block.slice(0, countryIndex)
+      : block.filter(l => l !== phone);
 
   let city = "";
   let state = "";
   let zip = "";
+  let cityIndex = -1;
 
-  for (const line of block) {
+  // find city/state/zip line
+  for (let i = 0; i < usableLines.length; i++) {
 
-    // City, State ZIP
-    const match = line.match(
+    const match = usableLines[i].match(
       /^(.*?),\s*(.+?)\s+(\d{5}(?:-\d{4})?)$/i
     );
 
@@ -576,19 +587,36 @@ function extractAddressZ1(text) {
       city = match[1].trim();
       state = normalizeState(match[2].trim());
       zip = match[3].trim();
+      cityIndex = i;
       break;
     }
   }
 
-  const phone =
-    block.find(l =>
-      /^\d{10}$/.test(l.replace(/\D/g, ""))
-    )?.replace(/\D/g, "") || "";
+  // find street line before city line
+  let addrIndex = cityIndex - 1;
+
+  let addr1 = "";
+  let addr2 = "";
+
+  if (addrIndex >= 0) {
+    addr1 = usableLines[addrIndex];
+
+    // anything before street line is probably name/company
+  }
+
+  const nameLines = usableLines.slice(
+    0,
+    addrIndex
+  );
+
+  const name = nameLines.length
+    ? nameLines[nameLines.length - 1]
+    : "";
 
   return {
     name,
     addr1,
-    addr2: "",
+    addr2,
     city,
     state,
     zip,
