@@ -8,3 +8,7 @@ Browser-based order processing tool that:
 - Imports price tables from Excel
 - Exports processed orders to Excel
 - Stores saved orders locally in the browser
+
+Future Features
+- Improve generic SKU detection
+- Add parser template generator
