@@ -1571,12 +1571,9 @@ function copyAllOrders() {
 
   const headers = Object.keys(savedOrders[0]);
 
-  const text = [
-    headers.join("\t"),
-    ...savedOrders.map(row =>
-      headers.map(h => row[h] || "").join("\t")
-    )
-  ].join("\n");
+  const text = savedOrders.map(row =>
+    headers.map(h => row[h] || "").join("\t")
+  ).join("\n");
 
   navigator.clipboard.writeText(text)
     .then(() => {
