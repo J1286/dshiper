@@ -592,36 +592,39 @@ function extractAddressZ1(text) {
     }
   }
 
-  // find street line before city line
-  let addrIndex = cityIndex - 1;
+  const addrIndex = cityIndex - 1;
 
   let addr1 = "";
   let addr2 = "";
 
   if (addrIndex >= 0) {
     addr1 = usableLines[addrIndex];
-
-    // anything before street line is probably name/company
   }
 
-  const nameLines = usableLines.slice(
-    0,
-    addrIndex
-  );
+  const beforeAddress = usableLines.slice(0, addrIndex);
 
-  const name = nameLines.length
-    ? nameLines[nameLines.length - 1]
-    : "";
+  let name = "";
+  
+  if (beforeAddress.length) {
+    // last line before address = person's name
+    name = beforeAddress[beforeAddress.length - 1];
 
+    // everything before name = extra address info
+    if (beforeAddress.length > 1) {
+      addr2 = beforeAddress
+        .slice(0, -1)
+        .join(" ");
+    }
+  }
   return {
-    name,
-    addr1,
-    addr2,
-    city,
-    state,
-    zip,
-    country: "US",
-    phone
+  name,
+  addr1,
+  addr2,
+  city,
+  state,
+  zip,
+  country: "US",
+  phone
   };
 }
 
