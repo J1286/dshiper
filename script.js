@@ -1563,6 +1563,31 @@ function updateSavedTable() {
   });
 }
 
+function copyAllOrders() {
+  if (!savedOrders.length) {
+    alert("No saved orders to copy");
+    return;
+  }
+
+  const headers = Object.keys(savedOrders[0]);
+
+  const text = [
+    headers.join("\t"),
+    ...savedOrders.map(row =>
+      headers.map(h => row[h] || "").join("\t")
+    )
+  ].join("\n");
+
+  navigator.clipboard.writeText(text)
+    .then(() => {
+      alert(`Copied ${savedOrders.length} orders`);
+    })
+    .catch(err => {
+      console.error("Copy failed:", err);
+      alert("Copy failed");
+    });
+}
+
 function downloadExcel() {
   if (!savedOrders.length) {
     console.log("No orders to download");
