@@ -1781,9 +1781,3 @@ Items (Generic): ${
 Items (Test): ${testResult?.Items || 0}
 `.trim();
 }
-
-fetch("help.html")
-  .then(response => response.text())
-  .then(html => {
-    document.getElementById("helpContent").innerHTML = html;
-  });
