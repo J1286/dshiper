@@ -544,6 +544,59 @@ function extractItemsTDOT(text) {
   return items;
 }
 
+function extractAddressZ1(text) {
+  const lines = text
+    .split("\n")
+    .map(l => l.trim())
+    .filter(Boolean);
+
+  const start = lines.findIndex(l =>
+    /^Deliver To$/i.test(l)
+  );
+
+  if (start === -1) return {};
+
+  const block = lines.slice(start + 1, start + 8);
+
+  const name = block[0] || "";
+  const addr1 = block[1] || "";
+
+  let city = "";
+  let state = "";
+  let zip = "";
+
+  for (const line of block) {
+
+    // City, State ZIP
+    const match = line.match(
+      /^(.*?),\s*(.+?)\s+(\d{5}(?:-\d{4})?)$/i
+    );
+
+    if (match) {
+      city = match[1].trim();
+      state = normalizeState(match[2].trim());
+      zip = match[3].trim();
+      break;
+    }
+  }
+
+  const phone =
+    block.find(l =>
+      /^\d{10}$/.test(l.replace(/\D/g, ""))
+    )?.replace(/\D/g, "") || "";
+
+  return {
+    name,
+    addr1,
+    addr2: "",
+    city,
+    state,
+    zip,
+    country: "US",
+    phone
+  };
+}
+
 function extractItemsGeneric(text) {
   text = normalizeBrokenLines(text);
   const lines = text
@@ -1291,7 +1344,7 @@ function parseTDOTWrapper(order) {
 
 function parseZ1Wrapper(order) {
   const items = extractItemsZ1(order);
-  const addr = extractAddressGeneric(order);
+  const addr = extractAddressZ1(order);
   return buildRow(order, "z1", items, addr);
 }
 
