@@ -148,19 +148,19 @@ const PROVINCE_MAP = {
 const DEALER_CONFIG = {
   redline360: { dshipper: "W7232", email: "tracking@redline360.com" },
   aag: { dshipper: "W5511", email: "tracking@autoaccessoriesgarage.com" },
-  
-  tdot: {
-  dshipper: "W7290",
-  email: "support@tdotperformance.ca",
-  thirdParty: true
-},
 
-z1: {
-  dshipper: "W7292",
-  email: "Purchasing@z1motorsports.com",
-  thirdParty: true
-},
-  
+  tdot: {
+    dshipper: "W7290",
+    email: "support@tdotperformance.ca",
+    thirdParty: true
+  },
+
+  z1: {
+    dshipper: "W7292",
+    email: "Purchasing@z1motorsports.com",
+    thirdParty: true
+  },
+
   newdealer: { dshipper: "WXXXX", email: "tracking@email.com" },
   newdealer2: {
     dshipper: "WXXXX",
@@ -341,10 +341,7 @@ function stitchNextLineSKU(lines, index) {
   }
 
   // ---- Case 2: trailing single fragment ----
-  if (
-    /^[A-Z0-9-]{6,}$/i.test(current) &&
-    /^[A-Z0-9]{1,3}$/i.test(next)
-  ) {
+  if (/^[A-Z0-9-]{6,}$/i.test(current) && /^[A-Z0-9]{1,3}$/i.test(next)) {
     return current + next;
   }
 
@@ -484,36 +481,34 @@ function extractItemsZ1(text) {
 
     // 🔒 STRICT SKU RULE (Z1 specific)
     // ---- extract inline SKU + qty ----
-const inlineMatch = line.match(
-  /([A-Z0-9-]{8,})\s+(\d+)\s+\$\d/i
-);
+    const inlineMatch = line.match(/([A-Z0-9-]{8,})\s+(\d+)\s+\$\d/i);
 
-if (inlineMatch) {
-  items.push({
-    sku: normalizeSKU(inlineMatch[1]),
-    qty: Number(inlineMatch[2])
-  });
+    if (inlineMatch) {
+      items.push({
+        sku: normalizeSKU(inlineMatch[1]),
+        qty: Number(inlineMatch[2])
+      });
 
-  continue;
-}
+      continue;
+    }
 
-// ---- standalone SKU ----
-if (/^[A-Z0-9-]{8,}$/i.test(line)) {
-  const nextLine = lines[i + 1] || "";
+    // ---- standalone SKU ----
+    if (/^[A-Z0-9-]{8,}$/i.test(line)) {
+      const nextLine = lines[i + 1] || "";
 
-  const qtyMatch = nextLine.match(/^(\d+)/);
+      const qtyMatch = nextLine.match(/^(\d+)/);
 
-  const qty = qtyMatch ? Number(qtyMatch[1]) : 1;
+      const qty = qtyMatch ? Number(qtyMatch[1]) : 1;
 
-  if (qtyMatch) i++;
+      if (qtyMatch) i++;
 
-  items.push({
-    sku: normalizeSKU(line),
-    qty
-  });
+      items.push({
+        sku: normalizeSKU(line),
+        qty
+      });
 
-  continue;
-}
+      continue;
+    }
   }
 
   return items.slice(0, 5);
@@ -547,29 +542,25 @@ function extractItemsTDOT(text) {
 function extractAddressZ1(text) {
   const lines = text
     .split("\n")
-    .map(l => l.trim())
+    .map((l) => l.trim())
     .filter(Boolean);
 
-  const start = lines.findIndex(l =>
-    /^Deliver To$/i.test(l)
-  );
+  const start = lines.findIndex((l) => /^Deliver To$/i.test(l));
 
   if (start === -1) return {};
   const block = lines.slice(start + 1, start + 10);
 
   const phone =
-    block.find(l =>
-      /^\d{10}$/.test(l.replace(/\D/g, ""))
-    )?.replace(/\D/g, "") || "";
+    block
+      .find((l) => /^\d{10}$/.test(l.replace(/\D/g, "")))
+      ?.replace(/\D/g, "") || "";
 
-  const countryIndex = block.findIndex(l =>
-    /^United States$/i.test(l)
-  );
+  const countryIndex = block.findIndex((l) => /^United States$/i.test(l));
 
   const usableLines =
     countryIndex !== -1
       ? block.slice(0, countryIndex)
-      : block.filter(l => l !== phone);
+      : block.filter((l) => l !== phone);
 
   let city = "";
   let state = "";
@@ -578,7 +569,6 @@ function extractAddressZ1(text) {
 
   // find city/state/zip line
   for (let i = 0; i < usableLines.length; i++) {
-
     const match = usableLines[i].match(
       /^(.*?),\s*(.+?)\s+(\d{5}(?:-\d{4})?)$/i
     );
@@ -604,27 +594,25 @@ function extractAddressZ1(text) {
   const beforeAddress = usableLines.slice(0, addrIndex);
 
   let name = "";
-  
+
   if (beforeAddress.length) {
     // last line before address = person's name
     name = beforeAddress[beforeAddress.length - 1];
 
     // everything before name = extra address info
     if (beforeAddress.length > 1) {
-      addr2 = beforeAddress
-        .slice(0, -1)
-        .join(" ");
+      addr2 = beforeAddress.slice(0, -1).join(" ");
     }
   }
   return {
-  name,
-  addr1,
-  addr2,
-  city,
-  state,
-  zip,
-  country: "US",
-  phone
+    name,
+    addr1,
+    addr2,
+    city,
+    state,
+    zip,
+    country: "US",
+    phone
   };
 }
 
@@ -727,43 +715,39 @@ function parseCityStateZip(line) {
       zip: m[3]
     };
   }
-  
-  m = line.match(
-  /^(.*?),\s*([A-Za-z\s]+),?\s*([A-Z]\d[A-Z]\s?\d[A-Z]\d)$/i
-);
 
-if (m) {
-  return {
-    city: m[1].trim(),
-    state: normalizeState(m[2]),
-    zip: m[3]
-  };
-}
+  m = line.match(/^(.*?),\s*([A-Za-z\s]+),?\s*([A-Z]\d[A-Z]\s?\d[A-Z]\d)$/i);
+
+  if (m) {
+    return {
+      city: m[1].trim(),
+      state: normalizeState(m[2]),
+      zip: m[3]
+    };
+  }
 
   // --- Canada: City, Province Postal ---
-m = line.match(
-  /^(.*?),\s*([A-Za-z\s]+),?\s*([A-Z]\d[A-Z]\s?\d[A-Z]\d)$/i
-);
+  m = line.match(/^(.*?),\s*([A-Za-z\s]+),?\s*([A-Z]\d[A-Z]\s?\d[A-Z]\d)$/i);
 
-if (m) {
-  const rawState = m[2].trim().toLowerCase();
+  if (m) {
+    const rawState = m[2].trim().toLowerCase();
 
-  return {
-    city: m[1].trim(),
-    state: normalizeState(rawState),
-    zip: m[3].toUpperCase()
-  };
-}
+    return {
+      city: m[1].trim(),
+      state: normalizeState(rawState),
+      zip: m[3].toUpperCase()
+    };
+  }
 
   return {};
 }
 
 function extractAddressGeneric(text) {
   const block = extractBlock(
-  text,
-  GENERIC_RULES.addressStart,
-  GENERIC_RULES.addressEnd
-);
+    text,
+    GENERIC_RULES.addressStart,
+    GENERIC_RULES.addressEnd
+  );
 
   if (!block) return {};
 
@@ -786,19 +770,19 @@ function extractAddressGeneric(text) {
     zip = "";
 
   const addr1Index = lines.findIndex((l) => {
-  const t = l.toLowerCase().trim();
+    const t = l.toLowerCase().trim();
 
-  // must start with number
-  if (!/^\d+/.test(t)) return false;
+    // must start with number
+    if (!/^\d+/.test(t)) return false;
 
-  // must contain letters (street name)
-  if (!/[a-z]/i.test(t)) return false;
+    // must contain letters (street name)
+    if (!/[a-z]/i.test(t)) return false;
 
-  // reject obvious non-address lines
-  if (/ship to|bill to|customer information|phone|po#/i.test(t)) return false;
+    // reject obvious non-address lines
+    if (/ship to|bill to|customer information|phone|po#/i.test(t)) return false;
 
-  return true;
-});
+    return true;
+  });
 
   if (addr1Index !== -1) {
     addr1 = lines[addr1Index];
@@ -820,13 +804,13 @@ function extractAddressGeneric(text) {
   }
 
   const phoneMatch =
-  matchFirst(text, GENERIC_RULES.phone) ||
-  text.match(
-    /\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/
-  )?.[0] ||
-  "";
+    matchFirst(text, GENERIC_RULES.phone) ||
+    text.match(
+      /\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/
+    )?.[0] ||
+    "";
 
-const phone = phoneMatch.replace(/\D/g, "");
+  const phone = phoneMatch.replace(/\D/g, "");
 
   return {
     name,
@@ -860,19 +844,19 @@ function parseGeneric(order) {
     const fallback = order.match(/\b(PO|ORDER)?[-\s#]*([A-Z0-9-]{6,})\b/i);
     if (fallback) po = fallback[2];
   }
-  
-  function extractPhone(text) {
-  const match =
-    text.match(
-      /\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/
-    )?.[0] || "";
 
-  return match.replace(/\D/g, "");
-}
+  function extractPhone(text) {
+    const match =
+      text.match(
+        /\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/
+      )?.[0] || "";
+
+    return match.replace(/\D/g, "");
+  }
 
   const detectedDealer = detectBestDealer(order).dealer;
   const config = DEALER_CONFIG[detectedDealer] || DEALER_CONFIG["redline360"];
-  
+
   const dealer = detectedDealer;
 
   const row = {
@@ -889,7 +873,7 @@ function parseGeneric(order) {
 
     row[`Item ID ${i + 1}`] = sku;
     row[`Qty ${i + 1}`] = item.qty || "";
-    
+
     row[`Price ${i + 1}`] = getPrice(dealer, sku);
   }
 
@@ -903,20 +887,20 @@ function parseGeneric(order) {
   row["Ship Phone"] = addr.phone || "";
   row["Ship Email"] = config.email;
   row["Ship Service"] = "GND";
-  
+
   const totalPrice = items.reduce((sum, item) => {
-  const price = Number(getPrice(dealer, item.sku)) || 0;
-  const qty = Number(item.qty) || 0;
+    const price = Number(getPrice(dealer, item.sku)) || 0;
+    const qty = Number(item.qty) || 0;
 
-  return sum + (price * qty);
-}, 0);
+    return sum + price * qty;
+  }, 0);
 
-row["Ship Ins."] = "";
-row["Ship COD"] = "";
-row["Ship Confirm."] = totalPrice > 600 ? "Y" : "";
+  row["Ship Ins."] = "";
+  row["Ship COD"] = "";
+  row["Ship Confirm."] = totalPrice > 600 ? "Y" : "";
 
-row["Ship From"] = config.thirdParty ? "Y" : "";
-row["Ship Acct"] = config.thirdParty ? "Y" : "";
+  row["Ship From"] = config.thirdParty ? "Y" : "";
+  row["Ship Acct"] = config.thirdParty ? "Y" : "";
 
   if (!items.length) {
     console.warn("Generic parser returned no items:", order);
@@ -1228,20 +1212,17 @@ function extractAddressAAG(text) {
 
   // ---- phone ----
   const phoneLine =
-  block.find((l) =>
-    /\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/.test(l)
-  ) || "";
+    block.find((l) => /\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/.test(l)) || "";
 
   const phone = phoneLine.replace(/\D/g, "");
 
   // ---- city/state/zip ----
   let city = "",
-      state = "",
-      zip = "",
-      cityIndex = -1;
+    state = "",
+    zip = "",
+    cityIndex = -1;
 
   for (let i = 0; i < block.length; i++) {
-
     // combined line support
     const combined = `${block[i]} ${block[i + 1] || ""}`;
 
@@ -1272,38 +1253,37 @@ function extractAddressAAG(text) {
   }
 
   // ---- build address lines safely ----
-const addressLines = [];
+  const addressLines = [];
 
-for (let i = 0; i < block.length; i++) {
+  for (let i = 0; i < block.length; i++) {
+    const line = block[i];
 
-  const line = block[i];
+    // skip phone
+    if (line === phoneLine) continue;
 
-  // skip phone
-  if (line === phoneLine) continue;
+    if (i === cityIndex) continue;
 
-  if (i === cityIndex) continue;
+    if (i === cityIndex + 1) continue;
 
-  if (i === cityIndex + 1) continue;
+    // skip labels
+    if (/ship to|bill to/i.test(line)) continue;
 
-  // skip labels
-  if (/ship to|bill to/i.test(line)) continue;
+    // remove duplicates
+    if (addressLines[addressLines.length - 1] === line) continue;
 
-  // remove duplicates
-  if (addressLines[addressLines.length - 1] === line) continue;
+    addressLines.push(line);
+  }
 
-  addressLines.push(line);
-}
-
-return {
-  name: addressLines[0] || "",
-  addr1: addressLines[1] || "",
-  addr2: addressLines.slice(2).join(" "),
-  city: city.replace(/,\s*$/, ""),
-  state,
-  zip,
-  country: "",
-  phone
-};
+  return {
+    name: addressLines[0] || "",
+    addr1: addressLines[1] || "",
+    addr2: addressLines.slice(2).join(" "),
+    city: city.replace(/,\s*$/, ""),
+    state,
+    zip,
+    country: "",
+    phone
+  };
 }
 
 function extractAddressNewDealer(text) {
@@ -1425,21 +1405,21 @@ function buildRow(order, dealer, items, addr) {
   row["Ship Country"] = detectCountry(addr);
   row["Ship Phone"] = addr.phone || "";
   row["Ship Email"] = config.email;
-  row["Ship Service"] = "GND"; 
-  
+  row["Ship Service"] = "GND";
+
   const totalPrice = items.reduce((sum, item) => {
-  const price = Number(getPrice(dealer, item.sku)) || 0;
-  const qty = Number(item.qty) || 0;
+    const price = Number(getPrice(dealer, item.sku)) || 0;
+    const qty = Number(item.qty) || 0;
 
-  return sum + (price * qty);
-}, 0);
+    return sum + price * qty;
+  }, 0);
 
-row["Ship Ins."] = "";
-row["Ship COD"] = "";
-row["Ship Confirm."] = totalPrice > 600 ? "Y" : "";
-  
-row["Ship From"] = config.thirdParty ? "Y" : "";
-row["Ship Acct"] = config.thirdParty ? "Y" : "";  
+  row["Ship Ins."] = "";
+  row["Ship COD"] = "";
+  row["Ship Confirm."] = totalPrice > 600 ? "Y" : "";
+
+  row["Ship From"] = config.thirdParty ? "Y" : "";
+  row["Ship Acct"] = config.thirdParty ? "Y" : "";
 
   return [row];
 }
@@ -1534,7 +1514,7 @@ function syncPreviewToOrders() {
     });
     updatedOrders.push(row);
   });
-  
+
   previewOrders = updatedOrders;
 }
 
@@ -1599,18 +1579,16 @@ function updateSavedTable() {
     copyBtn.textContent = "📋";
 
     copyBtn.onclick = () => {
-  const rowText = headers
-    .map(h => r[h] || "")
-    .join("\t");
+      const rowText = headers.map((h) => r[h] || "").join("\t");
 
-  navigator.clipboard.writeText(rowText);
+      navigator.clipboard.writeText(rowText);
 
-  copyBtn.textContent = "✅";
+      copyBtn.textContent = "✅";
 
-  setTimeout(() => {
-    copyBtn.textContent = "📋";
-  }, 800);
-};
+      setTimeout(() => {
+        copyBtn.textContent = "📋";
+      }, 800);
+    };
 
     const deleteBtn = document.createElement("button");
     deleteBtn.textContent = "🗑";
@@ -1655,15 +1633,16 @@ function copyAllOrders() {
 
   const headers = Object.keys(savedOrders[0]);
 
-  const text = savedOrders.map(row =>
-    headers.map(h => row[h] || "").join("\t")
-  ).join("\n");
+  const text = savedOrders
+    .map((row) => headers.map((h) => row[h] || "").join("\t"))
+    .join("\n");
 
-  navigator.clipboard.writeText(text)
+  navigator.clipboard
+    .writeText(text)
     .then(() => {
       alert(`Copied ${savedOrders.length} orders`);
     })
-    .catch(err => {
+    .catch((err) => {
       console.error("Copy failed:", err);
       alert("Copy failed");
     });
