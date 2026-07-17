@@ -1518,8 +1518,22 @@ function syncPreviewToOrders() {
   previewOrders = updatedOrders;
 }
 
+function recalculateShipConfirm(row) {
+  let total = 0;
+
+  for (let i = 1; i <= 5; i++) {
+    const price = parseFloat(row[`Price ${i}`]) || 0;
+    const qty = parseFloat(row[`Qty ${i}`]) || 0;
+
+    total += price * qty;
+  }
+
+  row["Ship Confirm."] = total > 500 ? "Y" : "";
+}
+
 function saveOrders() {
   syncPreviewToOrders();
+  previewOrders.forEach(recalculateShipConfirm);
 
   savedOrders = savedOrders.concat(previewOrders);
 
