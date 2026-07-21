@@ -11,6 +11,77 @@ function parseOrder(order) {
   return result;
 }
 
+function safeParseOrder(order) {
+  const detection = detectBestDealer(order);
+  const detectedDealer = detection?.dealer;
+  lastDetection = detection;
+
+  let result;
+
+  switch (detectedDealer) {
+    case "aag":
+    case "redline360":
+    case "tdot":
+    case "z1":
+    case "newdealer":
+      result = parseOrder(order);
+      break;
+
+    default:
+      result = parseGeneric(order);
+  }
+
+  const row = result[0] || {};
+
+  const itemCount = Object.keys(row).filter(
+    (k) => k.includes("Item ID") && row[k]
+  ).length;
+
+  const hasItem = itemCount > 0;
+  const hasGoodAddress = row["Ship Addr1"] && row["Ship City"];
+
+  let qualityScore = 0;
+  if (itemCount >= 1) qualityScore += 0.4;
+  if (itemCount >= 2) qualityScore += 0.2;
+  if (itemCount >= 3) qualityScore += 0.1;
+  if (hasGoodAddress) qualityScore += 0.3;
+  if (row["Tr.Orig.No."]) qualityScore += 0.1;
+
+  if (!hasItem || !hasGoodAddress) {
+    row["⚠️ Warning"] = "Missing Critical Data";
+  } else if (qualityScore < 0.5) {
+    row["⚠️ Warning"] = "Low Confidence Parse";
+  }
+
+  const fingerprint = order.replace(/\s+/g, " ").slice(0, 250);
+
+  const confidence = detection?.confidence ?? 0;
+
+  const shouldFlag =
+    detectedDealer === "unknown" ||
+    !hasItem ||
+    !hasGoodAddress ||
+    qualityScore < 0.5;
+
+  if (shouldFlag) {
+    const existing = unknownOrders.find((o) => o.fingerprint === fingerprint);
+
+    if (existing) {
+      existing.count = (existing.count || 1) + 1;
+    } else {
+      unknownOrders.push({
+        fingerprint,
+        raw: order,
+        detectedDealer,
+        confidence
+      });
+    }
+  }
+
+  updateUnknownTable();
+  return result;
+}
+
 function buildRow(order, dealer, items, addr) {
   const config = DEALER_CONFIG[dealer] || DEALER_CONFIG["redline360"];
 
