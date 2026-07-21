@@ -40,3 +40,17 @@ function getPrice(dealer, sku) {
 
   return num.toFixed(2);
 }
+
+function updatePriceStatus() {
+  const el = document.getElementById("priceStatus");
+  const saved = localStorage.getItem("priceLastUpdated");
+
+  if (!saved) {
+    el.textContent = "No price table loaded";
+    return;
+  }
+
+  const date = new Date(saved);
+  const formatted = `${date.getMonth() + 1}/${date.getDate()}`;
+  el.textContent = `Price Table Updated: ${formatted}`;
+}
