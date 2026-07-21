@@ -897,7 +897,7 @@ function parseGeneric(order) {
 
   row["Ship Ins."] = "";
   row["Ship COD"] = "";
-  row["Ship Confirm."] = totalPrice > 600 ? "Y" : "";
+  row["Ship Confirm."] = totalPrice > 500 ? "Y" : "";
 
   row["Ship From"] = config.thirdParty ? "Y" : "";
   row["Ship Acct"] = config.thirdParty ? "Y" : "";
@@ -1416,7 +1416,7 @@ function buildRow(order, dealer, items, addr) {
 
   row["Ship Ins."] = "";
   row["Ship COD"] = "";
-  row["Ship Confirm."] = totalPrice > 600 ? "Y" : "";
+  row["Ship Confirm."] = totalPrice > 500 ? "Y" : "";
 
   row["Ship From"] = config.thirdParty ? "Y" : "";
   row["Ship Acct"] = config.thirdParty ? "Y" : "";
