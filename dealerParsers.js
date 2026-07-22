@@ -260,34 +260,18 @@ function extractAddressAAG(text) {
     cityIndex = -1;
 
   for (let i = 0; i < block.length; i++) {
-    // combined line support
-    const combined = `${block[i]} ${block[i + 1] || ""}`;
 
-    let parsed = parseCityStateZip(combined);
+  // only parse standalone city/state/zip lines
+  let parsed = parseCityStateZip(block[i]);
 
-    if (!parsed.city) {
-      parsed = parseCityStateZip(block[i]);
-    }
-
-    if (parsed.city) {
-      city = parsed.city;
-      state = parsed.state;
-      zip = parsed.zip;
-      cityIndex = i;
-      break;
-    }
-
-    // fallback:
-    const m = block[i].match(/^(.*?),\s*([A-Za-z]{2})$/);
-
-    if (m && block[i + 1]?.match(/^\d{5}/)) {
-      city = m[1];
-      state = normalizeState(m[2]);
-      zip = block[i + 1];
-      cityIndex = i;
-      break;
-    }
+  if (parsed.city && parsed.zip) {
+    city = parsed.city;
+    state = parsed.state;
+    zip = parsed.zip;
+    cityIndex = i;
+    break;
   }
+}
 
   const addrIndex = cityIndex - 1;
 
@@ -296,10 +280,10 @@ let addr2 = "";
 let name = "";
 
 if (addrIndex >= 0) {
-  addr1 = block[addrIndex + 1] || "";
+  addr1 = block[addrIndex] || "";
 }
 
-const beforeAddress = block.slice(0, addrIndex + 1);
+const beforeAddress = block.slice(0, addrIndex);
 
 if (beforeAddress.length) {
   name = beforeAddress[0];
