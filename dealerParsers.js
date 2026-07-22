@@ -364,6 +364,7 @@ function extractAddressZ1(text) {
       break;
     }
   }
+}
 
 function extractAddressNewDealer(text) {
   const lines = text
