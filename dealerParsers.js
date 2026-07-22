@@ -288,6 +288,40 @@ function extractAddressAAG(text) {
     }
   }
 
+  const addrIndex = cityIndex - 1;
+
+  let addr1 = "";
+  let addr2 = "";
+
+  if (addrIndex >= 0) {
+    addr1 = usableLines[addrIndex];
+  }
+
+  const beforeAddress = usableLines.slice(0, addrIndex);
+  let name = "";
+
+  if (beforeAddress.length) {
+    // last line before address = person's name
+    name = beforeAddress[beforeAddress.length - 1];
+
+    // everything before name = extra address info
+    if (beforeAddress.length > 1) {
+      addr2 = beforeAddress.slice(0, -1).join(" ");
+    }
+  }
+  
+  return {
+    name,
+    addr1,
+    addr2,
+    city,
+    state,
+    zip,
+    country: "US",
+    phone
+  };
+}
+
 function extractAddressZ1(text) {
   const lines = text
     .split("\n")
@@ -330,40 +364,6 @@ function extractAddressZ1(text) {
       break;
     }
   }
-
-  const addrIndex = cityIndex - 1;
-
-  let addr1 = "";
-  let addr2 = "";
-
-  if (addrIndex >= 0) {
-    addr1 = usableLines[addrIndex];
-  }
-
-  const beforeAddress = usableLines.slice(0, addrIndex);
-  let name = "";
-
-  if (beforeAddress.length) {
-    // last line before address = person's name
-    name = beforeAddress[beforeAddress.length - 1];
-
-    // everything before name = extra address info
-    if (beforeAddress.length > 1) {
-      addr2 = beforeAddress.slice(0, -1).join(" ");
-    }
-  }
-  
-  return {
-    name,
-    addr1,
-    addr2,
-    city,
-    state,
-    zip,
-    country: "US",
-    phone
-  };
-}
 
 function extractAddressNewDealer(text) {
   const lines = text
