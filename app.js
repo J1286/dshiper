@@ -223,23 +223,6 @@ function updateSavedTable() {
   });
 }
 
-function saveOrders() {
-  syncPreviewToOrders();
-  previewOrders.forEach(recalculateShipConfirm);
-
-  savedOrders = savedOrders.concat(previewOrders);
-
-  localStorage.setItem("savedOrders", JSON.stringify(savedOrders));
-
-  previewOrders = [];
-
-  lastDetection = null; // clear detection UI
-  updateDetectionUI();
-
-  updatePreview();
-  updateSavedTable();
-}
-
 function copyAllOrders() {
   if (!savedOrders.length) {
     alert("No saved orders to copy");
