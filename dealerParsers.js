@@ -261,7 +261,6 @@ let cityIndex = -1;
 
 for (let i = 0; i < block.length; i++) {
 
-  // case 1: Scotia, NY 12345
   let parsed = parseCityStateZip(block[i]);
 
   if (parsed.city && parsed.zip) {
@@ -272,12 +271,11 @@ for (let i = 0; i < block.length; i++) {
     break;
   }
 
-  // case 2: Scotia, NY  (next line is zip)
   const cityState = block[i].match(
     /^(.*?),\s*([A-Za-z]{2})$/i
   );
 
-  if (cityState && block[i + 1]?.match(/^\d{5}/)) {
+    if (cityState && block[i + 1]?.match(/^\d{5}/)) {
     city = cityState[1].trim();
     state = normalizeState(cityState[2]);
     zip = block[i + 1].trim();
@@ -285,16 +283,32 @@ for (let i = 0; i < block.length; i++) {
     break;
   }
 }
-  
-  return {
-    name,
-    addr1,
-    addr2,
-    city,
-    state,
-    zip,
-    country: "US",
-    phone
+
+const addrIndex = cityIndex - 1;
+
+let addr1 = "";
+let addr2 = "";
+let name = "";
+
+if (addrIndex >= 0) {
+  addr1 = block[addrIndex];
+}
+
+if (addrIndex > 1) {
+  addr2 = block.slice(1, addrIndex).join(" ");
+}
+
+name = block[0] || "";
+
+return {
+  name,
+  addr1,
+  addr2,
+  city,
+  state,
+  zip,
+  country: "US",
+  phone
   };
 }
 
@@ -341,34 +355,22 @@ function extractAddressZ1(text) {
     }
   }
     
-  const addrIndex = cityIndex - 1;
+   const addrIndex = cityIndex - 1;
 
 let addr1 = "";
 let addr2 = "";
 let name = "";
 
 if (addrIndex >= 0) {
-  addr1 = block[addrIndex];
+  addr1 = usableLines[addrIndex];
 }
 
-if (addrIndex > 1) {
-  addr2 = block.slice(1, addrIndex).join(" ");
-}
+const beforeAddress = usableLines.slice(0, addrIndex);
 
-name = block[0] || "";
+if (beforeAddress.length) {
+  name = beforeAddress[beforeAddress.length - 1];
 
-  return {
-    name,
-    addr1,
-    addr2,
-    city,
-    state,
-    zip,
-    country: "US",
-    phone
-  };
-}
-
+  if (beforeAddress.length >
 function extractAddressNewDealer(text) {
   const lines = text
     .split("\n")
