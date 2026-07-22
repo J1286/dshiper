@@ -9,32 +9,32 @@ let selectedUnknownOrder = null;
 let testParserFn = null;
 let testParserName = "";
 
-const PARSER_PLUGINS = {
-  redline360: {
+const PARSER_PLUGINS = {};
+
+  PARSER_PLUGINS.redline360 = {
     parse: parseRedlineWrapper,
     confidence: 0.95
   },
-  aag: {
+  PARSER_PLUGINS.aag = {
     parse: parseAAGWrapper,
     confidence: 0.95
   },
-  tdot: {
+  PARSER_PLUGINS.tdot = {
     parse: parseTDOTWrapper,
     confidence: 0.9
   },
-  z1: {
+  PARSER_PLUGINS.z1 = {
     parse: parseZ1Wrapper,
     confidence: 0.9
   },
-  newdealer: {
+  PARSER_PLUGINS.newdealer = {
     parse: parseNewDealerWrapper,
     confidence: 0.9
   },
-  generic: {
+  PARSER_PLUGINS.generic = {
     parse: parseGeneric,
     confidence: 0.5
-  }
-};
+  };
 
 const GENERIC_RULES = {
   po: [
