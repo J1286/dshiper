@@ -54,3 +54,25 @@ function updatePriceStatus() {
   const formatted = `${date.getMonth() + 1}/${date.getDate()}`;
   el.textContent = `Price Table Updated: ${formatted}`;
 }
+
+document.getElementById("priceFileInput").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    const data = new Uint8Array(evt.target.result);
+    const workbook = XLSX.read(data, { type: "array" });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    allPriceRows = XLSX.utils.sheet_to_json(sheet);
+
+    // Save parsed data in localStorage
+    localStorage.setItem("priceRows", JSON.stringify(allPriceRows));
+
+    // Save timestamp
+    const now = new Date();
+    localStorage.setItem("priceLastUpdated", now.toISOString());
+
+    buildPriceTable();
+    updatePriceStatus(); // call function to update display
+  };
+  reader.readAsArrayBuffer(file);
+});
