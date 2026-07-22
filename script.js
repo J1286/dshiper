@@ -812,6 +812,12 @@ function extractAddressGeneric(text) {
 
   const phone = phoneMatch.replace(/\D/g, "");
 
+  let country = "US";
+
+  if (Object.values(PROVINCE_MAP).includes(state)) {
+  country = "CA";
+}
+
   return {
     name,
     addr1,
@@ -819,7 +825,7 @@ function extractAddressGeneric(text) {
     city,
     state,
     zip,
-    country: "",
+    country,
     phone
   };
 }
@@ -1158,6 +1164,17 @@ function normalizeState(state) {
   if (PROVINCE_MAP[s]) return PROVINCE_MAP[s];
 
   return state; // fallback
+}
+
+function normalizeCountry(addr) {
+  if (!addr.country) {
+    if (Object.values(PROVINCE_MAP).includes(addr.state)) {
+      addr.country = "CA";
+    } else {
+      addr.country = "US";
+    }
+  }
+  return addr;
 }
 
 function extractAddressRedline(order) {
