@@ -886,7 +886,10 @@ function parseGeneric(order) {
   row["Ship Country"] = detectCountry(addr);
   row["Ship Phone"] = addr.phone || "";
   row["Ship Email"] = config.email;
-  row["Ship Service"] = "GND";
+  row["Ship Service"] =
+    country === "CA" || country === "CANADA"
+      ? "ST"
+      : "GND";
 
   const totalPrice = items.reduce((sum, item) => {
     const price = Number(getPrice(dealer, item.sku)) || 0;
