@@ -13,6 +13,19 @@ function normalizeState(state) {
   return state; // fallback
 }
 
+function normalizeSKU(sku) {
+  if (!sku) return "";
+
+  let clean = sku
+    .replace(/\u00A0/g, " ")
+    .trim()
+    .toUpperCase();
+
+  clean = clean.replace(/^SPECDTUNING[-_]?/i, "");
+
+  return clean;
+}
+
 function detectCountry(addr) {
   const rawCountry = (addr.country || "").trim().toLowerCase();
   const zip = (addr.zip || "").replace(/\s+/g, "").toUpperCase();
