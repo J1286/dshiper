@@ -18,6 +18,7 @@ function parseGeneric(order) {
     const fallback = order.match(/\b(PO|ORDER)?[-\s#]*([A-Z0-9-]{6,})\b/i);
     if (fallback) po = fallback[2];
   }
+}
 
 function extractItemsGeneric(text) {
   text = normalizeBrokenLines(text);
