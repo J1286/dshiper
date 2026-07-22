@@ -176,6 +176,70 @@ function extractAddressGeneric(text) {
   };
 }
 
+function extractPhone(text) {
+    const match =
+      text.match(
+        /\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/
+      )?.[0] || "";
+
+    return match.replace(/\D/g, "");
+  }
+
+  const detectedDealer = detectBestDealer(order).dealer;
+  const config = DEALER_CONFIG[detectedDealer] || DEALER_CONFIG["redline360"];
+
+  const dealer = detectedDealer;
+
+  const row = {
+    "DShipper ID": config.dshipper,
+    "Tr.Orig.No.": po,
+    "Cust. PO No.": po
+  };
+
+  const MAX_ITEMS = 5;
+
+  for (let i = 0; i < MAX_ITEMS; i++) {
+    const item = items[i] || {};
+    const sku = item.sku || "";
+
+    row[`Item ID ${i + 1}`] = sku;
+    row[`Qty ${i + 1}`] = item.qty || "";
+
+    row[`Price ${i + 1}`] = getPrice(dealer, sku);
+  }
+
+  row["Ship Name"] = addr.name || "";
+  row["Ship Addr1"] = addr.addr1 || "";
+  row["Ship Addr2"] = addr.addr2 || "";
+  row["Ship City"] = addr.city || "";
+  row["Ship State"] = addr.state || "";
+  row["Ship Zip"] = addr.zip || "";
+  row["Ship Country"] = detectCountry(addr);
+  row["Ship Phone"] = addr.phone || "";
+  row["Ship Email"] = config.email;
+  row["Ship Service"] = "GND";
+
+  const totalPrice = items.reduce((sum, item) => {
+    const price = Number(getPrice(dealer, item.sku)) || 0;
+    const qty = Number(item.qty) || 0;
+
+    return sum + price * qty;
+  }, 0);
+
+  row["Ship Ins."] = "";
+  row["Ship COD"] = "";
+  row["Ship Confirm."] = totalPrice > 500 ? "Y" : "";
+
+  row["Ship From"] = config.thirdParty ? "Y" : "";
+  row["Ship Acct"] = config.thirdParty ? "Y" : "";
+
+  if (!items.length) {
+    console.warn("Generic parser returned no items:", order);
+  }
+
+  return [row];
+}
+
 function scoreSKU(str) {
   if (!str) return 0;
 
@@ -265,4 +329,13 @@ function getItemSection(text) {
 
 function isUPC(str) {
   return /^\d{12}$/.test(str); // standard UPC
+}
+
+function generatePluginSuggestion(text) {
+  return {
+    itemPattern: "[A-Z0-9-]{6,}",
+    addressHint: text.includes("Ship To"),
+    poHint: /PO|Order/i.test(text),
+    confidenceBoost: 0.3
+  };
 }
