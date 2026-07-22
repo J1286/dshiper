@@ -9,7 +9,37 @@ let selectedUnknownOrder = null;
 let testParserFn = null;
 let testParserName = "";
 
-const PARSER_PLUGINS = {};
+const PARSER_PLUGINS = {
+  redline360: {
+    parse: parseRedlineWrapper,
+    confidence: 0.95
+  },
+
+  aag: {
+    parse: parseAAGWrapper,
+    confidence: 0.95
+  },
+
+  tdot: {
+    parse: parseTDOTWrapper,
+    confidence: 0.9
+  },
+
+  z1: {
+    parse: parseZ1Wrapper,
+    confidence: 0.9
+  },
+
+  newdealer: {
+    parse: parseNewDealerWrapper,
+    confidence: 0.9
+  },
+
+  generic: {
+    parse: parseGeneric,
+    confidence: 0.5
+  }
+};
 
 const GENERIC_RULES = {
   po: [
