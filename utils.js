@@ -64,8 +64,6 @@ function parseCityStateZip(line) {
   }
 
   // --- Canada: City, Province Postal ---
-  m = line.match(/^(.*?),\s*([A-Za-z\s]+),?\s*([A-Z]\d[A-Z]\s?\d[A-Z]\d)$/i);
-
   if (m) {
     const rawState = m[2].trim().toLowerCase();
 
