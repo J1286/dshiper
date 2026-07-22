@@ -206,6 +206,10 @@ function detectBestDealer(text) {
   };
 }
 
+function getDealerFromRow(row) {
+  return DSHIPPER_TO_DEALER[row["DShipper ID"]] || "redline360";
+}
+
 // -------- DEALER DETECTION --------
 function scoreDealer(text) {
   const t = text.toLowerCase();
