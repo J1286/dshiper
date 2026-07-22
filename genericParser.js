@@ -339,3 +339,165 @@ function generatePluginSuggestion(text) {
     confidenceBoost: 0.3
   };
 }
+
+function generateParserTemplate() {
+  if (!selectedUnknownOrder) return;
+
+  const text = selectedUnknownOrder.raw;
+
+  const dealerName = prompt("Name this new dealer format (e.g. newdealer2)");
+  if (!dealerName) return;
+
+  const safeName = dealerName.replace(/\s+/g, "_").toLowerCase();
+
+  // ---- extract preview signals ----
+  const lines = text
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  const sampleLines = lines.slice(0, 8);
+
+  const skuGuess = lines.find((l) => /[A-Z0-9-]{6,}/.test(l)) || "";
+  const hasShipTo = text.toLowerCase().includes("ship to");
+  const hasBillTo = text.toLowerCase().includes("bill to");
+
+  // ---- build template ----
+  const template = `
+// ===== ${safeName.toUpperCase()} PARSER TEMPLATE =====
+
+function extractItems_${safeName}(text) {
+  const items = [];
+  const section = getItemSection(text);
+
+const lines = section
+  .split("\n")
+  .map(l => l.trim())
+  .filter(Boolean);
+
+  for (let line of lines) {
+    // TODO: refine item extraction
+    // sample line: ${sampleLines[0] || "N/A"}
+
+    const match = line.match(/([A-Z0-9-]{6,})/);
+    if (match) {
+      items.push({
+        sku: normalizeSKU(match[1]),
+        qty: 1
+      });
+    }
+  }
+
+  return items;
+}
+
+testParserName = "${safeName}";
+
+testParserFn = function(text) {
+  const items = [];
+  const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+
+  for (let line of lines) {
+    const match = line.match(/([A-Z0-9-]{6,})/);
+    if (match) {
+      items.push({
+        sku: normalizeSKU(match[1]),
+        qty: 1
+      });
+    }
+  }
+
+  return [{
+    "Test Parser": "${safeName}",
+    "Items": items.length,
+    "Raw Items": items
+  }];
+};
+
+function extractAddress_${safeName}(text) {
+  const lines = text.split("\\n").map(l => l.trim()).filter(Boolean);
+
+  return {
+    name: lines[0] || "",
+    addr1: lines[1] || "",
+    addr2: "",
+    city: "",
+    state: "",
+    zip: "",
+    country: "",
+    phone: ""
+  };
+}
+
+// --- DETECTION RULE SUGGESTION ---
+if (
+  text.toLowerCase().includes("${
+    lines[0]?.toLowerCase() || "unique_keyword"
+  }") &&
+  ${hasShipTo} &&
+  ${hasBillTo}
+) {
+  return "${safeName}";
+}
+
+// --- CONFIG SUGGESTION ---
+/*
+${safeName}: {
+  dshipper: "",
+  email: ""
+}
+*/
+`;
+
+  // ---- show result ----
+  const win = window.open("", "_blank");
+
+  if (!win) {
+    alert("Popup blocked. Please allow popups for this site.");
+    return;
+  }
+
+  win.document.write(`<pre>${template}</pre>`);
+  win.document.close();
+}
+
+function runTestParser() {
+  if (!selectedUnknownOrder) return;
+
+  const raw = selectedUnknownOrder.raw;
+
+  // ---- generic result ----
+  const generic = parseGeneric(raw)[0];
+
+  // ---- test result ----
+  let testResult = null;
+
+  if (testParserFn) {
+    testResult = testParserFn(raw)[0];
+  }
+
+  // ---- render output ----
+  const metaEl = document.getElementById("rawViewerMeta");
+
+  metaEl.style.background = "";
+
+  if (testResult && testResult.Items > 0) {
+    metaEl.style.background = "#f3fff3";
+  }
+
+  metaEl.textContent = `
+🧪 TEST MODE RESULTS
+
+--- Generic Parser ---
+${JSON.stringify(generic, null, 2)}
+
+--- Test Parser (${testParserName}) ---
+${JSON.stringify(testResult, null, 2)}
+
+--- Comparison ---
+Items (Generic): ${
+    Object.keys(generic).filter((k) => k.includes("Item")).length
+  }
+Items (Test): ${testResult?.Items || 0}
+`.trim();
+}
