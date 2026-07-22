@@ -886,7 +886,6 @@ function parseGeneric(order) {
   row["Ship Country"] = detectCountry(addr);
   row["Ship Phone"] = addr.phone || "";
   row["Ship Email"] = config.email;
-  console.log("Country =", addr.country);
   const country = (addr.country || "").toUpperCase();
   row["Ship Service"] =
     country === "CA" || country === "CANADA"
