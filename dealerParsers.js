@@ -291,25 +291,23 @@ function extractAddressAAG(text) {
 
   const addrIndex = cityIndex - 1;
 
-  let addr1 = "";
-  let addr2 = "";
+let addr1 = "";
+let addr2 = "";
+let name = "";
 
-  if (addrIndex >= 0) {
-    addr1 = usableLines[addrIndex];
+if (addrIndex >= 0) {
+  addr1 = block[addrIndex + 1] || "";
+}
+
+const beforeAddress = block.slice(0, addrIndex + 1);
+
+if (beforeAddress.length) {
+  name = beforeAddress[0];
+
+  if (beforeAddress.length > 1) {
+    addr2 = beforeAddress.slice(1).join(" ");
   }
-
-  const beforeAddress = usableLines.slice(0, addrIndex);
-  let name = "";
-
-  if (beforeAddress.length) {
-    // last line before address = person's name
-    name = beforeAddress[beforeAddress.length - 1];
-
-    // everything before name = extra address info
-    if (beforeAddress.length > 1) {
-      addr2 = beforeAddress.slice(0, -1).join(" ");
-    }
-  }
+}
   
   return {
     name,
@@ -365,6 +363,36 @@ function extractAddressZ1(text) {
       break;
     }
   }
+    const addrIndex = cityIndex - 1;
+
+  let addr1 = "";
+  let addr2 = "";
+  let name = "";
+
+  if (addrIndex >= 0) {
+    addr1 = usableLines[addrIndex];
+  }
+
+  const beforeAddress = usableLines.slice(0, addrIndex);
+
+  if (beforeAddress.length) {
+    name = beforeAddress[beforeAddress.length - 1];
+
+    if (beforeAddress.length > 1) {
+      addr2 = beforeAddress.slice(0, -1).join(" ");
+    }
+  }
+
+  return {
+    name,
+    addr1,
+    addr2,
+    city,
+    state,
+    zip,
+    country: "US",
+    phone
+  };
 }
 
 function extractAddressNewDealer(text) {
