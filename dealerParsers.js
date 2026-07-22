@@ -321,6 +321,7 @@ function extractAddressZ1(text) {
   const start = lines.findIndex((l) => /^Deliver To$/i.test(l));
 
   if (start === -1) return {};
+
   const block = lines.slice(start + 1, start + 10);
 
   const phone =
@@ -340,7 +341,6 @@ function extractAddressZ1(text) {
   let zip = "";
   let cityIndex = -1;
 
-  // find city/state/zip line
   for (let i = 0; i < usableLines.length; i++) {
     const match = usableLines[i].match(
       /^(.*?),\s*(.+?)\s+(\d{5}(?:-\d{4})?)$/i
@@ -354,42 +354,35 @@ function extractAddressZ1(text) {
       break;
     }
   }
-    
-   const addrIndex = cityIndex - 1;
 
-let addr1 = "";
-let addr2 = "";
-let name = "";
+  const addrIndex = cityIndex - 1;
 
-if (addrIndex >= 0) {
-  addr1 = usableLines[addrIndex];
-}
+  let addr1 = "";
+  let addr2 = "";
+  let name = "";
 
-const beforeAddress = usableLines.slice(0, addrIndex);
-
-if (beforeAddress.length) {
-  name = beforeAddress[beforeAddress.length - 1];
-
-  if (beforeAddress.length >
-function extractAddressNewDealer(text) {
-  const lines = text
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean);
-  let start = lines.findIndex((l) => l.toLowerCase() === "ship to");
-  if (start === -1) return {};
-  const block = lines.slice(start + 1, start + 7);
-  let name = block[0] || "",
-    addr1 = block[2] || "",
-    cityLine = block[3] || "",
-    zip = block[4] || "",
-    phone = (block[5] || "").replace(/\D/g, "");
-  const m = cityLine.match(/^(.*),\s*(.*)$/);
-  let city = "",
-    state = "";
-  if (m) {
-    city = m[1];
-    state = normalizeState(m[2]);
+  if (addrIndex >= 0) {
+    addr1 = usableLines[addrIndex];
   }
-  return { name, addr1, addr2: "", city, state, zip, country: "", phone };
+
+  const beforeAddress = usableLines.slice(0, addrIndex);
+
+  if (beforeAddress.length) {
+    name = beforeAddress[beforeAddress.length - 1];
+
+    if (beforeAddress.length > 1) {
+      addr2 = beforeAddress.slice(0, -1).join(" ");
+    }
+  }
+
+  return {
+    name,
+    addr1,
+    addr2,
+    city,
+    state,
+    zip,
+    country: "US",
+    phone
+  };
 }
