@@ -254,14 +254,14 @@ function extractAddressAAG(text) {
   const phone = phoneLine.replace(/\D/g, "");
 
   // ---- city/state/zip ----
-  let city = "",
-    state = "",
-    zip = "",
-    cityIndex = -1;
+let city = "";
+let state = "";
+let zip = "";
+let cityIndex = -1;
 
-  for (let i = 0; i < block.length; i++) {
+for (let i = 0; i < block.length; i++) {
 
-  // only parse standalone city/state/zip lines
+  // case 1: Scotia, NY 12345
   let parsed = parseCityStateZip(block[i]);
 
   if (parsed.city && parsed.zip) {
@@ -271,25 +271,18 @@ function extractAddressAAG(text) {
     cityIndex = i;
     break;
   }
-}
 
-  const addrIndex = cityIndex - 1;
+  // case 2: Scotia, NY  (next line is zip)
+  const cityState = block[i].match(
+    /^(.*?),\s*([A-Za-z]{2})$/i
+  );
 
-let addr1 = "";
-let addr2 = "";
-let name = "";
-
-if (addrIndex >= 0) {
-  addr1 = block[addrIndex] || "";
-}
-
-const beforeAddress = block.slice(0, addrIndex);
-
-if (beforeAddress.length) {
-  name = beforeAddress[0];
-
-  if (beforeAddress.length > 1) {
-    addr2 = beforeAddress.slice(1).join(" ");
+  if (cityState && block[i + 1]?.match(/^\d{5}/)) {
+    city = cityState[1].trim();
+    state = normalizeState(cityState[2]);
+    zip = block[i + 1].trim();
+    cityIndex = i;
+    break;
   }
 }
   
@@ -347,25 +340,22 @@ function extractAddressZ1(text) {
       break;
     }
   }
-    const addrIndex = cityIndex - 1;
+    
+  const addrIndex = cityIndex - 1;
 
-  let addr1 = "";
-  let addr2 = "";
-  let name = "";
+let addr1 = "";
+let addr2 = "";
+let name = "";
 
-  if (addrIndex >= 0) {
-    addr1 = usableLines[addrIndex];
-  }
+if (addrIndex >= 0) {
+  addr1 = block[addrIndex];
+}
 
-  const beforeAddress = usableLines.slice(0, addrIndex);
+if (addrIndex > 1) {
+  addr2 = block.slice(1, addrIndex).join(" ");
+}
 
-  if (beforeAddress.length) {
-    name = beforeAddress[beforeAddress.length - 1];
-
-    if (beforeAddress.length > 1) {
-      addr2 = beforeAddress.slice(0, -1).join(" ");
-    }
-  }
+name = block[0] || "";
 
   return {
     name,
