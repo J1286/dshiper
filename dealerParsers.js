@@ -286,16 +286,18 @@ for (let i = 0; i < block.length; i++) {
 
 const addrIndex = cityIndex - 1;
 
+let name = block[0] || "";
 let addr1 = "";
 let addr2 = "";
-let name = "";
 
-if (addrIndex >= 0) {
-  addr1 = block[addrIndex];
-}
+if (addrIndex >= 1) {
+  // Street is always immediately after the name
+  addr1 = block[1];
 
-if (addrIndex > 1) {
-  addr2 = block.slice(1, addrIndex).join(" ");
+  // Everything between street and city becomes Addr2
+  if (addrIndex > 1) {
+    addr2 = block.slice(2, cityIndex).join(" ");
+  }
 }
 
 name = block[0] || "";
