@@ -8,6 +8,28 @@ function addOrders() {
   updateUnknownTable();
 }
 
+function processData() {
+  const raw = document.getElementById("input").value;
+  const orders = raw.includes("Subject:") ? raw.split(/(?=Subject:)/g) : [raw];
+  let result = [];
+  orders.forEach((o) => (result = result.concat(safeParseOrder(o))));
+  return result;
+}
+
+function saveOrders() {
+  syncPreviewToOrders();
+  
+  previewOrders.forEach(recalculateShipConfirm);
+  savedOrders = savedOrders.concat(previewOrders);
+  localStorage.setItem("savedOrders", JSON.stringify(savedOrders));
+  previewOrders = [];
+
+  lastDetection = null; // clear detection UI
+  updateDetectionUI();
+  updatePreview();
+  updateSavedTable();
+}
+
 function updatePreview() {
   const head = document.getElementById("previewHeader"),
     body = document.getElementById("previewBody");
@@ -37,48 +59,6 @@ function updatePreview() {
   document.getElementById(
     "output"
   ).textContent = `Orders: ${previewOrders.length}`;
-}
-
-function saveOrders() {
-  syncPreviewToOrders();
-  previewOrders.forEach(recalculateShipConfirm);
-
-  savedOrders = savedOrders.concat(previewOrders);
-
-  localStorage.setItem("savedOrders", JSON.stringify(savedOrders));
-
-  previewOrders = [];
-
-  lastDetection = null; // clear detection UI
-  updateDetectionUI();
-
-  updatePreview();
-  updateSavedTable();
-}
-
-function downloadExcel() {
-  if (!savedOrders.length) {
-    console.log("No orders to download");
-    return;
-  }
-
-  const ws = XLSX.utils.json_to_sheet(savedOrders);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "SavedOrders");
-
-  // Generate file as blob instead of direct download
-  const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-  const blob = new Blob([wbout], { type: "application/octet-stream" });
-
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "SavedOrders.xlsx";
-  document.body.appendChild(a);
-  a.click();
-
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
 }
 
 function clearPreview() {
@@ -220,6 +200,23 @@ function updateSavedTable() {
   });
 }
 
+function saveOrders() {
+  syncPreviewToOrders();
+  previewOrders.forEach(recalculateShipConfirm);
+
+  savedOrders = savedOrders.concat(previewOrders);
+
+  localStorage.setItem("savedOrders", JSON.stringify(savedOrders));
+
+  previewOrders = [];
+
+  lastDetection = null; // clear detection UI
+  updateDetectionUI();
+
+  updatePreview();
+  updateSavedTable();
+}
+
 function copyAllOrders() {
   if (!savedOrders.length) {
     alert("No saved orders to copy");
@@ -250,6 +247,31 @@ function clearAllOrders() {
   savedOrders = [];
   localStorage.setItem("savedOrders", JSON.stringify(savedOrders));
   updateSavedTable();
+}
+
+function downloadExcel() {
+  if (!savedOrders.length) {
+    console.log("No orders to download");
+    return;
+  }
+
+  const ws = XLSX.utils.json_to_sheet(savedOrders);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "SavedOrders");
+
+  // Generate file as blob instead of direct download
+  const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+  const blob = new Blob([wbout], { type: "application/octet-stream" });
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "SavedOrders.xlsx";
+  document.body.appendChild(a);
+  a.click();
+
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function updateUnknownTable() {
@@ -312,4 +334,26 @@ Confidence: ${(selectedUnknownOrder.confidence ?? 0).toFixed(2)}
 function closeRawViewer() {
   document.getElementById("rawViewer").style.display = "none";
   selectedUnknownOrder = null;
+}
+
+function updateDetectionUI() {
+  const el = document.getElementById("detectionInfo");
+
+  if (!lastDetection) {
+    el.textContent = "No order analyzed yet";
+    return;
+  }
+
+  const lines = [];
+
+  lines.push(`Best Match: ${lastDetection.dealer}`);
+  lines.push(`Confidence: ${lastDetection.confidence.toFixed(2)}`);
+  lines.push("");
+  lines.push("Ranking:");
+
+  lastDetection.ranked.forEach((r) => {
+    lines.push(`- ${r.dealer}: ${r.score.toFixed(2)}`);
+  });
+
+  el.textContent = lines.join("\n");
 }
