@@ -331,11 +331,6 @@ Confidence: ${(selectedUnknownOrder.confidence ?? 0).toFixed(2)}
   viewer.style.display = "block";
 }
 
-function closeRawViewer() {
-  document.getElementById("rawViewer").style.display = "none";
-  selectedUnknownOrder = null;
-}
-
 function updateDetectionUI() {
   const el = document.getElementById("detectionInfo");
 
