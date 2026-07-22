@@ -185,3 +185,68 @@ function getSection(text, startLabel, endLabel) {
   const end = slice.search(new RegExp(endLabel, "i"));
   return end === -1 ? slice : slice.slice(0, end);
 }
+
+function detectBestDealer(text) {
+  const ranked = scoreDealer(text);
+
+  const best = ranked[0];
+
+  if (!best || best.score < 0.45) {
+    return {
+      dealer: "unknown",
+      confidence: best ? best.score : 0,
+      ranked
+    };
+  }
+
+  return {
+    dealer: best.dealer,
+    confidence: best.score,
+    ranked
+  };
+}
+
+// -------- DEALER DETECTION --------
+function scoreDealer(text) {
+  const t = text.toLowerCase();
+
+  const scores = {
+    aag: 0,
+    redline360: 0,
+    tdot: 0,
+    z1: 0,
+    newdealer: 0,
+    newdealer2: 0
+  };
+
+  // -------- AAG --------
+  if (t.includes("spec-d tuning items purchased")) scores.aag += 0.6;
+  if (t.includes("bill to") && t.includes("ship to")) scores.aag += 0.2;
+  if (t.includes("aag")) scores.aag += 0.2;
+
+  // -------- REDLINE --------
+  if (t.includes("redline360")) scores.redline360 += 0.8;
+  if (t.includes("sku:")) scores.redline360 += 0.1;
+  if (t.includes("quantity:")) scores.redline360 += 0.1;
+
+  // -------- TDOT --------
+  if (t.includes("tdot")) scores.tdot += 0.7;
+  if (/tdot\s*performance/i.test(t)) scores.tdot += 0.3;
+
+  // -------- Z1 --------
+  if (t.includes("z1 motorsports")) scores.z1 += 0.8;
+  if (t.includes("qty") && /[a-z0-9-]{6,}/i.test(t)) scores.z1 += 0.2;
+  if (t.includes("purchase order") && t.includes("fedex")) scores.z1 += 0.2;
+  if (t.includes("deliver to")) scores.z1 += 0.2;
+  if (t.includes("purchase order number")) scores.z1 += 0.2;
+  if (t.includes("products item number")) scores.z1 += 0.3;
+
+  // -------- NEW DEALER --------
+  if (t.includes("ship to") && t.includes("brand")) scores.newdealer += 0.4;
+  if (t.includes("purchase order")) scores.newdealer += 0.2;
+  if (t.includes("unique keyword")) scores.newdealer2 += 0.8;
+
+  return Object.entries(scores)
+    .map(([dealer, score]) => ({ dealer, score }))
+    .sort((a, b) => b.score - a.score);
+}
