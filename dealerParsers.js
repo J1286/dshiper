@@ -1,3 +1,4 @@
+console.log("dealerParsers start"); 
 // -------- MAIN PARSER --------
 function parseRedlineWrapper(order) {
   const items = extractItemsRedline(order);
