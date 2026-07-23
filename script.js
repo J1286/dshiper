@@ -152,8 +152,12 @@ const DEALER_CONFIG = {
   tdot: {
     dshipper: "W7290",
     email: "support@tdotperformance.ca",
-    thirdParty: true
-  },
+    thirdParty: true,
+    us: {
+    email: "support@automotivestuff.com",
+    thirdParty: false
+  }
+}
 
   z1: {
     dshipper: "W7292",
