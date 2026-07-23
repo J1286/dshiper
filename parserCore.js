@@ -123,10 +123,7 @@ function buildRow(order, dealer, items, addr) {
   row["Ship Phone"] = addr.phone || "";
   row["Ship Email"] = config.email;
   const country = detectCountry(addr);
-  row["Ship Service"] =
-    country === "CA"
-      ? "ST"
-      : "GND";
+  row["Ship Service"] = country === "CA" ? "ST" : "GND";
 
   const totalPrice = items.reduce((sum, item) => {
     const price = Number(getPrice(dealer, item.sku)) || 0;
