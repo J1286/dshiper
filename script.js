@@ -1038,6 +1038,10 @@ function scoreDealer(text) {
   if (t.includes("tdot")) scores.tdot += 0.7;
   if (/tdot\s*performance/i.test(t)) scores.tdot += 0.3;
 
+  // TDOT US format
+  if (t.includes("new spec d tuning order po")) scores.tdot += 0.8;
+  if (t.includes("specdtuning-")) scores.tdot += 0.2;
+
   // -------- Z1 --------
   if (t.includes("z1 motorsports")) scores.z1 += 0.8;
   if (t.includes("qty") && /[a-z0-9-]{6,}/i.test(t)) scores.z1 += 0.2;
