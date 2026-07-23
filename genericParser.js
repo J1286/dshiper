@@ -52,12 +52,9 @@ function parseGeneric(order) {
   row["Ship Phone"] = addr.phone || "";
   row["Ship Email"] = config.email;
   const country = detectCountry(addr);
-  row["Ship Service"] =
-    country === "CA"
-      ? "ST"
-      : "GND";
+  row["Ship Service"] = country === "CA" ? "ST" : "GND";
 
-    const totalPrice = items.reduce((sum, item) => {
+  const totalPrice = items.reduce((sum, item) => {
     const price = Number(getPrice(dealer, item.sku)) || 0;
     const qty = Number(item.qty) || 0;
 
@@ -78,7 +75,7 @@ function parseGeneric(order) {
   return [row];
 }
 
-  function extractItemsGeneric(text) {
+function extractItemsGeneric(text) {
   text = normalizeBrokenLines(text);
   const lines = text
     .split("\n")
@@ -236,13 +233,13 @@ function extractAddressGeneric(text) {
 }
 
 function extractPhone(text) {
-    const match =
-      text.match(
-        /\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/
-      )?.[0] || "";
+  const match =
+    text.match(
+      /\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/
+    )?.[0] || "";
 
-    return match.replace(/\D/g, "");
-  }
+  return match.replace(/\D/g, "");
+}
 
 function scoreSKU(str) {
   if (!str) return 0;
