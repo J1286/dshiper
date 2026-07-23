@@ -516,24 +516,17 @@ function extractItemsZ1(text) {
 
 function extractItemsTDOT(text) {
   const items = [];
-  const lines = text
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean);
 
-  for (let line of lines) {
-    if (!line.includes("QTY:")) continue;
+  const regex =
+    /QTY:\s*(\d+)\s*-\s*SpecDTuning-([A-Z0-9-]+)/gi;
 
-    const match = line.match(/QTY:\s*(\d+)\s*-\s*([A-Z0-9-]{6,})/i);
+  let match;
 
-    if (!match) continue;
-
-    const qty = Number(match[1]);
-    const sku = normalizeSKU(match[2]);
-
-    if (!isLikelySKU(sku)) continue;
-
-    items.push({ sku, qty });
+  while ((match = regex.exec(text)) !== null) {
+    items.push({
+      qty: Number(match[1]),
+      sku: normalizeSKU(match[2])
+    });
   }
 
   return items;
@@ -842,7 +835,6 @@ function extractAddressGeneric(text) {
 }
 
 function parseGeneric(order) {
-  console.log("GENERIC parser");
   const items = extractItemsGeneric(order);
   const addr = extractAddressGeneric(order);
 
@@ -1372,7 +1364,6 @@ function parseRedlineWrapper(order) {
 }
 
 function parseAAGWrapper(order) {
-  console.log("TDOT parser");
   const items = extractItemsAAG(order);
   const addr = extractAddressAAG(order);
   return buildRow(order, "aag", items, addr);
