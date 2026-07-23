@@ -1062,6 +1062,7 @@ function detectBestDealer(text) {
   const best = ranked[0];
 
   if (!best || best.score < 0.45) {
+    console.log(scores);
     return {
       dealer: "unknown",
       confidence: best ? best.score : 0,
