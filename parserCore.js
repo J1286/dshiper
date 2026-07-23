@@ -122,11 +122,11 @@ function buildRow(order, dealer, items, addr) {
   row["Ship Country"] = detectCountry(addr);
   row["Ship Phone"] = addr.phone || "";
   row["Ship Email"] = config.email;
-  const country = (addr.country || "").toUpperCase();
+  const country = detectCountry(addr);
   row["Ship Service"] =
-    country === "CA" || country === "CANADA"
-    ? "ST"
-    : "GND";
+    country === "CA"
+      ? "ST"
+      : "GND";
 
   const totalPrice = items.reduce((sum, item) => {
     const price = Number(getPrice(dealer, item.sku)) || 0;
