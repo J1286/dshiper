@@ -357,25 +357,21 @@ function extractAddressZ1(text) {
     }
   }
 
-  const addrIndex = cityIndex - 1;
-
 let addr1 = "";
 let addr2 = "";
 let name = "";
 
-if (addrIndex >= 0) {
-  addr1 = usableLines[addrIndex];
-}
+if (cityIndex >= 0) {
+  const addressLines = usableLines.slice(0, cityIndex);
 
-const beforeAddress = usableLines.slice(0, addrIndex);
+  name = addressLines[0] || "";
+  addr1 = addressLines[1] || "";
 
-if (beforeAddress.length) {
-  name = beforeAddress[beforeAddress.length - 1];
-
-  if (beforeAddress.length > 1) {
-    addr2 = beforeAddress.slice(0, -1).join(" ");
+  if (addressLines.length > 2) {
+    addr2 = addressLines.slice(2).join(" ");
   }
 }
+  
   return {
     name,
     addr1,
