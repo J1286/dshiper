@@ -266,13 +266,21 @@ function downloadExcel() {
   XLSX.utils.book_append_sheet(wb, ws, "SavedOrders");
 
   // Generate file as blob instead of direct download
-  const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-  const blob = new Blob([wbout], { type: "application/octet-stream" });
+  const csv = XLSX.utils.sheet_to_csv(ws);
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+
+  // Get today's date
+  const today = new Date();
+  const month = today.getMonth() + 1; // Months are 0-based
+  const day = today.getDate();
+  const year = today.getFullYear();
+
+  const fileName = `${month}-${day}-${year} FC Batch1.xlsx`;
 
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "SavedOrders.xlsx";
+  a.download = `${month}-${day}-${year} FC Batch1.csv`;
   document.body.appendChild(a);
   a.click();
 
