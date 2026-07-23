@@ -283,22 +283,23 @@ for (let i = 0; i < block.length; i++) {
   }
 }
 
-const addrIndex = cityIndex - 1;
+const cityIndex = usableLines.findIndex((line) =>
+  /^(.*?),\s*(.+?)\s+(\d{5}(?:-\d{4})?)$/i.test(line)
+);
 
-let name = block[0] || "";
+let name = "";
 let addr1 = "";
 let addr2 = "";
 
-if (addrIndex >= 1) {
-  // Street is always immediately after the name
-  addr1 = block[1];
+if (cityIndex > 0) {
+  name = usableLines[0];
 
-  // Everything between street and city becomes Addr2
-  if (addrIndex > 1) {
-    addr2 = block.slice(2, cityIndex).join(" ");
-  }
+  const addressLines = usableLines.slice(1, cityIndex);
+
+  addr1 = addressLines[0] || "";
+  addr2 = addressLines.slice(1).join(" ");
 }
-
+  
 name = block[0] || "";
 
 return {
