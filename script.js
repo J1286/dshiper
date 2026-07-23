@@ -842,6 +842,7 @@ function extractAddressGeneric(text) {
 }
 
 function parseGeneric(order) {
+  console.log("GENERIC parser");
   const items = extractItemsGeneric(order);
   const addr = extractAddressGeneric(order);
 
@@ -1371,6 +1372,7 @@ function parseRedlineWrapper(order) {
 }
 
 function parseAAGWrapper(order) {
+  console.log("TDOT parser");
   const items = extractItemsAAG(order);
   const addr = extractAddressAAG(order);
   return buildRow(order, "aag", items, addr);
