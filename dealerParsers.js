@@ -356,25 +356,22 @@ function extractAddressZ1(text) {
     }
   }
 
-  const addrIndex = cityIndex - 1;
+  const cityIndex = usableLines.findIndex((line) =>
+  /^(.*?),\s*(.+?)\s+(\d{5}(?:-\d{4})?)$/i.test(line)
+);
 
-  let addr1 = "";
-  let addr2 = "";
-  let name = "";
+let name = "";
+let addr1 = "";
+let addr2 = "";
 
-  if (addrIndex >= 0) {
-    addr1 = usableLines[addrIndex];
-  }
+if (cityIndex > 0) {
+  name = usableLines[0];
 
-  const beforeAddress = usableLines.slice(0, addrIndex);
+  const addressLines = usableLines.slice(1, cityIndex);
 
-  if (beforeAddress.length) {
-    name = beforeAddress[beforeAddress.length - 1];
-
-    if (beforeAddress.length > 1) {
-      addr2 = beforeAddress.slice(0, -1).join(" ");
-    }
-  }
+  addr1 = addressLines[0] || "";
+  addr2 = addressLines.slice(1).join(" ");
+}
 
   return {
     name,
