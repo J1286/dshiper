@@ -188,7 +188,7 @@ function extractItemsNewDealer(text) {
     if (parts.length >= 2)
       items.push({ sku: normalizeSKU(parts.at(-1)), qty: Number(parts[0]) });
   }
-  return items;  
+  return items;
 }
 
 // -------- ADDRESS PARSERS --------
@@ -253,64 +253,61 @@ function extractAddressAAG(text) {
   const phone = phoneLine.replace(/\D/g, "");
 
   // ---- city/state/zip ----
-let city = "";
-let state = "";
-let zip = "";
-let cityIndex = -1;
+  let city = "";
+  let state = "";
+  let zip = "";
+  let cityIndex = -1;
 
-for (let i = 0; i < block.length; i++) {
+  for (let i = 0; i < block.length; i++) {
+    let parsed = parseCityStateZip(block[i]);
 
-  let parsed = parseCityStateZip(block[i]);
+    if (parsed.city && parsed.zip) {
+      city = parsed.city;
+      state = parsed.state;
+      zip = parsed.zip;
+      cityIndex = i;
+      break;
+    }
 
-  if (parsed.city && parsed.zip) {
-    city = parsed.city;
-    state = parsed.state;
-    zip = parsed.zip;
-    cityIndex = i;
-    break;
-  }
-
-  const cityState = block[i].match(
-    /^(.*?),\s*([A-Za-z]{2})$/i
-  );
+    const cityState = block[i].match(/^(.*?),\s*([A-Za-z]{2})$/i);
 
     if (cityState && block[i + 1]?.match(/^\d{5}/)) {
-    city = cityState[1].trim();
-    state = normalizeState(cityState[2]);
-    zip = block[i + 1].trim();
-    cityIndex = i;
-    break;
+      city = cityState[1].trim();
+      state = normalizeState(cityState[2]);
+      zip = block[i + 1].trim();
+      cityIndex = i;
+      break;
+    }
   }
-}
 
-const cityIndex = usableLines.findIndex((line) =>
-  /^(.*?),\s*(.+?)\s+(\d{5}(?:-\d{4})?)$/i.test(line)
-);
+  const cityIndex = usableLines.findIndex((line) =>
+    /^(.*?),\s*(.+?)\s+(\d{5}(?:-\d{4})?)$/i.test(line)
+  );
 
-let name = "";
-let addr1 = "";
-let addr2 = "";
+  let name = "";
+  let addr1 = "";
+  let addr2 = "";
 
-if (cityIndex > 0) {
-  name = usableLines[0];
+  if (cityIndex > 0) {
+    name = usableLines[0];
 
-  const addressLines = usableLines.slice(1, cityIndex);
+    const addressLines = usableLines.slice(1, cityIndex);
 
-  addr1 = addressLines[0] || "";
-  addr2 = addressLines.slice(1).join(" ");
-}
-  
-name = block[0] || "";
+    addr1 = addressLines[0] || "";
+    addr2 = addressLines.slice(1).join(" ");
+  }
 
-return {
-  name,
-  addr1,
-  addr2,
-  city,
-  state,
-  zip,
-  country: "US",
-  phone
+  name = block[0] || "";
+
+  return {
+    name,
+    addr1,
+    addr2,
+    city,
+    state,
+    zip,
+    country: "US",
+    phone
   };
 }
 
@@ -357,21 +354,21 @@ function extractAddressZ1(text) {
     }
   }
 
-let addr1 = "";
-let addr2 = "";
-let name = "";
+  let addr1 = "";
+  let addr2 = "";
+  let name = "";
 
-if (cityIndex >= 0) {
-  const addressLines = usableLines.slice(0, cityIndex);
+  if (cityIndex >= 0) {
+    const addressLines = usableLines.slice(0, cityIndex);
 
-  name = addressLines[0] || "";
-  addr1 = addressLines[1] || "";
+    name = addressLines[0] || "";
+    addr1 = addressLines[1] || "";
 
-  if (addressLines.length > 2) {
-    addr2 = addressLines.slice(2).join(" ");
+    if (addressLines.length > 2) {
+      addr2 = addressLines.slice(2).join(" ");
+    }
   }
-}
-  
+
   return {
     name,
     addr1,
