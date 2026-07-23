@@ -57,7 +57,7 @@ function updatePriceStatus() {
 
 document.getElementById("priceFileInput").addEventListener("change", (e) => {
   const file = e.target.files[0];
-    if (!file) return;
+  if (!file) return;
 
   const reader = new FileReader();
   reader.onload = (evt) => {
