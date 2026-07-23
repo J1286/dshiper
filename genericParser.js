@@ -51,7 +51,11 @@ function parseGeneric(order) {
   row["Ship Country"] = detectCountry(addr);
   row["Ship Phone"] = addr.phone || "";
   row["Ship Email"] = config.email;
-  row["Ship Service"] = "GND";
+  const country = (addr.country || "").toUpperCase();
+  row["Ship Service"] =
+    country === "CA" || country === "CANADA"
+    ? "ST"
+    : "GND";
 
     const totalPrice = items.reduce((sum, item) => {
     const price = Number(getPrice(dealer, item.sku)) || 0;
