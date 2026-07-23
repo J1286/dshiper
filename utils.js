@@ -87,4 +87,3 @@ function parseCityStateZip(line) {
 
   return {};
 }
-
