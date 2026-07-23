@@ -156,8 +156,8 @@ const DEALER_CONFIG = {
     us: {
     email: "support@automotivestuff.com",
     thirdParty: false
-  }
-}
+    }
+  },
 
   z1: {
     dshipper: "W7292",
