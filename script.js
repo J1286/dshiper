@@ -910,8 +910,9 @@ function parseGeneric(order) {
   row["Ship COD"] = "";
   row["Ship Confirm."] = totalPrice > 500 ? "Y" : "";
 
-  row["Ship From"] = config.thirdParty ? "Y" : "";
-  row["Ship Acct"] = config.thirdParty ? "Y" : "";
+  const isUS = shipCountry === "United States";
+  row["Ship From"] = config.thirdParty && !isUS ? "Y" : "";
+  row["Ship Acct"] = config.thirdParty && !isUS ? "Y" : "";
 
   if (!items.length) {
     console.warn("Generic parser returned no items:", order);
@@ -1445,8 +1446,9 @@ function buildRow(order, dealer, items, addr) {
   row["Ship COD"] = "";
   row["Ship Confirm."] = totalPrice > 500 ? "Y" : "";
 
-  row["Ship From"] = config.thirdParty ? "Y" : "";
-  row["Ship Acct"] = config.thirdParty ? "Y" : "";
+  const isUS = shipCountry === "United States";
+  row["Ship From"] = config.thirdParty && !isUS ? "Y" : "";
+  row["Ship Acct"] = config.thirdParty && !isUS ? "Y" : "";
 
   return [row];
 }
