@@ -910,7 +910,8 @@ function parseGeneric(order) {
   row["Ship COD"] = "";
   row["Ship Confirm."] = totalPrice > 500 ? "Y" : "";
 
-  const isUS = shipCountry === "United States";
+  const isUS = /^(US|USA|United States)$/i.test(row["Ship Country"]);
+
   row["Ship From"] = config.thirdParty && !isUS ? "Y" : "";
   row["Ship Acct"] = config.thirdParty && !isUS ? "Y" : "";
 
@@ -1446,7 +1447,8 @@ function buildRow(order, dealer, items, addr) {
   row["Ship COD"] = "";
   row["Ship Confirm."] = totalPrice > 500 ? "Y" : "";
 
-  const isUS = shipCountry === "United States";
+  const isUS = /^(US|USA|United States)$/i.test(row["Ship Country"]);
+
   row["Ship From"] = config.thirdParty && !isUS ? "Y" : "";
   row["Ship Acct"] = config.thirdParty && !isUS ? "Y" : "";
 
