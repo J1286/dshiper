@@ -726,6 +726,17 @@ function parseCityStateZip(line) {
     };
   }
 
+  // --- US: City, Full State, ZIP ---
+m = line.match(/^(.*?),\s*([A-Za-z\s]+),\s*(\d{5}(?:-\d{4})?)$/i);
+
+if (m) {
+  return {
+    city: m[1].trim(),
+    state: normalizeState(m[2]),
+    zip: m[3]
+  };
+}
+
   // --- Canada: City, Province Postal ---
   m = line.match(/^(.*?),\s*([A-Za-z\s]+),?\s*([A-Z]\d[A-Z]\s?\d[A-Z]\d)$/i);
 
