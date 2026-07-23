@@ -41,7 +41,7 @@ function processData() {
 
 function saveOrders() {
   syncPreviewToOrders();
-  
+
   previewOrders.forEach(recalculateShipConfirm);
   savedOrders = savedOrders.concat(previewOrders);
   localStorage.setItem("savedOrders", JSON.stringify(savedOrders));
