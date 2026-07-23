@@ -815,8 +815,8 @@ function extractAddressGeneric(text) {
   let country = "US";
 
   if (Object.values(PROVINCE_MAP).includes(state)) {
-  country = "CA";
-}
+    country = "CA";
+  }
 
   return {
     name,
@@ -893,11 +893,8 @@ function parseGeneric(order) {
   row["Ship Phone"] = addr.phone || "";
   row["Ship Email"] = config.email;
   const country = (addr.country || "").toUpperCase();
-  row["Ship Service"] =
-    country === "CA" || country === "CANADA"
-    ? "ST"
-    : "GND";
-  
+  row["Ship Service"] = country === "CA" || country === "CANADA" ? "ST" : "GND";
+
   const totalPrice = items.reduce((sum, item) => {
     const price = Number(getPrice(dealer, item.sku)) || 0;
     const qty = Number(item.qty) || 0;
@@ -1426,12 +1423,9 @@ function buildRow(order, dealer, items, addr) {
   row["Ship Country"] = detectCountry(addr);
   row["Ship Phone"] = addr.phone || "";
   row["Ship Email"] = config.email;
-    
+
   const country = (addr.country || "").toUpperCase();
-  row["Ship Service"] =
-    country === "CA" || country === "CANADA"
-      ? "ST"
-      : "GND";
+  row["Ship Service"] = country === "CA" || country === "CANADA" ? "ST" : "GND";
   const totalPrice = items.reduce((sum, item) => {
     const price = Number(getPrice(dealer, item.sku)) || 0;
     const qty = Number(item.qty) || 0;
