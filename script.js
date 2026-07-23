@@ -835,7 +835,6 @@ function extractAddressGeneric(text) {
 }
 
 function parseGeneric(order) {
-  console.log("GENERIC parser");
   const items = extractItemsGeneric(order);
   const addr = extractAddressGeneric(order);
 
@@ -1010,25 +1009,6 @@ function getSection(text, startLabel, endLabel) {
 
   const end = slice.search(new RegExp(endLabel, "i"));
   return end === -1 ? slice : slice.slice(0, end);
-}
-
-function detectDealer(text) {
-    if (
-        text.includes("SpecDTuning") ||
-        /QTY:\s*\d+\s*-/i.test(text)
-    ) {
-        return "tdot";
-    }
-
-    if (text.includes("Auto Accessories Garage")) {
-        return "aag";
-    }
-
-    if (text.includes("Redline360")) {
-        return "redline360";
-    }
-
-    return "genericparser";
 }
 
 // -------- DEALER DETECTION --------
@@ -1390,7 +1370,6 @@ function parseAAGWrapper(order) {
 }
 
 function parseTDOTWrapper(order) {
-  console.log("TDOT parser");
   const items = extractItemsTDOT(order);
   const addr = extractAddressGeneric(order);
   return buildRow(order, "tdot", items, addr);
