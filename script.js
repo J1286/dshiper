@@ -899,10 +899,7 @@ function parseGeneric(order) {
   row["Ship Zip"] = addr.zip || "";
   row["Ship Country"] = detectCountry(addr);
   row["Ship Phone"] = addr.phone || "";
-  
-  row["Email"] = (dealer === "tdot" && shipCountry === "United States")
-    ? "support@automotivestuff.com"
-    : config.email;
+  row["Ship Email"] = config.email;
   
   const country = (addr.country || "").toUpperCase();
   row["Ship Service"] = country === "CA" || country === "CANADA" ? "ST" : "GND";
@@ -1440,10 +1437,7 @@ function buildRow(order, dealer, items, addr) {
   row["Ship Zip"] = addr.zip || "";
   row["Ship Country"] = detectCountry(addr);
   row["Ship Phone"] = addr.phone || "";
-  
-  row["Email"] = (dealer === "tdot" && shipCountry === "United States")
-    ? "support@automotivestuff.com"
-    : config.email;
+  row["Ship Email"] = config.email;
 
   const country = (addr.country || "").toUpperCase();
   row["Ship Service"] = country === "CA" || country === "CANADA" ? "ST" : "GND";
