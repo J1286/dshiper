@@ -13,6 +13,17 @@ function normalizeState(state) {
   return state; // fallback
 }
 
+function normalizeCountry(addr) {
+  if (!addr.country) {
+    if (Object.values(PROVINCE_MAP).includes(addr.state)) {
+      addr.country = "CA";
+    } else {
+      addr.country = "US";
+    }
+  }
+  return addr;
+}
+
 function normalizeSKU(sku) {
   if (!sku) return "";
 
