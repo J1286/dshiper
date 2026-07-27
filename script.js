@@ -1544,7 +1544,14 @@ function buildRow(order, dealer, items, addr) {
   row["Ship Zip"] = addr.zip || "";
   row["Ship Country"] = detectCountry(addr);
   row["Ship Phone"] = addr.phone || "";
-  row["Ship Email"] = config.email;
+	
+  const isUS = /^(US|USA|United States)$/i.test(row["Ship Country"]);
+  const emailConfig =
+  dealer === "tdot" && isUS && config.us
+    ? config.us
+    : config;
+
+  row["Ship Email"] = emailConfig.email;
 
   const country = (addr.country || "").toUpperCase();
   row["Ship Service"] = country === "CA" || country === "CANADA" ? "ST" : "GND";
