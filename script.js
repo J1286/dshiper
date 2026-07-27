@@ -626,25 +626,44 @@ function extractAddressZ1(text) {
 
 function extractAddressNTXGlow(text) {
 
-  const match = text.match(
+  // US format
+  let match = text.match(
     /Ship to:\s*(.*?)\s+(\d+\s+.+?)\s+(WEB\d+)\s+(.+?),\s*([A-Za-z\s]+)\s+(\d{5}(?:-\d{4})?)\s+United States/i
   );
 
-  if (!match) {
-    console.log("NTXGlow address failed:", text);
-    return {};
+  if (match) {
+    return {
+      name: match[1].trim(),
+      addr1: match[2].trim(),
+      addr2: match[3].trim(),
+      city: match[4].trim(),
+      state: normalizeState(match[5].trim()),
+      zip: match[6].trim(),
+      country: "US",
+      phone: "000-000-0000"
+    };
   }
 
-  return {
-    name: match[1].trim(),
-    addr1: match[2].trim(),
-    addr2: match[3].trim(),
-    city: match[4].trim(),
-    state: normalizeState(match[5].trim()),
-    zip: match[6].trim(),
-    country: "US",
-    phone: "000-000-0000"
-  };
+  // Canada format
+  match = text.match(
+    /Ship to:\s*(.*?)\s+(\d+\s+.+?)\s+([A-Z\s]+),\s*([A-Za-z\s]+)\s+([A-Z]\d[A-Z]\s?\d[A-Z]\d)\s+Canada/i
+  );
+
+  if (match) {
+    return {
+      name: match[1].trim(),
+      addr1: match[2].trim(),
+      addr2: "",
+      city: match[3].trim(),
+      state: normalizeState(match[4].trim()),
+      zip: match[5].trim().toUpperCase(),
+      country: "CA",
+      phone: "000-000-0000"
+    };
+  }
+
+  console.log("NTXGlow address failed:", text);
+  return {};
 }
 
 function cleanNTXGlowText(text) {
