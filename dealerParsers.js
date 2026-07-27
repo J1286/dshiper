@@ -280,9 +280,9 @@ function extractAddressAAG(text) {
     }
   }
 
-  const cityIndex = usableLines.findIndex((line) =>
-    /^(.*?),\s*(.+?)\s+(\d{5}(?:-\d{4})?)$/i.test(line)
-  );
+  const usableCityIndex = usableLines.findIndex((line) =>
+  /^(.*?),\s*(.+?)\s+(\d{5}(?:-\d{4})?)$/i.test(line)
+);
 
   let name = "";
   let addr1 = "";
