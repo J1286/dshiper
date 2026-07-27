@@ -626,23 +626,27 @@ function extractAddressZ1(text) {
 
 function extractAddressNTXGlow(text) {
 
-  // US format
-  let match = text.match(
-    /Ship to:\s*(.*?)\s+(\d+\s+.+?)\s+(WEB\d+)\s+(.+?),\s*([A-Za-z\s]+)\s+(\d{5}(?:-\d{4})?)\s+United States/i
+  const match = text.match(
+    /Ship to:\s*(.*?)\s+(\d+\s+.+?)\s*\n\s*(.+?),\s*([A-Za-z\s]+)\s+([A-Z0-9\s-]+)\s+(United States|Canada)/i
   );
 
-  if (match) {
-    return {
-      name: match[1].trim(),
-      addr1: match[2].trim(),
-      addr2: match[3].trim(),
-      city: match[4].trim(),
-      state: normalizeState(match[5].trim()),
-      zip: match[6].trim(),
-      country: "US",
-      phone: "000-000-0000"
-    };
+  if (!match) {
+    console.log("NTXGlow address failed:", text);
+    return {};
   }
+
+  const country = match[6].trim();
+
+  return {
+    name: match[1].trim(),
+    addr1: match[2].trim(),
+    addr2: "",
+    city: match[3].trim(),
+    state: normalizeState(match[4].trim()),
+    zip: match[5].trim().toUpperCase(),
+    country: country === "Canada" ? "CA" : "US",
+    phone: "000-000-0000"
+  };
 
   // Canada format
   match = text.match(
