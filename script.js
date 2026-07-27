@@ -26,6 +26,10 @@ const PARSER_PLUGINS = {
     parse: parseZ1Wrapper,
     confidence: 0.9
   },
+  ntxglow: {
+    parse: parseNTXGlowWrapper,
+    confidence: 0.95
+},
   newdealer: {
     parse: parseNewDealerWrapper,
     confidence: 0.9
@@ -164,6 +168,11 @@ const DEALER_CONFIG = {
     email: "Purchasing@z1motorsports.com",
     thirdParty: true
   },
+
+  ntxglow: {
+  dshipper: "W7266",
+  email: "ntxglow@gmail.com"   
+},
 
   newdealer: { dshipper: "WXXXX", email: "tracking@email.com" },
   newdealer2: {
@@ -613,6 +622,37 @@ function extractAddressZ1(text) {
   };
 }
 
+function extractAddressNTXGlow(text) {
+
+    const m = text.match(
+        /Ship to:\s*([\s\S]*?)Thank you,/i
+    );
+
+    if (!m) return {};
+
+    const lines = m[1]
+        .split(/\n/)
+        .map(l => l.trim())
+        .filter(Boolean);
+
+    const name = lines[0] || "";
+    const addr1 = lines[1] || "";
+    const addr2 = lines[2] || "";
+
+    const parsed = parseCityStateZip(lines[3] || "");
+
+    return {
+        name,
+        addr1,
+        addr2,
+        city: parsed.city,
+        state: parsed.state,
+        zip: parsed.zip,
+        country: "US",
+        phone: ""
+    };
+}
+
 function extractItemsGeneric(text) {
   text = normalizeBrokenLines(text);
   const lines = text
@@ -1039,7 +1079,8 @@ function scoreDealer(text) {
     tdot: 0,
     z1: 0,
     newdealer: 0,
-    newdealer2: 0
+    newdealer2: 0,
+    ntxglow: 0
   };
 
   // -------- AAG --------
@@ -1067,6 +1108,10 @@ function scoreDealer(text) {
   if (t.includes("deliver to")) scores.z1 += 0.2;
   if (t.includes("purchase order number")) scores.z1 += 0.2;
   if (t.includes("products item number")) scores.z1 += 0.3;
+
+  // -------- NTXGlow --------
+if (t.includes("thank you, ntxglow")) scores.ntxglow += 0.8;
+if (t.includes("need to be fulfilled")) scores.ntxglow += 0.2;
 
   // -------- NEW DEALER --------
   if (t.includes("ship to") && t.includes("brand")) scores.newdealer += 0.4;
@@ -1401,6 +1446,12 @@ function parseZ1Wrapper(order) {
   const items = extractItemsZ1(order);
   const addr = extractAddressZ1(order);
   return buildRow(order, "z1", items, addr);
+}
+
+function parseNTXGlowWrapper(order) {
+    const items = extractItemsGeneric(order);
+    const addr = extractAddressNTXGlow(order);
+    return buildRow(order, "ntxglow", items, addr);
 }
 
 function parseNewDealerWrapper(order) {
