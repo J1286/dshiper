@@ -26,9 +26,13 @@ const PARSER_PLUGINS = {
     parse: parseZ1Wrapper,
     confidence: 0.9
   },
+  ntxglow: {
+    parse: parseNTXGlowWrapper,
+    confidence: 0.95
+},
   newdealer: {
     parse: parseNewDealerWrapper,
-    confidence: 0.9
+    confidence: 0.95
   },
   generic: {
     parse: parseGeneric,
@@ -165,6 +169,12 @@ const DEALER_CONFIG = {
     thirdParty: true
   },
 
+  ntxglow: {
+  dshipper: "W7266",
+  email: "ntxglow@gmail.com",
+  thirdParty: false 
+},
+
   newdealer: { dshipper: "WXXXX", email: "tracking@email.com" },
   newdealer2: {
     dshipper: "WXXXX",
@@ -227,6 +237,7 @@ function safeParseOrder(order) {
     case "redline360":
     case "tdot":
     case "z1":
+    case "ntxglow":
     case "newdealer":
       result = parseOrder(order);
       break;
@@ -613,6 +624,54 @@ function extractAddressZ1(text) {
   };
 }
 
+function extractAddressNTXGlow(text) {
+
+  const match = text.match(
+    /Ship to:\s*(.*?)\s+(\d+\s+.+?)\s+(WEB\d+)\s+(.+?),\s*([A-Za-z\s]+)\s+(\d{5}(?:-\d{4})?)\s+United States/i
+  );
+
+  if (!match) {
+    console.log("NTXGlow address failed:", text);
+    return {};
+  }
+
+  return {
+    name: match[1].trim(),
+    addr1: match[2].trim(),
+    addr2: match[3].trim(),
+    city: match[4].trim(),
+    state: normalizeState(match[5].trim()),
+    zip: match[6].trim(),
+    country: "US",
+    phone: "000-000-0000"
+  };
+}
+
+function cleanNTXGlowText(text) {
+  return text.replace(
+    /Ship to:[\s\S]*?United States/i,
+    ""
+  );
+}
+
+function extractItemsNTXGlow(text) {
+  text = cleanNTXGlowText(text);
+
+  const items = [];
+
+  const skuMatch = text.match(/SKU\s*\/\s*Part\s*#:\s*([A-Z0-9-]+)/i);
+  const qtyMatch = text.match(/Quantity:\s*(\d+)/i);
+
+  if (skuMatch) {
+    items.push({
+      sku: normalizeSKU(skuMatch[1]),
+      qty: qtyMatch ? Number(qtyMatch[1]) : 1
+    });
+  }
+
+  return items;
+}
+
 function extractItemsGeneric(text) {
   text = normalizeBrokenLines(text);
   const lines = text
@@ -666,7 +725,9 @@ function extractItemsGeneric(text) {
           raw: m,
           score: scoreSKUWithContext(m, lines[i - 1], lines[i + 1])
         }))
-        .filter((m) => !isUPC(m.raw));
+        .filter((m) => !isUPC(m.raw))
+	.filter((m) => !/^\d{5}(-\d{4})?$/.test(m.raw));
+
 
       if (scored.length) {
         const best = scored.sort((a, b) => b.score - a.score)[0];
@@ -903,22 +964,33 @@ function parseGeneric(order) {
   
   const country = (addr.country || "").toUpperCase();
   row["Ship Service"] = country === "CA" || country === "CANADA" ? "ST" : "GND";
+  row["Ship Ins."] = "";
+  row["Ship COD"] = "";
 
   const totalPrice = items.reduce((sum, item) => {
     const price = Number(getPrice(dealer, item.sku)) || 0;
     const qty = Number(item.qty) || 0;
-
     return sum + price * qty;
   }, 0);
 
-  row["Ship Ins."] = "";
-  row["Ship COD"] = "";
   row["Ship Confirm."] = totalPrice > 500 ? "Y" : "";
 
-  const isUS = /^(US|USA|United States)$/i.test(row["Ship Country"]);
-
-  row["Ship From"] = config.thirdParty && !isUS ? "Y" : "";
-  row["Ship Acct"] = config.thirdParty && !isUS ? "Y" : "";
+  // Z1 always uses third-party billing
+if (row["DShipper ID"] === "W7292") {
+  row["Ship From"] = "Y";
+  row["Ship Acct"] = "Y";
+}
+// TDOT only uses third-party billing for Canada
+else if (
+  row["DShipper ID"] === "W7290" &&
+  row["Ship Country"] === "CA"
+) {
+  row["Ship From"] = "Y";
+  row["Ship Acct"] = "Y";
+} else {
+  row["Ship From"] = "";
+  row["Ship Acct"] = "";
+}
 
   if (!items.length) {
     console.warn("Generic parser returned no items:", order);
@@ -1028,7 +1100,8 @@ function scoreDealer(text) {
     tdot: 0,
     z1: 0,
     newdealer: 0,
-    newdealer2: 0
+    newdealer2: 0,
+    ntxglow: 0
   };
 
   // -------- AAG --------
@@ -1056,6 +1129,11 @@ function scoreDealer(text) {
   if (t.includes("deliver to")) scores.z1 += 0.2;
   if (t.includes("purchase order number")) scores.z1 += 0.2;
   if (t.includes("products item number")) scores.z1 += 0.3;
+
+// -------- NTXGlow --------
+if (t.includes("ntxglow")) scores.ntxglow += 0.9;
+if (t.includes("sku / part #:")) scores.ntxglow += 0.3;
+if (t.includes("thank you, ntxglow")) scores.ntxglow += 0.5;
 
   // -------- NEW DEALER --------
   if (t.includes("ship to") && t.includes("brand")) scores.newdealer += 0.4;
@@ -1392,6 +1470,12 @@ function parseZ1Wrapper(order) {
   return buildRow(order, "z1", items, addr);
 }
 
+function parseNTXGlowWrapper(order) {
+  const items = extractItemsNTXGlow(order);
+  const addr = extractAddressNTXGlow(order);
+  return buildRow(order, "ntxglow", items, addr);
+}
+
 function parseNewDealerWrapper(order) {
   const items = extractItemsNewDealer(order);
   const addr = extractAddressNewDealer(order);
@@ -1441,21 +1525,34 @@ function buildRow(order, dealer, items, addr) {
 
   const country = (addr.country || "").toUpperCase();
   row["Ship Service"] = country === "CA" || country === "CANADA" ? "ST" : "GND";
-  const totalPrice = items.reduce((sum, item) => {
-    const price = Number(getPrice(dealer, item.sku)) || 0;
-    const qty = Number(item.qty) || 0;
-
-    return sum + price * qty;
-  }, 0);
 
   row["Ship Ins."] = "";
   row["Ship COD"] = "";
+
+    const totalPrice = items.reduce((sum, item) => {
+    const price = Number(getPrice(dealer, item.sku)) || 0;
+    const qty = Number(item.qty) || 0;
+    return sum + price * qty;
+  }, 0);
+  
   row["Ship Confirm."] = totalPrice > 500 ? "Y" : "";
 
-  const isUS = /^(US|USA|United States)$/i.test(row["Ship Country"]);
-
-  row["Ship From"] = config.thirdParty && !isUS ? "Y" : "";
-  row["Ship Acct"] = config.thirdParty && !isUS ? "Y" : "";
+  // Z1 always uses third-party billing
+if (row["DShipper ID"] === "W7292") {
+  row["Ship From"] = "Y";
+  row["Ship Acct"] = "Y";
+}
+// TDOT only uses third-party billing for Canada
+else if (
+  row["DShipper ID"] === "W7290" &&
+  row["Ship Country"] === "CA"
+) {
+  row["Ship From"] = "Y";
+  row["Ship Acct"] = "Y";
+} else {
+  row["Ship From"] = "";
+  row["Ship Acct"] = "";
+}
 
   return [row];
 }
