@@ -119,11 +119,20 @@ function buildRow(order, dealer, items, addr) {
   row["Ship City"] = addr.city || "";
   row["Ship State"] = addr.state || "";
   row["Ship Zip"] = addr.zip || "";
-  row["Ship Country"] = detectCountry(addr);
-  row["Ship Phone"] = addr.phone || "";
-  row["Ship Email"] = config.email;
+  
   const country = detectCountry(addr);
+  row["Ship Country"] = country;
+  row["Ship Phone"] = addr.phone || "";
+
+  row["Ship Email"] =
+  dealer === "tdot" && country === "US"
+    ? "support@automotivestuff.com"
+    : config.email;
+
   row["Ship Service"] = country === "CA" ? "ST" : "GND";
+
+  row["Ship From"] = config.thirdParty && country !== "US" ? "Y" : "";
+  row["Ship Acct"] = config.thirdParty && country !== "US" ? "Y" : "";
 
   const totalPrice = items.reduce((sum, item) => {
     const price = Number(getPrice(dealer, item.sku)) || 0;
