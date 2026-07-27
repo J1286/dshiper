@@ -280,7 +280,7 @@ function extractAddressAAG(text) {
     }
   }
 
-  const usableCityIndex = usableLines.findIndex((line) =>
+  const cityLineIndex = block.findIndex((line) =>
   /^(.*?),\s*(.+?)\s+(\d{5}(?:-\d{4})?)$/i.test(line)
 );
 
@@ -288,10 +288,10 @@ function extractAddressAAG(text) {
   let addr1 = "";
   let addr2 = "";
 
-  if (cityIndex > 0) {
-    name = usableLines[0];
+  if (cityLineIndex > 0) {
+    name = block[0];
 
-    const addressLines = usableLines.slice(1, cityIndex);
+    const addressLines = block.slice(1, cityLineIndex);
 
     addr1 = addressLines[0] || "";
     addr2 = addressLines.slice(1).join(" ");
