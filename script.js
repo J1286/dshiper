@@ -32,7 +32,7 @@ const PARSER_PLUGINS = {
 },
   newdealer: {
     parse: parseNewDealerWrapper,
-    confidence: 0.9
+    confidence: 0.95
   },
   generic: {
     parse: parseGeneric,
@@ -171,7 +171,8 @@ const DEALER_CONFIG = {
 
   ntxglow: {
   dshipper: "W7266",
-  email: "ntxglow@gmail.com"   
+  email: "ntxglow@gmail.com",
+  thirdParty: false 
 },
 
   newdealer: { dshipper: "WXXXX", email: "tracking@email.com" },
@@ -236,6 +237,7 @@ function safeParseOrder(order) {
     case "redline360":
     case "tdot":
     case "z1":
+    case "ntxglow":
     case "newdealer":
       result = parseOrder(order);
       break;
@@ -624,22 +626,50 @@ function extractAddressZ1(text) {
 
 function extractAddressNTXGlow(text) {
 
-  const m = text.match(
-    /Ship to:\s*(.*?)\s+(\d+.+?)\s+WEB\d+\s+(.+?),\s*([A-Za-z\s]+)\s+(\d{5}(?:-\d{4})?)\s+United States/i
+  const match = text.match(
+    /Ship to:\s*(.*?)\s+(\d+\s+.+?)\s+(WEB\d+)\s+(.+?),\s*([A-Za-z\s]+)\s+(\d{5}(?:-\d{4})?)\s+United States/i
   );
 
-  if (!m) return {};
+  if (!match) {
+    console.log("NTXGlow address failed:", text);
+    return {};
+  }
 
   return {
-    name: m[1].trim(),
-    addr1: m[2].trim(),
-    addr2: "",
-    city: m[3].trim(),
-    state: normalizeState(m[4]),
-    zip: m[5],
+    name: match[1].trim(),
+    addr1: match[2].trim(),
+    addr2: match[3].trim(),
+    city: match[4].trim(),
+    state: normalizeState(match[5].trim()),
+    zip: match[6].trim(),
     country: "US",
-    phone: ""
+    phone: "000-000-0000"
   };
+}
+
+function cleanNTXGlowText(text) {
+  return text.replace(
+    /Ship to:[\s\S]*?United States/i,
+    ""
+  );
+}
+
+function extractItemsNTXGlow(text) {
+  text = cleanNTXGlowText(text);
+
+  const items = [];
+
+  const skuMatch = text.match(/SKU\s*\/\s*Part\s*#:\s*([A-Z0-9-]+)/i);
+  const qtyMatch = text.match(/Quantity:\s*(\d+)/i);
+
+  if (skuMatch) {
+    items.push({
+      sku: normalizeSKU(skuMatch[1]),
+      qty: qtyMatch ? Number(qtyMatch[1]) : 1
+    });
+  }
+
+  return items;
 }
 
 function extractItemsGeneric(text) {
@@ -695,7 +725,9 @@ function extractItemsGeneric(text) {
           raw: m,
           score: scoreSKUWithContext(m, lines[i - 1], lines[i + 1])
         }))
-        .filter((m) => !isUPC(m.raw));
+        .filter((m) => !isUPC(m.raw))
+	.filter((m) => !/^\d{5}(-\d{4})?$/.test(m.raw));
+
 
       if (scored.length) {
         const best = scored.sort((a, b) => b.score - a.score)[0];
@@ -1098,9 +1130,10 @@ function scoreDealer(text) {
   if (t.includes("purchase order number")) scores.z1 += 0.2;
   if (t.includes("products item number")) scores.z1 += 0.3;
 
-  // -------- NTXGlow --------
-if (t.includes("thank you, ntxglow")) scores.ntxglow += 0.8;
-if (t.includes("need to be fulfilled")) scores.ntxglow += 0.2;
+// -------- NTXGlow --------
+if (t.includes("ntxglow")) scores.ntxglow += 0.9;
+if (t.includes("sku / part #:")) scores.ntxglow += 0.3;
+if (t.includes("thank you, ntxglow")) scores.ntxglow += 0.5;
 
   // -------- NEW DEALER --------
   if (t.includes("ship to") && t.includes("brand")) scores.newdealer += 0.4;
@@ -1438,9 +1471,9 @@ function parseZ1Wrapper(order) {
 }
 
 function parseNTXGlowWrapper(order) {
-    const items = extractItemsGeneric(order);
-    const addr = extractAddressNTXGlow(order);
-    return buildRow(order, "ntxglow", items, addr);
+  const items = extractItemsNTXGlow(order);
+  const addr = extractAddressNTXGlow(order);
+  return buildRow(order, "ntxglow", items, addr);
 }
 
 function parseNewDealerWrapper(order) {
