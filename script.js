@@ -627,7 +627,7 @@ function extractAddressZ1(text) {
 function extractAddressNTXGlow(text) {
 
   const match = text.match(
-    /Ship to:\s*(.*?)\s+(\d+\s+.+?)\s+(WEB\d+)\s+(.+?),\s*([A-Za-z\s]+)\s+(\d{5}(?:-\d{4})?)\s+United States/i
+    /Ship to:\s*(.*?)\s+(\d+\s+.+?)\s*\n\s*(.+?),\s*([A-Za-z\s]+)\s+([A-Z0-9\s-]+)\s+(United States|Canada)/i
   );
 
   if (!match) {
@@ -635,16 +635,39 @@ function extractAddressNTXGlow(text) {
     return {};
   }
 
+  const country = match[6].trim();
+
   return {
     name: match[1].trim(),
     addr1: match[2].trim(),
-    addr2: match[3].trim(),
-    city: match[4].trim(),
-    state: normalizeState(match[5].trim()),
-    zip: match[6].trim(),
-    country: "US",
+    addr2: "",
+    city: match[3].trim(),
+    state: normalizeState(match[4].trim()),
+    zip: match[5].trim().toUpperCase(),
+    country: country === "Canada" ? "CA" : "US",
     phone: "000-000-0000"
   };
+
+  // Canada format
+  match = text.match(
+    /Ship to:\s*(.*?)\s+(\d+\s+.+?)\s+([A-Z\s]+),\s*([A-Za-z\s]+)\s+([A-Z]\d[A-Z]\s?\d[A-Z]\d)\s+Canada/i
+  );
+
+  if (match) {
+    return {
+      name: match[1].trim(),
+      addr1: match[2].trim(),
+      addr2: "",
+      city: match[3].trim(),
+      state: normalizeState(match[4].trim()),
+      zip: match[5].trim().toUpperCase(),
+      country: "CA",
+      phone: "000-000-0000"
+    };
+  }
+
+  console.log("NTXGlow address failed:", text);
+  return {};
 }
 
 function cleanNTXGlowText(text) {
@@ -1521,7 +1544,14 @@ function buildRow(order, dealer, items, addr) {
   row["Ship Zip"] = addr.zip || "";
   row["Ship Country"] = detectCountry(addr);
   row["Ship Phone"] = addr.phone || "";
-  row["Ship Email"] = config.email;
+	
+  const isUS = /^(US|USA|United States)$/i.test(row["Ship Country"]);
+  const emailConfig =
+  dealer === "tdot" && isUS && config.us
+    ? config.us
+    : config;
+
+  row["Ship Email"] = emailConfig.email;
 
   const country = (addr.country || "").toUpperCase();
   row["Ship Service"] = country === "CA" || country === "CANADA" ? "ST" : "GND";
