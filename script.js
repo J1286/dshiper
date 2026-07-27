@@ -625,7 +625,7 @@ function extractAddressZ1(text) {
 function extractAddressNTXGlow(text) {
 
   const m = text.match(
-    /Ship to:\s*(.*?)\s+(\d+.+?)\s+(WEB\d+)\s+(.+?),\s*([A-Za-z\s]+)\s+(\d{5}(?:-\d{4})?)\s+United States/i
+    /Ship to:\s*(.*?)\s+(\d+.+?)\s+WEB\d+\s+(.+?),\s*([A-Za-z\s]+)\s+(\d{5}(?:-\d{4})?)\s+United States/i
   );
 
   if (!m) return {};
@@ -633,10 +633,10 @@ function extractAddressNTXGlow(text) {
   return {
     name: m[1].trim(),
     addr1: m[2].trim(),
-    addr2: m[3].trim(),
-    city: m[4].trim(),
-    state: normalizeState(m[5]),
-    zip: m[6],
+    addr2: "",
+    city: m[3].trim(),
+    state: normalizeState(m[4]),
+    zip: m[5],
     country: "US",
     phone: ""
   };
