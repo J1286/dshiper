@@ -624,33 +624,22 @@ function extractAddressZ1(text) {
 
 function extractAddressNTXGlow(text) {
 
-    const m = text.match(
-        /Ship to:\s*([\s\S]*?)Thank you,/i
-    );
+  const m = text.match(
+    /Ship to:\s*(.*?)\s+(\d+.+?)\s+(WEB\d+)\s+(.+?),\s*([A-Za-z\s]+)\s+(\d{5}(?:-\d{4})?)\s+United States/i
+  );
 
-    if (!m) return {};
+  if (!m) return {};
 
-    const lines = m[1]
-        .split(/\n/)
-        .map(l => l.trim())
-        .filter(Boolean);
-
-    const name = lines[0] || "";
-    const addr1 = lines[1] || "";
-    const addr2 = lines[2] || "";
-
-    const parsed = parseCityStateZip(lines[3] || "");
-
-    return {
-        name,
-        addr1,
-        addr2,
-        city: parsed.city,
-        state: parsed.state,
-        zip: parsed.zip,
-        country: "US",
-        phone: ""
-    };
+  return {
+    name: m[1].trim(),
+    addr1: m[2].trim(),
+    addr2: m[3].trim(),
+    city: m[4].trim(),
+    state: normalizeState(m[5]),
+    zip: m[6],
+    country: "US",
+    phone: ""
+  };
 }
 
 function extractItemsGeneric(text) {
