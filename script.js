@@ -903,22 +903,33 @@ function parseGeneric(order) {
   
   const country = (addr.country || "").toUpperCase();
   row["Ship Service"] = country === "CA" || country === "CANADA" ? "ST" : "GND";
+  row["Ship Ins."] = "";
+  row["Ship COD"] = "";
 
   const totalPrice = items.reduce((sum, item) => {
     const price = Number(getPrice(dealer, item.sku)) || 0;
     const qty = Number(item.qty) || 0;
-
     return sum + price * qty;
   }, 0);
 
-  row["Ship Ins."] = "";
-  row["Ship COD"] = "";
   row["Ship Confirm."] = totalPrice > 500 ? "Y" : "";
 
-  const isUS = /^(US|USA|United States)$/i.test(row["Ship Country"]);
-
-  row["Ship From"] = config.thirdParty && !isUS ? "Y" : "";
-  row["Ship Acct"] = config.thirdParty && !isUS ? "Y" : "";
+  // Z1 always uses third-party billing
+if (row["DShipper ID"] === "W7292") {
+  row["Ship From"] = "Y";
+  row["Ship Acct"] = "Y";
+}
+// TDOT only uses third-party billing for Canada
+else if (
+  row["DShipper ID"] === "W7290" &&
+  row["Ship Country"] === "CA"
+) {
+  row["Ship From"] = "Y";
+  row["Ship Acct"] = "Y";
+} else {
+  row["Ship From"] = "";
+  row["Ship Acct"] = "";
+}
 
   if (!items.length) {
     console.warn("Generic parser returned no items:", order);
@@ -1441,21 +1452,34 @@ function buildRow(order, dealer, items, addr) {
 
   const country = (addr.country || "").toUpperCase();
   row["Ship Service"] = country === "CA" || country === "CANADA" ? "ST" : "GND";
-  const totalPrice = items.reduce((sum, item) => {
-    const price = Number(getPrice(dealer, item.sku)) || 0;
-    const qty = Number(item.qty) || 0;
-
-    return sum + price * qty;
-  }, 0);
 
   row["Ship Ins."] = "";
   row["Ship COD"] = "";
+
+    const totalPrice = items.reduce((sum, item) => {
+    const price = Number(getPrice(dealer, item.sku)) || 0;
+    const qty = Number(item.qty) || 0;
+    return sum + price * qty;
+  }, 0);
+  
   row["Ship Confirm."] = totalPrice > 500 ? "Y" : "";
 
-  const isUS = /^(US|USA|United States)$/i.test(row["Ship Country"]);
-
-  row["Ship From"] = config.thirdParty && !isUS ? "Y" : "";
-  row["Ship Acct"] = config.thirdParty && !isUS ? "Y" : "";
+  // Z1 always uses third-party billing
+if (row["DShipper ID"] === "W7292") {
+  row["Ship From"] = "Y";
+  row["Ship Acct"] = "Y";
+}
+// TDOT only uses third-party billing for Canada
+else if (
+  row["DShipper ID"] === "W7290" &&
+  row["Ship Country"] === "CA"
+) {
+  row["Ship From"] = "Y";
+  row["Ship Acct"] = "Y";
+} else {
+  row["Ship From"] = "";
+  row["Ship Acct"] = "";
+}
 
   return [row];
 }
