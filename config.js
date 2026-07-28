@@ -100,7 +100,7 @@ const DSHIPPER_TO_DEALER = {
 	W5511: "aag",
 	W7290: "tdot",
   W7292: "z1",
-  W7266: "ntxglow
+  W7266: "ntxglow"
 };
 
 const STATE_MAP = {
