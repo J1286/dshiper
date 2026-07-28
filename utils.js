@@ -64,6 +64,10 @@ function removeSubstrings(items) {
 	);
 }
 
+function normalizeBrokenLines(text) {
+  return text.replace(/-\s*\n\s*/g, "-");
+}
+
 function stitchNextLineSKU(lines, index) {
   
 	const current = lines[index];
