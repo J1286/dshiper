@@ -86,13 +86,7 @@ function updateUnknownTable() {
 
 
 
-function getItemSection(text) {
-  const start = text.search(/Item\s+Vendor\s+SKU/i);
-  if (start === -1) return text;
 
-  const end = text.search(/total|subtotal|receive by/i);
-  return end > start ? text.slice(start, end) : text.slice(start);
-}
 
 function generatePluginSuggestion(text) {
   return {
