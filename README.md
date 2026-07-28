@@ -13,3 +13,4 @@ Browser-based order processing tool that:
 Future Features
 - Improve generic SKU detection
 - Add parser template generator
+- extractPhone() insdie parseGeneric() -> move to utils.js
