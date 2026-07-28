@@ -30,10 +30,6 @@ const PARSER_PLUGINS = {
     parse: parseNTXGlowWrapper,
     confidence: 0.95
 },
-  newdealer: {
-    parse: parseNewDealerWrapper,
-    confidence: 0.95
-  },
   generic: {
     parse: parseGeneric,
     confidence: 0.5
@@ -173,13 +169,7 @@ const DEALER_CONFIG = {
   dshipper: "W7266",
   email: "ntxglow@gmail.com",
   thirdParty: false 
-},
-
-  newdealer: { dshipper: "WXXXX", email: "tracking@email.com" },
-  newdealer2: {
-    dshipper: "WXXXX",
-    email: "whatever@email.com"
-  }
+	},
 };
 
 const DSHIPPER_TO_DEALER = {
@@ -238,7 +228,6 @@ function safeParseOrder(order) {
     case "tdot":
     case "z1":
     case "ntxglow":
-    case "newdealer":
       result = parseOrder(order);
       break;
 
@@ -1122,8 +1111,6 @@ function scoreDealer(text) {
     redline360: 0,
     tdot: 0,
     z1: 0,
-    newdealer: 0,
-    newdealer2: 0,
     ntxglow: 0
   };
 
@@ -1157,11 +1144,6 @@ function scoreDealer(text) {
 if (t.includes("ntxglow")) scores.ntxglow += 0.9;
 if (t.includes("sku / part #:")) scores.ntxglow += 0.3;
 if (t.includes("thank you, ntxglow")) scores.ntxglow += 0.5;
-
-  // -------- NEW DEALER --------
-  if (t.includes("ship to") && t.includes("brand")) scores.newdealer += 0.4;
-  if (t.includes("purchase order")) scores.newdealer += 0.2;
-  if (t.includes("unique keyword")) scores.newdealer2 += 0.8;
 
   return Object.entries(scores)
     .map(([dealer, score]) => ({ dealer, score }))
@@ -1243,23 +1225,6 @@ function extractItemsAAG(text) {
     });
   }
 
-  return items;
-}
-
-function extractItemsNewDealer(text) {
-  const items = [];
-  const section = text.split("Spec-D Tuning Items Purchased")[1];
-  if (!section) return items;
-  const lines = section
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean);
-  for (let line of lines) {
-    if (line.startsWith("Qty") || line.startsWith("Brand")) continue;
-    const parts = line.split(/\s{2,}|\t+/);
-    if (parts.length >= 2)
-      items.push({ sku: normalizeSKU(parts.at(-1)), qty: Number(parts[0]) });
-  }
   return items;
 }
 
@@ -1420,29 +1385,6 @@ function extractAddressAAG(text) {
   };
 }
 
-function extractAddressNewDealer(text) {
-  const lines = text
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean);
-  let start = lines.findIndex((l) => l.toLowerCase() === "ship to");
-  if (start === -1) return {};
-  const block = lines.slice(start + 1, start + 7);
-  let name = block[0] || "",
-    addr1 = block[2] || "",
-    cityLine = block[3] || "",
-    zip = block[4] || "",
-    phone = (block[5] || "").replace(/\D/g, "");
-  const m = cityLine.match(/^(.*),\s*(.*)$/);
-  let city = "",
-    state = "";
-  if (m) {
-    city = m[1];
-    state = normalizeState(m[2]);
-  }
-  return { name, addr1, addr2: "", city, state, zip, country: "", phone };
-}
-
 function detectCountry(addr) {
   const rawCountry = (addr.country || "").trim().toLowerCase();
   const zip = (addr.zip || "").replace(/\s+/g, "").toUpperCase();
@@ -1497,12 +1439,6 @@ function parseNTXGlowWrapper(order) {
   const items = extractItemsNTXGlow(order);
   const addr = extractAddressNTXGlow(order);
   return buildRow(order, "ntxglow", items, addr);
-}
-
-function parseNewDealerWrapper(order) {
-  const items = extractItemsNewDealer(order);
-  const addr = extractAddressNewDealer(order);
-  return buildRow(order, "newdealer", items, addr);
 }
 
 function buildRow(order, dealer, items, addr) {
@@ -1895,7 +1831,7 @@ function generateParserTemplate() {
 
   const text = selectedUnknownOrder.raw;
 
-  const dealerName = prompt("Name this new dealer format (e.g. newdealer2)");
+  const dealerName = prompt("Name this new dealer format (e.g. newdealer)");
   if (!dealerName) return;
 
   const safeName = dealerName.replace(/\s+/g, "_").toLowerCase();
