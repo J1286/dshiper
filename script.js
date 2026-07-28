@@ -1,17 +1,3 @@
-function updatePriceStatus() {
-  const el = document.getElementById("priceStatus");
-  const saved = localStorage.getItem("priceLastUpdated");
-
-  if (!saved) {
-    el.textContent = "No price table loaded";
-    return;
-  }
-
-  const date = new Date(saved);
-  const formatted = `${date.getMonth() + 1}/${date.getDate()}`;
-  el.textContent = `Price Table Updated: ${formatted}`;
-}
-
 const STATE_MAP = {
   alabama: "AL",
   alaska: "AK",
@@ -267,27 +253,6 @@ function closeRawViewer() {
   selectedUnknownOrder = null;
 }
 
-function stitchNextLineSKU(lines, index) {
-  const current = lines[index];
-  const next = lines[index + 1];
-
-  if (!current || !next) return null;
-
-  // ---- Case 1: broken with leading dash ----
-  if (
-    /[A-Z0-9]{4,}-[A-Z0-9]{2,}$/i.test(current) &&
-    /^-[A-Z0-9]{1,}$/i.test(next)
-  ) {
-    return current + next;
-  }
-
-  // ---- Case 2: trailing single fragment ----
-  if (/^[A-Z0-9-]{6,}$/i.test(current) && /^[A-Z0-9]{1,3}$/i.test(next)) {
-    return current + next;
-  }
-
-  return null;
-}
 
 function updateUnknownTable() {
   const head = document.getElementById("unknownHeader");
@@ -329,48 +294,6 @@ function updateUnknownTable() {
   });
 }
 
-function scoreSKU(str) {
-  if (!str) return 0;
-
-  let score = 0;
-
-  // --- core signals ---
-  if (/[A-Z]/i.test(str)) score += 0.2; // has letters
-  if (/\d/.test(str)) score += 0.2; // has numbers
-  if (/[-_]/.test(str)) score += 0.2; // has separator (very common in SKUs)
-
-  // --- structure ---
-  if (str.length >= 6 && str.length <= 25) score += 0.2;
-  if (/^[A-Z0-9-_]+$/i.test(str)) score += 0.2; // clean format
-
-  // --- strong SKU patterns ---
-  if (/^[A-Z]{2,}-\d{2,}/i.test(str)) score += 0.3; // ABC-123
-  if (/^[A-Z0-9]+-[A-Z0-9-]+$/i.test(str)) score += 0.3;
-
-  // --- penalties (VERY important) ---
-  if (/^\d{10,}$/.test(str)) score -= 0.6; // tracking number
-  if (/^\d+$/.test(str)) score -= 0.4; // pure number
-  if (/^\d{12,14}$/.test(str)) score -= 0.8; // UPC/EAN strong reject
-  if (/^\d{1,5}$/.test(str)) score -= 0.5; // small numbers
-  if (/invoice|order|tracking|phone/i.test(str)) score -= 0.5;
-
-  return score;
-}
-
-function isLikelySKU(str) {
-  return scoreSKU(str) >= 0.5;
-}
-
-function scoreSKUWithContext(line, prevLine = "", nextLine = "") {
-  let score = scoreSKU(line);
-
-  const context = (prevLine + " " + nextLine).toLowerCase();
-
-  if (/qty|quantity|item|sku/.test(context)) score += 0.2;
-  if (/\$\d+/.test(nextLine)) score += 0.1; // price nearby
-  if (/ship|address|phone/.test(context)) score -= 0.2;
-  return score;
-}
 
 function normalizeBrokenLines(text) {
   return text.replace(/-\s*\n\s*/g, "-");
@@ -382,10 +305,6 @@ function getItemSection(text) {
 
   const end = text.search(/total|subtotal|receive by/i);
   return end > start ? text.slice(start, end) : text.slice(start);
-}
-
-function isUPC(str) {
-  return /^\d{12}$/.test(str); // standard UPC
 }
 
 function extractItemsZ1(text) {
@@ -692,68 +611,6 @@ function extractItemsGeneric(text) {
   return cleaned.slice(0, 5);
 }
 
-function removeSubstrings(items) {
-  return items.filter(
-    (a) =>
-      !items.some(
-        (b) =>
-          b !== a && b.sku.includes(a.sku) && b.sku.length - a.sku.length > 3
-      )
-  );
-}
-
-function parseCityStateZip(line) {
-  if (!line) return {};
-
-  // --- US: City, State ZIP (State can be full name) ---
-  let m = line.match(/^(.*?)\s+([A-Z]{2})\s+(\d{5}(-\d{4})?)$/i);
-  if (m) {
-    const rawState = m[2].trim().toLowerCase();
-
-    return {
-      city: m[1].trim(),
-      state: normalizeState(rawState),
-      zip: m[3]
-    };
-  }
-
-  m = line.match(/^(.*?),\s*([A-Za-z\s]+),?\s*([A-Z]\d[A-Z]\s?\d[A-Z]\d)$/i);
-
-  if (m) {
-    return {
-      city: m[1].trim(),
-      state: normalizeState(m[2]),
-      zip: m[3]
-    };
-  }
-
-  // --- US: City, Full State, ZIP ---
-  m = line.match(/^(.*?),\s*([A-Za-z\s]+),\s*(\d{5}(?:-\d{4})?)$/i);
-
-  if (m) {
-    return {
-      city: m[1].trim(),
-      state: normalizeState(m[2]),
-      zip: m[3]
-    };
-  }
-
-  // --- Canada: City, Province Postal ---
-  m = line.match(/^(.*?),\s*([A-Za-z\s]+),?\s*([A-Z]\d[A-Z]\s?\d[A-Z]\d)$/i);
-
-  if (m) {
-    const rawState = m[2].trim().toLowerCase();
-
-    return {
-      city: m[1].trim(),
-      state: normalizeState(rawState),
-      zip: m[3].toUpperCase()
-    };
-  }
-
-  return {};
-}
-
 function extractAddressGeneric(text) {
   const block = extractBlock(
     text,
@@ -939,84 +796,7 @@ function parseGeneric(order) {
   return [row];
 }
 
-// -------- PRICE TABLE --------
-document.getElementById("priceFileInput").addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  const reader = new FileReader();
-  reader.onload = (evt) => {
-    const data = new Uint8Array(evt.target.result);
-    const workbook = XLSX.read(data, { type: "array" });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    allPriceRows = XLSX.utils.sheet_to_json(sheet);
 
-    // Save parsed data in localStorage
-    localStorage.setItem("priceRows", JSON.stringify(allPriceRows));
-
-    // Save timestamp
-    const now = new Date();
-    localStorage.setItem("priceLastUpdated", now.toISOString());
-
-    buildPriceTable();
-    updatePriceStatus(); // call function to update display
-  };
-  reader.readAsArrayBuffer(file);
-});
-
-function normalizeSKU(sku) {
-  if (!sku) return "";
-
-  let clean = sku
-    .replace(/\u00A0/g, " ")
-    .trim()
-    .toUpperCase();
-
-  clean = clean.replace(/^SPECDTUNING[-_]?/i, "");
-
-  return clean;
-}
-
-function buildPriceTable() {
-  priceTable = {
-    redline360: {},
-    aag: {},
-    tdot: {},
-    pq: {}
-  };
-
-  allPriceRows.forEach((r) => {
-    const sku = normalizeSKU(r["SKU"]);
-    if (!sku) return;
-
-    Object.keys(r).forEach((col) => {
-      const key = col.toLowerCase();
-
-      if (key.includes("redline")) {
-        priceTable.redline360[sku] = r[col];
-      } else if (key.includes("aag")) {
-        priceTable.aag[sku] = r[col];
-      } else if (key.includes("tdot")) {
-        priceTable.tdot[sku] = r[col];
-      } else if (key === "pq") {
-        priceTable.pq[sku] = r[col];
-      }
-    });
-  });
-}
-
-function getPrice(dealer, sku) {
-  if (!sku) return "";
-
-  let price = priceTable[dealer]?.[sku] ?? priceTable.pq?.[sku] ?? "";
-
-  if (price === "") return "";
-
-  // normalize floating point precision
-  const num = Number(price);
-
-  if (isNaN(num)) return price;
-
-  return num.toFixed(2);
-}
 
 function getSection(text, startLabel, endLabel) {
   const start = text.search(new RegExp(startLabel, "i"));
@@ -1157,31 +937,6 @@ function extractItemsAAG(text) {
 }
 
 // -------- ADDRESS PARSERS --------
-function normalizeState(state) {
-  if (!state) return "";
-
-  const s = state.trim().toLowerCase();
-  if (s.length === 2) return s.toUpperCase();
-
-  // US states first
-  if (STATE_MAP[s]) return STATE_MAP[s];
-
-  // Canadian provinces
-  if (PROVINCE_MAP[s]) return PROVINCE_MAP[s];
-
-  return state; // fallback
-}
-
-function normalizeCountry(addr) {
-  if (!addr.country) {
-    if (Object.values(PROVINCE_MAP).includes(addr.state)) {
-      addr.country = "CA";
-    } else {
-      addr.country = "US";
-    }
-  }
-  return addr;
-}
 
 function extractAddressRedline(order) {
   const phone =
@@ -1311,18 +1066,6 @@ function extractAddressAAG(text) {
     country: "",
     phone
   };
-}
-
-function detectCountry(addr) {
-  const rawCountry = (addr.country || "").trim().toLowerCase();
-  const zip = (addr.zip || "").replace(/\s+/g, "").toUpperCase();
-  if (rawCountry.includes("canada") || rawCountry === "ca") return "CA";
-  if (["us", "usa", "united states"].includes(rawCountry)) return "US";
-  const canadaPostalRegex = /^[A-Z]\d[A-Z]\d[A-Z]\d$/;
-  const usZipRegex = /^\d{5}(-\d{4})?$/;
-  if (canadaPostalRegex.test(zip)) return "CA";
-  if (usZipRegex.test(zip)) return "US";
-  return "US";
 }
 
 // -------- MAIN PARSER --------
