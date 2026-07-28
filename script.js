@@ -29,10 +29,6 @@ const PARSER_PLUGINS = {
   ntxglow: {
     parse: parseNTXGlowWrapper,
     confidence: 0.95
-},
-  newdealer: {
-    parse: parseNewDealerWrapper,
-    confidence: 0.95
   },
   generic: {
     parse: parseGeneric,
@@ -158,8 +154,8 @@ const DEALER_CONFIG = {
     email: "support@tdotperformance.ca",
     thirdParty: true,
     us: {
-    email: "support@automotivestuff.com",
-    thirdParty: false
+      email: "support@automotivestuff.com",
+      thirdParty: false
     }
   },
 
@@ -170,15 +166,9 @@ const DEALER_CONFIG = {
   },
 
   ntxglow: {
-  dshipper: "W7266",
-  email: "ntxglow@gmail.com",
-  thirdParty: false 
-},
-
-  newdealer: { dshipper: "WXXXX", email: "tracking@email.com" },
-  newdealer2: {
-    dshipper: "WXXXX",
-    email: "whatever@email.com"
+    dshipper: "W7266",
+    email: "ntxglow@gmail.com",
+    thirdParty: false
   }
 };
 
@@ -238,7 +228,6 @@ function safeParseOrder(order) {
     case "tdot":
     case "z1":
     case "ntxglow":
-    case "newdealer":
       result = parseOrder(order);
       break;
 
@@ -532,8 +521,7 @@ function extractItemsZ1(text) {
 function extractItemsTDOT(text) {
   const items = [];
 
-  const regex =
-    /QTY:\s*(\d+)\s*-\s*SpecDTuning-([A-Z0-9-]+)/gi;
+  const regex = /QTY:\s*(\d+)\s*-\s*SpecDTuning-([A-Z0-9-]+)/gi;
 
   let match;
 
@@ -625,7 +613,6 @@ function extractAddressZ1(text) {
 }
 
 function extractAddressNTXGlow(text) {
-
   const match = text.match(
     /Ship to:\s*(.*?)\s+(\d+\s+.+?)\s*\n\s*(.+?),\s*([A-Za-z\s]+)\s+([A-Z0-9\s-]+)\s+(United States|Canada)/i
   );
@@ -671,10 +658,7 @@ function extractAddressNTXGlow(text) {
 }
 
 function cleanNTXGlowText(text) {
-  return text.replace(
-    /Ship to:[\s\S]*?United States/i,
-    ""
-  );
+  return text.replace(/Ship to:[\s\S]*?United States/i, "");
 }
 
 function extractItemsNTXGlow(text) {
@@ -749,8 +733,7 @@ function extractItemsGeneric(text) {
           score: scoreSKUWithContext(m, lines[i - 1], lines[i + 1])
         }))
         .filter((m) => !isUPC(m.raw))
-	.filter((m) => !/^\d{5}(-\d{4})?$/.test(m.raw));
-
+        .filter((m) => !/^\d{5}(-\d{4})?$/.test(m.raw));
 
       if (scored.length) {
         const best = scored.sort((a, b) => b.score - a.score)[0];
@@ -808,15 +791,15 @@ function parseCityStateZip(line) {
   }
 
   // --- US: City, Full State, ZIP ---
-m = line.match(/^(.*?),\s*([A-Za-z\s]+),\s*(\d{5}(?:-\d{4})?)$/i);
+  m = line.match(/^(.*?),\s*([A-Za-z\s]+),\s*(\d{5}(?:-\d{4})?)$/i);
 
-if (m) {
-  return {
-    city: m[1].trim(),
-    state: normalizeState(m[2]),
-    zip: m[3]
-  };
-}
+  if (m) {
+    return {
+      city: m[1].trim(),
+      state: normalizeState(m[2]),
+      zip: m[3]
+    };
+  }
 
   // --- Canada: City, Province Postal ---
   m = line.match(/^(.*?),\s*([A-Za-z\s]+),?\s*([A-Z]\d[A-Z]\s?\d[A-Z]\d)$/i);
@@ -984,7 +967,7 @@ function parseGeneric(order) {
   row["Ship Country"] = detectCountry(addr);
   row["Ship Phone"] = addr.phone || "";
   row["Ship Email"] = config.email;
-  
+
   const country = (addr.country || "").toUpperCase();
   row["Ship Service"] = country === "CA" || country === "CANADA" ? "ST" : "GND";
   row["Ship Ins."] = "";
@@ -999,21 +982,18 @@ function parseGeneric(order) {
   row["Ship Confirm."] = totalPrice > 500 ? "Y" : "";
 
   // Z1 always uses third-party billing
-if (row["DShipper ID"] === "W7292") {
-  row["Ship From"] = "Y";
-  row["Ship Acct"] = "Y";
-}
-// TDOT only uses third-party billing for Canada
-else if (
-  row["DShipper ID"] === "W7290" &&
-  row["Ship Country"] === "CA"
-) {
-  row["Ship From"] = "Y";
-  row["Ship Acct"] = "Y";
-} else {
-  row["Ship From"] = "";
-  row["Ship Acct"] = "";
-}
+  if (row["DShipper ID"] === "W7292") {
+    row["Ship From"] = "Y";
+    row["Ship Acct"] = "Y";
+  }
+  // TDOT only uses third-party billing for Canada
+  else if (row["DShipper ID"] === "W7290" && row["Ship Country"] === "CA") {
+    row["Ship From"] = "Y";
+    row["Ship Acct"] = "Y";
+  } else {
+    row["Ship From"] = "";
+    row["Ship Acct"] = "";
+  }
 
   if (!items.length) {
     console.warn("Generic parser returned no items:", order);
@@ -1122,8 +1102,6 @@ function scoreDealer(text) {
     redline360: 0,
     tdot: 0,
     z1: 0,
-    newdealer: 0,
-    newdealer2: 0,
     ntxglow: 0
   };
 
@@ -1153,15 +1131,10 @@ function scoreDealer(text) {
   if (t.includes("purchase order number")) scores.z1 += 0.2;
   if (t.includes("products item number")) scores.z1 += 0.3;
 
-// -------- NTXGlow --------
-if (t.includes("ntxglow")) scores.ntxglow += 0.9;
-if (t.includes("sku / part #:")) scores.ntxglow += 0.3;
-if (t.includes("thank you, ntxglow")) scores.ntxglow += 0.5;
-
-  // -------- NEW DEALER --------
-  if (t.includes("ship to") && t.includes("brand")) scores.newdealer += 0.4;
-  if (t.includes("purchase order")) scores.newdealer += 0.2;
-  if (t.includes("unique keyword")) scores.newdealer2 += 0.8;
+  // -------- NTXGlow --------
+  if (t.includes("ntxglow")) scores.ntxglow += 0.9;
+  if (t.includes("sku / part #:")) scores.ntxglow += 0.3;
+  if (t.includes("thank you, ntxglow")) scores.ntxglow += 0.5;
 
   return Object.entries(scores)
     .map(([dealer, score]) => ({ dealer, score }))
@@ -1243,23 +1216,6 @@ function extractItemsAAG(text) {
     });
   }
 
-  return items;
-}
-
-function extractItemsNewDealer(text) {
-  const items = [];
-  const section = text.split("Spec-D Tuning Items Purchased")[1];
-  if (!section) return items;
-  const lines = section
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean);
-  for (let line of lines) {
-    if (line.startsWith("Qty") || line.startsWith("Brand")) continue;
-    const parts = line.split(/\s{2,}|\t+/);
-    if (parts.length >= 2)
-      items.push({ sku: normalizeSKU(parts.at(-1)), qty: Number(parts[0]) });
-  }
   return items;
 }
 
@@ -1420,29 +1376,6 @@ function extractAddressAAG(text) {
   };
 }
 
-function extractAddressNewDealer(text) {
-  const lines = text
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean);
-  let start = lines.findIndex((l) => l.toLowerCase() === "ship to");
-  if (start === -1) return {};
-  const block = lines.slice(start + 1, start + 7);
-  let name = block[0] || "",
-    addr1 = block[2] || "",
-    cityLine = block[3] || "",
-    zip = block[4] || "",
-    phone = (block[5] || "").replace(/\D/g, "");
-  const m = cityLine.match(/^(.*),\s*(.*)$/);
-  let city = "",
-    state = "";
-  if (m) {
-    city = m[1];
-    state = normalizeState(m[2]);
-  }
-  return { name, addr1, addr2: "", city, state, zip, country: "", phone };
-}
-
 function detectCountry(addr) {
   const rawCountry = (addr.country || "").trim().toLowerCase();
   const zip = (addr.zip || "").replace(/\s+/g, "").toUpperCase();
@@ -1499,12 +1432,6 @@ function parseNTXGlowWrapper(order) {
   return buildRow(order, "ntxglow", items, addr);
 }
 
-function parseNewDealerWrapper(order) {
-  const items = extractItemsNewDealer(order);
-  const addr = extractAddressNewDealer(order);
-  return buildRow(order, "newdealer", items, addr);
-}
-
 function buildRow(order, dealer, items, addr) {
   const config = DEALER_CONFIG[dealer] || DEALER_CONFIG["redline360"];
 
@@ -1544,12 +1471,10 @@ function buildRow(order, dealer, items, addr) {
   row["Ship Zip"] = addr.zip || "";
   row["Ship Country"] = detectCountry(addr);
   row["Ship Phone"] = addr.phone || "";
-	
+
   const isUS = /^(US|USA|United States)$/i.test(row["Ship Country"]);
   const emailConfig =
-  dealer === "tdot" && isUS && config.us
-    ? config.us
-    : config;
+    dealer === "tdot" && isUS && config.us ? config.us : config;
 
   row["Ship Email"] = emailConfig.email;
 
@@ -1559,30 +1484,27 @@ function buildRow(order, dealer, items, addr) {
   row["Ship Ins."] = "";
   row["Ship COD"] = "";
 
-    const totalPrice = items.reduce((sum, item) => {
+  const totalPrice = items.reduce((sum, item) => {
     const price = Number(getPrice(dealer, item.sku)) || 0;
     const qty = Number(item.qty) || 0;
     return sum + price * qty;
   }, 0);
-  
+
   row["Ship Confirm."] = totalPrice > 500 ? "Y" : "";
 
   // Z1 always uses third-party billing
-if (row["DShipper ID"] === "W7292") {
-  row["Ship From"] = "Y";
-  row["Ship Acct"] = "Y";
-}
-// TDOT only uses third-party billing for Canada
-else if (
-  row["DShipper ID"] === "W7290" &&
-  row["Ship Country"] === "CA"
-) {
-  row["Ship From"] = "Y";
-  row["Ship Acct"] = "Y";
-} else {
-  row["Ship From"] = "";
-  row["Ship Acct"] = "";
-}
+  if (row["DShipper ID"] === "W7292") {
+    row["Ship From"] = "Y";
+    row["Ship Acct"] = "Y";
+  }
+  // TDOT only uses third-party billing for Canada
+  else if (row["DShipper ID"] === "W7290" && row["Ship Country"] === "CA") {
+    row["Ship From"] = "Y";
+    row["Ship Acct"] = "Y";
+  } else {
+    row["Ship From"] = "";
+    row["Ship Acct"] = "";
+  }
 
   return [row];
 }
@@ -1895,7 +1817,7 @@ function generateParserTemplate() {
 
   const text = selectedUnknownOrder.raw;
 
-  const dealerName = prompt("Name this new dealer format (e.g. newdealer2)");
+  const dealerName = prompt("Name this new dealer format (e.g. newdealer)");
   if (!dealerName) return;
 
   const safeName = dealerName.replace(/\s+/g, "_").toLowerCase();
