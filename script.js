@@ -926,15 +926,6 @@ function parseGeneric(order) {
     if (fallback) po = fallback[2];
   }
 
-  function extractPhone(text) {
-    const match =
-      text.match(
-        /\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/
-      )?.[0] || "";
-
-    return match.replace(/\D/g, "");
-  }
-
   const detectedDealer = detectBestDealer(order).dealer;
   const config = DEALER_CONFIG[detectedDealer] || DEALER_CONFIG["redline360"];
 
@@ -1375,6 +1366,15 @@ function extractAddressAAG(text) {
     phone
   };
 }
+
+  function extractPhone(text) {
+    const match =
+      text.match(
+        /\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/
+      )?.[0] || "";
+
+    return match.replace(/\D/g, "");
+  }
 
 function detectCountry(addr) {
   const rawCountry = (addr.country || "").trim().toLowerCase();
