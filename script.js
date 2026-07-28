@@ -84,9 +84,7 @@ function updateUnknownTable() {
 }
 
 
-function normalizeBrokenLines(text) {
-  return text.replace(/-\s*\n\s*/g, "-");
-}
+
 
 function getItemSection(text) {
   const start = text.search(/Item\s+Vendor\s+SKU/i);
