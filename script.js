@@ -29,7 +29,7 @@ const PARSER_PLUGINS = {
   ntxglow: {
     parse: parseNTXGlowWrapper,
     confidence: 0.95
-},
+  },
   generic: {
     parse: parseGeneric,
     confidence: 0.5
@@ -154,8 +154,8 @@ const DEALER_CONFIG = {
     email: "support@tdotperformance.ca",
     thirdParty: true,
     us: {
-    email: "support@automotivestuff.com",
-    thirdParty: false
+      email: "support@automotivestuff.com",
+      thirdParty: false
     }
   },
 
@@ -166,10 +166,10 @@ const DEALER_CONFIG = {
   },
 
   ntxglow: {
-  dshipper: "W7266",
-  email: "ntxglow@gmail.com",
-  thirdParty: false 
-	},
+    dshipper: "W7266",
+    email: "ntxglow@gmail.com",
+    thirdParty: false
+  }
 };
 
 const DSHIPPER_TO_DEALER = {
@@ -521,8 +521,7 @@ function extractItemsZ1(text) {
 function extractItemsTDOT(text) {
   const items = [];
 
-  const regex =
-    /QTY:\s*(\d+)\s*-\s*SpecDTuning-([A-Z0-9-]+)/gi;
+  const regex = /QTY:\s*(\d+)\s*-\s*SpecDTuning-([A-Z0-9-]+)/gi;
 
   let match;
 
@@ -614,7 +613,6 @@ function extractAddressZ1(text) {
 }
 
 function extractAddressNTXGlow(text) {
-
   const match = text.match(
     /Ship to:\s*(.*?)\s+(\d+\s+.+?)\s*\n\s*(.+?),\s*([A-Za-z\s]+)\s+([A-Z0-9\s-]+)\s+(United States|Canada)/i
   );
@@ -660,10 +658,7 @@ function extractAddressNTXGlow(text) {
 }
 
 function cleanNTXGlowText(text) {
-  return text.replace(
-    /Ship to:[\s\S]*?United States/i,
-    ""
-  );
+  return text.replace(/Ship to:[\s\S]*?United States/i, "");
 }
 
 function extractItemsNTXGlow(text) {
@@ -738,8 +733,7 @@ function extractItemsGeneric(text) {
           score: scoreSKUWithContext(m, lines[i - 1], lines[i + 1])
         }))
         .filter((m) => !isUPC(m.raw))
-	.filter((m) => !/^\d{5}(-\d{4})?$/.test(m.raw));
-
+        .filter((m) => !/^\d{5}(-\d{4})?$/.test(m.raw));
 
       if (scored.length) {
         const best = scored.sort((a, b) => b.score - a.score)[0];
@@ -797,15 +791,15 @@ function parseCityStateZip(line) {
   }
 
   // --- US: City, Full State, ZIP ---
-m = line.match(/^(.*?),\s*([A-Za-z\s]+),\s*(\d{5}(?:-\d{4})?)$/i);
+  m = line.match(/^(.*?),\s*([A-Za-z\s]+),\s*(\d{5}(?:-\d{4})?)$/i);
 
-if (m) {
-  return {
-    city: m[1].trim(),
-    state: normalizeState(m[2]),
-    zip: m[3]
-  };
-}
+  if (m) {
+    return {
+      city: m[1].trim(),
+      state: normalizeState(m[2]),
+      zip: m[3]
+    };
+  }
 
   // --- Canada: City, Province Postal ---
   m = line.match(/^(.*?),\s*([A-Za-z\s]+),?\s*([A-Z]\d[A-Z]\s?\d[A-Z]\d)$/i);
@@ -973,7 +967,7 @@ function parseGeneric(order) {
   row["Ship Country"] = detectCountry(addr);
   row["Ship Phone"] = addr.phone || "";
   row["Ship Email"] = config.email;
-  
+
   const country = (addr.country || "").toUpperCase();
   row["Ship Service"] = country === "CA" || country === "CANADA" ? "ST" : "GND";
   row["Ship Ins."] = "";
@@ -988,21 +982,18 @@ function parseGeneric(order) {
   row["Ship Confirm."] = totalPrice > 500 ? "Y" : "";
 
   // Z1 always uses third-party billing
-if (row["DShipper ID"] === "W7292") {
-  row["Ship From"] = "Y";
-  row["Ship Acct"] = "Y";
-}
-// TDOT only uses third-party billing for Canada
-else if (
-  row["DShipper ID"] === "W7290" &&
-  row["Ship Country"] === "CA"
-) {
-  row["Ship From"] = "Y";
-  row["Ship Acct"] = "Y";
-} else {
-  row["Ship From"] = "";
-  row["Ship Acct"] = "";
-}
+  if (row["DShipper ID"] === "W7292") {
+    row["Ship From"] = "Y";
+    row["Ship Acct"] = "Y";
+  }
+  // TDOT only uses third-party billing for Canada
+  else if (row["DShipper ID"] === "W7290" && row["Ship Country"] === "CA") {
+    row["Ship From"] = "Y";
+    row["Ship Acct"] = "Y";
+  } else {
+    row["Ship From"] = "";
+    row["Ship Acct"] = "";
+  }
 
   if (!items.length) {
     console.warn("Generic parser returned no items:", order);
@@ -1140,10 +1131,10 @@ function scoreDealer(text) {
   if (t.includes("purchase order number")) scores.z1 += 0.2;
   if (t.includes("products item number")) scores.z1 += 0.3;
 
-// -------- NTXGlow --------
-if (t.includes("ntxglow")) scores.ntxglow += 0.9;
-if (t.includes("sku / part #:")) scores.ntxglow += 0.3;
-if (t.includes("thank you, ntxglow")) scores.ntxglow += 0.5;
+  // -------- NTXGlow --------
+  if (t.includes("ntxglow")) scores.ntxglow += 0.9;
+  if (t.includes("sku / part #:")) scores.ntxglow += 0.3;
+  if (t.includes("thank you, ntxglow")) scores.ntxglow += 0.5;
 
   return Object.entries(scores)
     .map(([dealer, score]) => ({ dealer, score }))
@@ -1480,12 +1471,10 @@ function buildRow(order, dealer, items, addr) {
   row["Ship Zip"] = addr.zip || "";
   row["Ship Country"] = detectCountry(addr);
   row["Ship Phone"] = addr.phone || "";
-	
+
   const isUS = /^(US|USA|United States)$/i.test(row["Ship Country"]);
   const emailConfig =
-  dealer === "tdot" && isUS && config.us
-    ? config.us
-    : config;
+    dealer === "tdot" && isUS && config.us ? config.us : config;
 
   row["Ship Email"] = emailConfig.email;
 
@@ -1495,30 +1484,27 @@ function buildRow(order, dealer, items, addr) {
   row["Ship Ins."] = "";
   row["Ship COD"] = "";
 
-    const totalPrice = items.reduce((sum, item) => {
+  const totalPrice = items.reduce((sum, item) => {
     const price = Number(getPrice(dealer, item.sku)) || 0;
     const qty = Number(item.qty) || 0;
     return sum + price * qty;
   }, 0);
-  
+
   row["Ship Confirm."] = totalPrice > 500 ? "Y" : "";
 
   // Z1 always uses third-party billing
-if (row["DShipper ID"] === "W7292") {
-  row["Ship From"] = "Y";
-  row["Ship Acct"] = "Y";
-}
-// TDOT only uses third-party billing for Canada
-else if (
-  row["DShipper ID"] === "W7290" &&
-  row["Ship Country"] === "CA"
-) {
-  row["Ship From"] = "Y";
-  row["Ship Acct"] = "Y";
-} else {
-  row["Ship From"] = "";
-  row["Ship Acct"] = "";
-}
+  if (row["DShipper ID"] === "W7292") {
+    row["Ship From"] = "Y";
+    row["Ship Acct"] = "Y";
+  }
+  // TDOT only uses third-party billing for Canada
+  else if (row["DShipper ID"] === "W7290" && row["Ship Country"] === "CA") {
+    row["Ship From"] = "Y";
+    row["Ship Acct"] = "Y";
+  } else {
+    row["Ship From"] = "";
+    row["Ship Acct"] = "";
+  }
 
   return [row];
 }
