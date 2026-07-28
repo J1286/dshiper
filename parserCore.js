@@ -230,53 +230,49 @@ function getDealerFromRow(row) {
 	return DSHIPPER_TO_DEALER[row["DShipper ID"]] || "redline360";
 }
 
-// done above
-
-
-
-
-
-
 function scoreDealer(text) {
-  const t = text.toLowerCase();
+	const t = text.toLowerCase();
 
-  const scores = {
-    aag: 0,
-    redline360: 0,
-    tdot: 0,
-    z1: 0,
-    newdealer: 0,
-    newdealer2: 0
-  };
+	const scores = {
+		aag: 0,
+		redline360: 0,
+		tdot: 0,
+		z1: 0,
+		ntxglow: 0
+	};
 
-  // -------- AAG --------
-  if (t.includes("spec-d tuning items purchased")) scores.aag += 0.6;
-  if (t.includes("bill to") && t.includes("ship to")) scores.aag += 0.2;
-  if (t.includes("aag")) scores.aag += 0.2;
+	// -------- AAG --------
+	if (t.includes("spec-d tuning items purchased")) scores.aag += 0.6;
+	if (t.includes("bill to") && t.includes("ship to")) scores.aag += 0.2;
+	if (t.includes("aag")) scores.aag += 0.2;
 
-  // -------- REDLINE --------
-  if (t.includes("redline360")) scores.redline360 += 0.8;
-  if (t.includes("sku:")) scores.redline360 += 0.1;
-  if (t.includes("quantity:")) scores.redline360 += 0.1;
+	// -------- REDLINE --------
+	if (t.includes("redline360")) scores.redline360 += 0.8;
+	if (t.includes("sku:")) scores.redline360 += 0.1;
+	if (t.includes("quantity:")) scores.redline360 += 0.1;
 
-  // -------- TDOT --------
-  if (t.includes("tdot")) scores.tdot += 0.7;
-  if (/tdot\s*performance/i.test(t)) scores.tdot += 0.3;
+	// -------- TDOT --------
+	if (t.includes("tdot")) scores.tdot += 0.7;
+	if (/tdot\s*performance/i.test(t)) scores.tdot += 0.3;
 
-  // -------- Z1 --------
-  if (t.includes("z1 motorsports")) scores.z1 += 0.8;
-  if (t.includes("qty") && /[a-z0-9-]{6,}/i.test(t)) scores.z1 += 0.2;
-  if (t.includes("purchase order") && t.includes("fedex")) scores.z1 += 0.2;
-  if (t.includes("deliver to")) scores.z1 += 0.2;
-  if (t.includes("purchase order number")) scores.z1 += 0.2;
-  if (t.includes("products item number")) scores.z1 += 0.3;
+	// TDOT US format
+	if (t.includes("new spec d tuning order po")) scores.tdot += 0.8;
+	if (t.includes("specdtuning-")) scores.tdot += 0.2;
 
-  // -------- NEW DEALER --------
-  if (t.includes("ship to") && t.includes("brand")) scores.newdealer += 0.4;
-  if (t.includes("purchase order")) scores.newdealer += 0.2;
-  if (t.includes("unique keyword")) scores.newdealer2 += 0.8;
+	// -------- Z1 --------
+	if (t.includes("z1 motorsports")) scores.z1 += 0.8;
+	if (t.includes("qty") && /[a-z0-9-]{6,}/i.test(t)) scores.z1 += 0.2;
+	if (t.includes("purchase order") && t.includes("fedex")) scores.z1 += 0.2;
+	if (t.includes("deliver to")) scores.z1 += 0.2;
+	if (t.includes("purchase order number")) scores.z1 += 0.2;
+	if (t.includes("products item number")) scores.z1 += 0.3;
 
-  return Object.entries(scores)
-    .map(([dealer, score]) => ({ dealer, score }))
-    .sort((a, b) => b.score - a.score);
+	// -------- NTXGlow --------
+	if (t.includes("ntxglow")) scores.ntxglow += 0.9;
+	if (t.includes("sku / part #:")) scores.ntxglow += 0.3;
+	if (t.includes("thank you, ntxglow")) scores.ntxglow += 0.5;
+
+	return Object.entries(scores)
+		.map(([dealer, score]) => ({ dealer, score }))
+		.sort((a, b) => b.score - a.score);
 }
