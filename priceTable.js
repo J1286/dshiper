@@ -45,7 +45,7 @@ function buildPriceTable() {
 				priceTable.tdot[sku] = r[col];
 			} else if (key === "pq") {
 				priceTable.pq[sku] = r[col];
-			} else if (key === "ntxglow") {
+			} else if (key.includes("ntxglow")) {
 				priceTable.ntxglow[sku] = r[col]
 		});
 	});
