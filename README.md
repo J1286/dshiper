@@ -11,5 +11,4 @@ Browser-based order processing tool that:
 - Refactor completed
 
 Future Features
-- Improve generic SKU detection
 - Add parser template generator
