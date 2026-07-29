@@ -26,7 +26,8 @@ function buildPriceTable() {
 		redline360: {},
 		aag: {},
 		tdot: {},
-		pq: {}
+		pq: {},
+		ntxglow: {}
 	};
 
 	allPriceRows.forEach((r) => {
@@ -44,7 +45,8 @@ function buildPriceTable() {
 				priceTable.tdot[sku] = r[col];
 			} else if (key === "pq") {
 				priceTable.pq[sku] = r[col];
-			}
+			} else if (key === "ntxglow") {
+				priceTable.ntxglow[sku] = r[col];
 		});
 	});
 }
