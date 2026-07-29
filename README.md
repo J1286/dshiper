@@ -12,3 +12,5 @@ Browser-based order processing tool that:
 
 Future Features
 - Add parser template generator
+- Edit saved order
+- Search saved order
