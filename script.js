@@ -1029,41 +1029,35 @@ function normalizeSKU(sku) {
   return clean;
 }
 
-  function extractPhone(text) {
-    const match =
-      text.match(
-        /\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/
-      )?.[0] || "";
-
-    return match.replace(/\D/g, "");
-  }
-
 function buildPriceTable() {
-  priceTable = {
-    redline360: {},
-    aag: {},
-    tdot: {},
-    pq: {}
-  };
+	priceTable = {
+		redline360: {},
+		aag: {},
+		tdot: {},
+		pq: {},
+		ntxglow: {}
+	};
 
-  allPriceRows.forEach((r) => {
-    const sku = normalizeSKU(r["SKU"]);
-    if (!sku) return;
+	allPriceRows.forEach((r) => {
+		const sku = normalizeSKU(r["SKU"]);
+		if (!sku) return;
 
-    Object.keys(r).forEach((col) => {
-      const key = col.toLowerCase();
+		Object.keys(r).forEach((col) => {
+			const key = col.toLowerCase();
 
-      if (key.includes("redline")) {
-        priceTable.redline360[sku] = r[col];
-      } else if (key.includes("aag")) {
-        priceTable.aag[sku] = r[col];
-      } else if (key.includes("tdot")) {
-        priceTable.tdot[sku] = r[col];
-      } else if (key === "pq") {
-        priceTable.pq[sku] = r[col];
-      }
-    });
-  });
+			if (key.includes("redline")) {
+				priceTable.redline360[sku] = r[col];
+			} else if (key.includes("aag")) {
+				priceTable.aag[sku] = r[col];
+			} else if (key.includes("tdot")) {
+				priceTable.tdot[sku] = r[col];
+			} else if (key === "pq") {
+				priceTable.pq[sku] = r[col];
+			} else if (key.includes("ntxglow")) {
+				priceTable.ntxglow[sku] = r[col]
+			}
+		});
+	});
 }
 
 function getPrice(dealer, sku) {
@@ -1375,6 +1369,15 @@ function extractAddressAAG(text) {
     phone
   };
 }
+
+  function extractPhone(text) {
+    const match =
+      text.match(
+        /\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/
+      )?.[0] || "";
+
+    return match.replace(/\D/g, "");
+  }
 
 function detectCountry(addr) {
   const rawCountry = (addr.country || "").trim().toLowerCase();
