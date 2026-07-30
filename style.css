@@ -65,7 +65,6 @@ th {
 #layout {
   display: flex;
   align-items: flex-start;
-  gap: 20px;
 }
 
 #sidebar {
