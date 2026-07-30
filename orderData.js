@@ -141,9 +141,17 @@ function updateSavedTable() {
 
   // normal headers
   headers.forEach((h) => {
-    const th = document.createElement("th");
-    th.textContent = h;
-    head.appendChild(th);
+    const td = document.createElement("td");
+
+    td.textContent = r[h] || "";
+
+    td.contentEditable = editingRow === index;
+
+    if (editingRow === index) {
+      td.style.background = "#fff8c5";
+    }
+
+    tr.appendChild(td);
   });
 
   // ---- rows ----
@@ -157,6 +165,45 @@ function updateSavedTable() {
 
     // actions cell
     const actionTd = document.createElement("td");
+
+    const editBtn = document.createElement("button");
+    editBtn.className = "action-btn";
+    editBtn.textContent = editingRow === index ? "💾" : "✏️";
+
+    editBtn.onclick = () => {
+      if (editingRow === index) {
+        // Save the edited row
+        const cells = tr.querySelectorAll("td");
+
+        headers.forEach((h, i) => {
+          savedOrders[index][h] = cells[i + 2].textContent;
+        });
+
+        const dealer = getDealerFromRow(savedOrders[index]);
+
+        for (let i = 1; i <= 5; i++) {
+          const skuField = `Item ID ${i}`;
+          const priceField = `Price ${i}`;
+
+          const newSku = savedOrders[index][skuField];
+          const oldSku = r[skuField];
+
+          if (newSku !== oldSku) {
+            savedOrders[index][priceField] = getPrice(dealer, newSku);
+          }
+        }
+
+        recalculateShipConfirm(savedOrders[index]);
+
+        localStorage.setItem("savedOrders", JSON.stringify(savedOrders));
+
+        editingRow = -1;
+      } else {
+        editingRow = index;
+      }
+
+      updateSavedTable();
+    };
 
     const copyBtn = document.createElement("button");
     copyBtn.textContent = "📋";
@@ -192,6 +239,7 @@ function updateSavedTable() {
     copyBtn.className = "action-btn";
     deleteBtn.className = "action-btn";
 
+    actionTd.appendChild(editBtn);
     actionTd.appendChild(copyBtn);
     actionTd.appendChild(deleteBtn);
 
