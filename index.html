@@ -7,41 +7,41 @@
   <link rel="stylesheet" href="./style.css">
 </head>
 
-<body>
+<div id="layout">
+  <div id="sidebar">
 
-  <div id="layout">
-    <div id="sidebar">
+    <h2>📊 Dashboard</h2>
+    <hr>
+    <h3>Dealers</h3>
 
-      <h2>📊 Dashboard</h2>
-      <hr>
-      <h3>Dealers</h3>
-
-      <div class="stat">
-        <span>Redline360</span>
-        <strong id="dashRedline">0</strong>
-      </div>
-
-      <div class="stat">
-        <span>AAG</span>
-        <strong id="dashAAG">0</strong>
-      </div>
-
-      <div class="stat">
-        <span>TDOT</span>
-        <strong id="dashTDOT">0</strong>
-      </div>
-
-      <div class="stat">
-        <span>Z1</span>
-        <strong id="dashZ1">0</strong>
-      </div>
-
-      <div class="stat">
-        <span>NTXGlow</span>
-        <strong id="dashNTX">0</strong>
-      </div>
+    <div class="stat">
+      <span>Redline360</span>
+      <strong id="dashRedline">0</strong>
     </div>
 
+    <div class="stat">
+      <span>AAG</span>
+      <strong id="dashAAG">0</strong>
+    </div>
+
+    <div class="stat">
+      <span>TDOT</span>
+      <strong id="dashTDOT">0</strong>
+    </div>
+
+    <div class="stat">
+      <span>Z1</span>
+      <strong id="dashZ1">0</strong>
+    </div>
+
+    <div class="stat">
+      <span>NTXGlow</span>
+      <strong id="dashNTX">0</strong>
+    </div>
+
+  </div>
+
+  <body>
     <div id="app">
 
       <!-- Price Table Upload -->
@@ -109,17 +109,17 @@
 
       </div>
     </div>
-  </div>
-  <script src='https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js'></script>
-  <script src="./orderData.js"></script>
-  <script src="./utils.js"></script>
-  <script src="./dealerParsers.js"></script>
-  <script src="./genericParser.js"></script>
-  <script src="./config.js"></script>
-  <script src="./priceTable.js"></script>
-  <script src="./parserCore.js"></script>
-  <script src="./app.js"></script>
+    <script src='https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js'></script>
+    <script src="./orderData.js"></script>
+    <script src="./utils.js"></script>
+    <script src="./dealerParsers.js"></script>
+    <script src="./genericParser.js"></script>
+    <script src="./config.js"></script>
+    <script src="./priceTable.js"></script>
+    <script src="./parserCore.js"></script>
+    <script src="./app.js"></script>
 
-</body>
+  </body>
+</div>
 
 </html>
