@@ -232,24 +232,28 @@ function updateSavedTable() {
 
     // normal cells
     headers.forEach((h) => {
-      const td = document.createElement("td");
+    const td = document.createElement("td");
 
-      td.textContent = r[h] || "";
+    td.textContent = r[h] || "";
 
-      td.onblur = () => {
+    td.contentEditable = (editingRow === index);
+
+    if (editingRow === index) {
+        td.style.background = "#fff8c5";
+    }
+
+    td.onblur = () => {
         savedOrders[index][h] = td.textContent;
 
-        // Keep Ship Confirm updated
         if (h.startsWith("Qty") || h.startsWith("Price")) {
-          recalculateShipConfirm(savedOrders[index]);
-          updateSavedTable();
+            recalculateShipConfirm(savedOrders[index]);
         }
 
         localStorage.setItem("savedOrders", JSON.stringify(savedOrders));
-      };
+    };
 
-      tr.appendChild(td);
-    });
+    tr.appendChild(td);
+});
 
     body.appendChild(tr);
   });
