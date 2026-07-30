@@ -8,6 +8,7 @@ let unknownOrders = [];
 let selectedUnknownOrder = null;
 let testParserFn = null;
 let testParserName = "";
+let editingRow = -1;
 
 const PARSER_PLUGINS = {
 	redline360: {
