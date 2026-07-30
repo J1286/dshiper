@@ -1,207 +1,222 @@
 // -------- PROCESS & PREVIEW --------
 function processData() {
-	const raw = document.getElementById("input").value;
-	const orders = raw.includes("Subject:") ? raw.split(/(?=Subject:)/g) : [raw];
-	let result = [];
-	orders.forEach((o) => (result = result.concat(safeParseOrder(o))));
-	return result;
+  const raw = document.getElementById("input").value;
+  const orders = raw.includes("Subject:") ? raw.split(/(?=Subject:)/g) : [raw];
+  let result = [];
+  orders.forEach((o) => (result = result.concat(safeParseOrder(o))));
+  return result;
 }
 
 function addOrders() {
-	const newOrders = processData();
-	previewOrders = previewOrders.concat(newOrders);
-	const input = document.getElementById("input");
-	if (input) input.value = "";
-  
-	updatePreview();
-	updateDetectionUI();
-	updateUnknownTable();
+  const newOrders = processData();
+  previewOrders = previewOrders.concat(newOrders);
+  const input = document.getElementById("input");
+  if (input) input.value = "";
+
+  updatePreview();
+  updateDetectionUI();
+  updateUnknownTable();
 }
 
 function updatePreview() {
-	const head = document.getElementById("previewHeader"),
-		body = document.getElementById("previewBody");
-	head.innerHTML = "";
-	body.innerHTML = "";
-	document.getElementById(
-		"output"
-	).textContent = `Orders: ${previewOrders.length}`;
+  const head = document.getElementById("previewHeader"),
+    body = document.getElementById("previewBody");
+  head.innerHTML = "";
+  body.innerHTML = "";
+  document.getElementById(
+    "output"
+  ).textContent = `Orders: ${previewOrders.length}`;
 
-	if (!previewOrders.length) return;
-	const headers = Object.keys(previewOrders[0]);
-	headers.forEach((h) => {
-		const th = document.createElement("th");
-		th.textContent = h;
-		head.appendChild(th);
-	});
-  
-	previewOrders.forEach((r) => {
-		const tr = document.createElement("tr");
-		headers.forEach((h) => {
-			const td = document.createElement("td");
-			td.contentEditable = true;
-			td.textContent = r[h] || "";
-			tr.appendChild(td);
-		});
-		body.appendChild(tr);
-	});
-	document.getElementById(
-		"output"
-	).textContent = `Orders: ${previewOrders.length}`;
+  if (!previewOrders.length) return;
+  const headers = Object.keys(previewOrders[0]);
+  headers.forEach((h) => {
+    const th = document.createElement("th");
+    th.textContent = h;
+    head.appendChild(th);
+  });
+
+  previewOrders.forEach((r) => {
+    const tr = document.createElement("tr");
+    headers.forEach((h) => {
+      const td = document.createElement("td");
+      td.contentEditable = true;
+      td.textContent = r[h] || "";
+      tr.appendChild(td);
+    });
+    body.appendChild(tr);
+  });
+  document.getElementById(
+    "output"
+  ).textContent = `Orders: ${previewOrders.length}`;
 }
 
 function clearPreview() {
-	previewOrders = [];
-	updatePreview();
+  previewOrders = [];
+  updatePreview();
 
-	lastDetection = null;
-	updateDetectionUI();
+  lastDetection = null;
+  updateDetectionUI();
 
-	unknownOrders = [];
-	selectedUnknownOrder = null;
-	updateUnknownTable();
+  unknownOrders = [];
+  selectedUnknownOrder = null;
+  updateUnknownTable();
 
-	const input = document.getElementById("input");
-	if (input) input.value = "";
+  const input = document.getElementById("input");
+  if (input) input.value = "";
 
-	document.getElementById("output").textContent = "Orders: 0";
+  document.getElementById("output").textContent = "Orders: 0";
 }
 
 function syncPreviewToOrders() {
-	const head = document.getElementById("previewHeader"),
-		body = document.getElementById("previewBody");
-	const headers = Array.from(head.querySelectorAll("th")).map(
-		(th) => th.textContent
-	);
-	const updatedOrders = [];
-	Array.from(body.querySelectorAll("tr")).forEach((tr) => {
-		const row = {};
-		Array.from(tr.querySelectorAll("td")).forEach((td, i) => {
-			row[headers[i]] = td.textContent;
-		});
-		updatedOrders.push(row);
-	});
+  const head = document.getElementById("previewHeader"),
+    body = document.getElementById("previewBody");
+  const headers = Array.from(head.querySelectorAll("th")).map(
+    (th) => th.textContent
+  );
+  const updatedOrders = [];
+  Array.from(body.querySelectorAll("tr")).forEach((tr) => {
+    const row = {};
+    Array.from(tr.querySelectorAll("td")).forEach((td, i) => {
+      row[headers[i]] = td.textContent;
+    });
+    updatedOrders.push(row);
+  });
 
-	previewOrders = updatedOrders;
+  previewOrders = updatedOrders;
 }
 
 function recalculateShipConfirm(row) {
-	let total = 0;
+  let total = 0;
 
-	for (let i = 1; i <= 5; i++) {
-		const price = parseFloat(row[`Price ${i}`]) || 0;
-		const qty = parseFloat(row[`Qty ${i}`]) || 0;
+  for (let i = 1; i <= 5; i++) {
+    const price = parseFloat(row[`Price ${i}`]) || 0;
+    const qty = parseFloat(row[`Qty ${i}`]) || 0;
 
-		total += price * qty;
-	}
+    total += price * qty;
+  }
 
-	row["Ship Confirm."] = total > 500 ? "Y" : "";
+  row["Ship Confirm."] = total > 500 ? "Y" : "";
 }
 
 function saveOrders() {
-	syncPreviewToOrders();
-	previewOrders.forEach(recalculateShipConfirm);
+  syncPreviewToOrders();
+  previewOrders.forEach(recalculateShipConfirm);
 
-	savedOrders = savedOrders.concat(previewOrders);
+  savedOrders = savedOrders.concat(previewOrders);
 
-	localStorage.setItem("savedOrders", JSON.stringify(savedOrders));
+  localStorage.setItem("savedOrders", JSON.stringify(savedOrders));
 
-	previewOrders = [];
+  previewOrders = [];
 
-	lastDetection = null; // clear detection UI
-	updateDetectionUI();
+  lastDetection = null; // clear detection UI
+  updateDetectionUI();
 
-	updatePreview();
-	updateSavedTable();
+  updatePreview();
+  updateSavedTable();
 }
 
 function updateSavedTable() {
-	const head = document.getElementById("savedHeader");
-	const body = document.getElementById("savedBody");
+  const head = document.getElementById("savedHeader");
+  const body = document.getElementById("savedBody");
 
-	head.innerHTML = "";
-	body.innerHTML = "";
+  head.innerHTML = "";
+  body.innerHTML = "";
 
-	if (!savedOrders.length) return;
+  if (!savedOrders.length) return;
 
-	// ---- headers ----
-	const headers = Object.keys(savedOrders[0]);
+  // ---- headers ----
+  const headers = Object.keys(savedOrders[0]);
 
-	// # column
-	const numTh = document.createElement("th");
-	numTh.textContent = "#";
-	head.appendChild(numTh);
+  // # column
+  const numTh = document.createElement("th");
+  numTh.textContent = "#";
+  head.appendChild(numTh);
 
-	// actions column
-	const actionTh = document.createElement("th");
-	actionTh.textContent = "Actions";
-	head.appendChild(actionTh);
+  // actions column
+  const actionTh = document.createElement("th");
+  actionTh.textContent = "Actions";
+  head.appendChild(actionTh);
 
-	// normal headers
-	headers.forEach((h) => {
-		const th = document.createElement("th");
-		th.textContent = h;
-		head.appendChild(th);
-	});
+  // normal headers
+  headers.forEach((h) => {
+    const th = document.createElement("th");
+    th.textContent = h;
+    head.appendChild(th);
+  });
 
-	// ---- rows ----
-	savedOrders.forEach((r, index) => {
-		const tr = document.createElement("tr");
+  // ---- rows ----
+  savedOrders.forEach((r, index) => {
+    const tr = document.createElement("tr");
 
-		// # cell
-		const numTd = document.createElement("td");
-		numTd.textContent = index + 1;
-		tr.appendChild(numTd);
+    // # cell
+    const numTd = document.createElement("td");
+    numTd.textContent = index + 1;
+    tr.appendChild(numTd);
 
-		// actions cell
-		const actionTd = document.createElement("td");
+    // actions cell
+    const actionTd = document.createElement("td");
 
-		const copyBtn = document.createElement("button");
-		copyBtn.textContent = "📋";
+    const copyBtn = document.createElement("button");
+    copyBtn.textContent = "📋";
 
-		copyBtn.onclick = () => {
-			const rowText = headers.map((h) => r[h] || "").join("\t");
+    copyBtn.onclick = () => {
+      const rowText = headers.map((h) => r[h] || "").join("\t");
 
-			navigator.clipboard.writeText(rowText);
+      navigator.clipboard.writeText(rowText);
 
-			copyBtn.textContent = "✅";
+      copyBtn.textContent = "✅";
 
-			setTimeout(() => {
-				copyBtn.textContent = "📋";
-			}, 800);
-		};
+      setTimeout(() => {
+        copyBtn.textContent = "📋";
+      }, 800);
+    };
 
-		const deleteBtn = document.createElement("button");
-		deleteBtn.textContent = "🗑";
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "🗑";
 
-		deleteBtn.onclick = () => {
-			const confirmed = confirm("Delete this order?");
-			if (!confirmed) return;
+    deleteBtn.onclick = () => {
+      const confirmed = confirm("Delete this order?");
+      if (!confirmed) return;
 
-			savedOrders.splice(index, 1);
+      savedOrders.splice(index, 1);
 
-			localStorage.setItem("savedOrders", JSON.stringify(savedOrders));
+      localStorage.setItem("savedOrders", JSON.stringify(savedOrders));
 
-			updateSavedTable();
-		};
+      updateSavedTable();
+    };
 
-		actionTd.className = "action-cell";
+    actionTd.className = "action-cell";
 
-		copyBtn.className = "action-btn";
-		deleteBtn.className = "action-btn";
+    copyBtn.className = "action-btn";
+    deleteBtn.className = "action-btn";
 
-		actionTd.appendChild(copyBtn);
-		actionTd.appendChild(deleteBtn);
+    actionTd.appendChild(copyBtn);
+    actionTd.appendChild(deleteBtn);
 
-		tr.appendChild(actionTd);
+    tr.appendChild(actionTd);
 
-		// normal cells
-		headers.forEach((h) => {
-			const td = document.createElement("td");
-			td.textContent = r[h] || "";
-			tr.appendChild(td);
-		});
+    // normal cells
+    headers.forEach((h) => {
+      const td = document.createElement("td");
 
-		body.appendChild(tr);
-	});
+      td.contentEditable = true;
+      td.textContent = r[h] || "";
+
+      td.onblur = () => {
+        savedOrders[index][h] = td.textContent;
+
+        // Keep Ship Confirm updated
+        if (h.startsWith("Qty") || h.startsWith("Price")) {
+          recalculateShipConfirm(savedOrders[index]);
+          updateSavedTable();
+        }
+
+        localStorage.setItem("savedOrders", JSON.stringify(savedOrders));
+      };
+
+      tr.appendChild(td);
+    });
+
+    body.appendChild(tr);
+  });
 }
