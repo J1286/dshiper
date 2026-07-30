@@ -234,7 +234,6 @@ function updateSavedTable() {
     headers.forEach((h) => {
       const td = document.createElement("td");
 
-      td.contentEditable = true;
       td.textContent = r[h] || "";
 
       td.onblur = () => {
