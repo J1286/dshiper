@@ -174,15 +174,6 @@ function closeRawViewer() {
 }
 
 function updateDashboard() {
-  document.getElementById("dashPreview").textContent = previewOrders.length;
-
-  document.getElementById("dashSaved").textContent = savedOrders.length;
-
-  document.getElementById("dashUnknown").textContent = unknownOrders.length;
-
-  document.getElementById("dashPrice").textContent = allPriceRows.length
-    ? "✅"
-    : "❌";
 
   const dealerCount = {
     redline360: 0,
