@@ -7,61 +7,63 @@
   <link rel="stylesheet" href="./style.css">
 </head>
 
-<div id="layout">
-  <div id="sidebar">
+<body>
 
-    <h2>📊 Dashboard</h2>
+  <div id="layout">
+    <div id="sidebar">
 
-    <div class="stat">
-      <span>Preview</span>
-      <strong id="dashPreview">0</strong>
+      <h2>📊 Dashboard</h2>
+
+      <div class="stat">
+        <span>Preview</span>
+        <strong id="dashPreview">0</strong>
+      </div>
+
+      <div class="stat">
+        <span>Saved</span>
+        <strong id="dashSaved">0</strong>
+      </div>
+
+      <div class="stat">
+        <span>Unknown</span>
+        <strong id="dashUnknown">0</strong>
+      </div>
+
+      <div class="stat">
+        <span>Price Table</span>
+        <strong id="dashPrice">❌</strong>
+      </div>
+
+      <hr>
+
+      <h3>Dealers</h3>
+
+      <div class="stat">
+        <span>Redline360</span>
+        <strong id="dashRedline">0</strong>
+      </div>
+
+      <div class="stat">
+        <span>AAG</span>
+        <strong id="dashAAG">0</strong>
+      </div>
+
+      <div class="stat">
+        <span>TDOT</span>
+        <strong id="dashTDOT">0</strong>
+      </div>
+
+      <div class="stat">
+        <span>Z1</span>
+        <strong id="dashZ1">0</strong>
+      </div>
+
+      <div class="stat">
+        <span>NTXGlow</span>
+        <strong id="dashNTX">0</strong>
+      </div>
     </div>
 
-    <div class="stat">
-      <span>Saved</span>
-      <strong id="dashSaved">0</strong>
-    </div>
-
-    <div class="stat">
-      <span>Unknown</span>
-      <strong id="dashUnknown">0</strong>
-    </div>
-
-    <div class="stat">
-      <span>Price Table</span>
-      <strong id="dashPrice">❌</strong>
-    </div>
-
-    <hr>
-
-    <h3>Dealers</h3>
-
-    <div class="stat">
-      <span>Redline360</span>
-      <strong id="dashRedline">0</strong>
-    </div>
-
-    <div class="stat">
-      <span>AAG</span>
-      <strong id="dashAAG">0</strong>
-    </div>
-
-    <div class="stat">
-      <span>TDOT</span>
-      <strong id="dashTDOT">0</strong>
-    </div>
-
-    <div class="stat">
-      <span>Z1</span>
-      <strong id="dashZ1">0</strong>
-    </div>
-
-    <div class="stat">
-      <span>NTXGlow</span>
-      <strong id="dashNTX">0</strong>
-    </div>
-
-  <body>
     <div id="app">
 
       <!-- Price Table Upload -->
@@ -129,18 +131,17 @@
 
       </div>
     </div>
-    <script src='https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js'></script>
-    <script src="./orderData.js"></script>
-    <script src="./utils.js"></script>
-    <script src="./dealerParsers.js"></script>
-    <script src="./genericParser.js"></script>
-    <script src="./config.js"></script>
-    <script src="./priceTable.js"></script>
-    <script src="./parserCore.js"></script>
-    <script src="./app.js"></script>
+  </div>
+  <script src='https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js'></script>
+  <script src="./orderData.js"></script>
+  <script src="./utils.js"></script>
+  <script src="./dealerParsers.js"></script>
+  <script src="./genericParser.js"></script>
+  <script src="./config.js"></script>
+  <script src="./priceTable.js"></script>
+  <script src="./parserCore.js"></script>
+  <script src="./app.js"></script>
 
-  </body>
- </div>
-</div>
+</body>
 
 </html>
