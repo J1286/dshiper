@@ -5,87 +5,143 @@
   <meta charset="UTF-8">
   <title>DropShip Portal</title>
   <link rel="stylesheet" href="./style.css">
-
 </head>
 
-<body>
-  <div id="app">
+<div id="layout">
+  <div id="sidebar">
 
-    <!-- Price Table Upload -->
-    <label>Upload Price Table:</label>
-    <input type="file" id="priceFileInput" accept=".xlsx,.csv"><br><br>
-    <div id="priceStatus">No price table loaded</div>
+    <h2>📊 Dashboard</h2>
 
-    <!-- New Orders Input -->
-    <h2>🟦 New Orders</h2>
-    <textarea id="input" rows="10" placeholder="Paste order data here"></textarea><br>
-    <button onclick="addOrders()">Add Orders</button>
-    <button onclick="clearPreview()">Clear Input</button>
-    <h3>🔍 Detection Info</h3>
-    <pre id="detectionInfo">No order analyzed yet</pre>
-    <pre id="output"></pre>
+    <div class="stat">
+      <span>Preview</span>
+      <strong id="dashPreview">0</strong>
+    </div>
 
-    <!-- Preview Orders -->
-    <h3>Preview Orders:</h3>
-    <table border="1" style="border-collapse: collapse; width:100%">
-      <thead>
-        <tr id="previewHeader"></tr>
-      </thead>
-      <tbody id="previewBody"></tbody>
-    </table>
-    <br>
-    <button onclick="saveOrders()">Save Orders</button>
-    <h2>🟨 Unknown Format Inspector</h2>
-    <pre id="parserTemplateOutput"></pre>
-    <div id="unknownStatus"></div>
-    <table border="1" style="border-collapse: collapse; width:100%">
-      <thead>
-        <tr id="unknownHeader"></tr>
-      </thead>
-      <tbody id="unknownBody"></tbody>
-    </table>
+    <div class="stat">
+      <span>Saved</span>
+      <strong id="dashSaved">0</strong>
+    </div>
+
+    <div class="stat">
+      <span>Unknown</span>
+      <strong id="dashUnknown">0</strong>
+    </div>
+
+    <div class="stat">
+      <span>Price Table</span>
+      <strong id="dashPrice">❌</strong>
+    </div>
+
     <hr>
 
-    <!-- Saved Orders -->
-    <h2>🟩 Saved Orders</h2>
-    <table border="1" style="border-collapse: collapse; width:100%">
-      <thead>
-        <tr id="savedHeader"></tr>
-      </thead>
-      <tbody id="savedBody"></tbody>
-    </table>
-    <br>
-    <button onclick="downloadExcel()">Download</button>
-    <button onclick="copyAllOrders()">📋Copy All</button>
-    <button onclick="clearAllOrders()">Clear All Orders</button>
-    <br><br>
-  </div>
+    <h3>Dealers</h3>
 
-  <div id="rawViewer" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000000aa;">
-    <button onclick="generateParserTemplate()">Generate Parser Template</button>
-    <button onclick="runTestParser()">Run Test Parser</button>
-    <div style="background:white; width:80%; height:80%; margin:5% auto; padding:15px; overflow:auto;">
-
-      <button onclick="closeRawViewer()">Close</button>
-
-      <h3>Raw Order</h3>
-      <pre id="rawViewerText" style="white-space:pre-wrap;"></pre>
-
-      <h3>Detection Info</h3>
-      <pre id="rawViewerMeta"></pre>
-
+    <div class="stat">
+      <span>Redline360</span>
+      <strong id="dashRedline">0</strong>
     </div>
-  </div>
-  <script src='https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js'></script>
-  <script src="./orderData.js"></script>
-  <script src="./utils.js"></script>  
-  <script src="./dealerParsers.js"></script>
-  <script src="./genericParser.js"></script>
-  <script src="./config.js"></script>
-  <script src="./priceTable.js"></script>
-  <script src="./parserCore.js"></script>
-  <script src="./app.js"></script>
 
-</body>
+    <div class="stat">
+      <span>AAG</span>
+      <strong id="dashAAG">0</strong>
+    </div>
+
+    <div class="stat">
+      <span>TDOT</span>
+      <strong id="dashTDOT">0</strong>
+    </div>
+
+    <div class="stat">
+      <span>Z1</span>
+      <strong id="dashZ1">0</strong>
+    </div>
+
+    <div class="stat">
+      <span>NTXGlow</span>
+      <strong id="dashNTX">0</strong>
+    </div>
+
+  </div>
+
+  <body>
+    <div id="app">
+
+      <!-- Price Table Upload -->
+      <label>Upload Price Table:</label>
+      <input type="file" id="priceFileInput" accept=".xlsx,.csv"><br><br>
+      <div id="priceStatus">No price table loaded</div>
+
+      <!-- New Orders Input -->
+      <h2>🟦 New Orders</h2>
+      <textarea id="input" rows="10" placeholder="Paste order data here"></textarea><br>
+      <button onclick="addOrders()">Add Orders</button>
+      <button onclick="clearPreview()">Clear Input</button>
+      <h3>🔍 Detection Info</h3>
+      <pre id="detectionInfo">No order analyzed yet</pre>
+      <pre id="output"></pre>
+
+      <!-- Preview Orders -->
+      <h3>Preview Orders:</h3>
+      <table border="1" style="border-collapse: collapse; width:100%">
+        <thead>
+          <tr id="previewHeader"></tr>
+        </thead>
+        <tbody id="previewBody"></tbody>
+      </table>
+      <br>
+      <button onclick="saveOrders()">Save Orders</button>
+      <h2>🟨 Unknown Format Inspector</h2>
+      <pre id="parserTemplateOutput"></pre>
+      <div id="unknownStatus"></div>
+      <table border="1" style="border-collapse: collapse; width:100%">
+        <thead>
+          <tr id="unknownHeader"></tr>
+        </thead>
+        <tbody id="unknownBody"></tbody>
+      </table>
+      <hr>
+
+      <!-- Saved Orders -->
+      <h2>🟩 Saved Orders</h2>
+      <table border="1" style="border-collapse: collapse; width:100%">
+        <thead>
+          <tr id="savedHeader"></tr>
+        </thead>
+        <tbody id="savedBody"></tbody>
+      </table>
+      <br>
+      <button onclick="downloadExcel()">Download</button>
+      <button onclick="copyAllOrders()">📋Copy All</button>
+      <button onclick="clearAllOrders()">Clear All Orders</button>
+      <br><br>
+    </div>
+
+    <div id="rawViewer" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000000aa;">
+      <button onclick="generateParserTemplate()">Generate Parser Template</button>
+      <button onclick="runTestParser()">Run Test Parser</button>
+      <div style="background:white; width:80%; height:80%; margin:5% auto; padding:15px; overflow:auto;">
+
+        <button onclick="closeRawViewer()">Close</button>
+
+        <h3>Raw Order</h3>
+        <pre id="rawViewerText" style="white-space:pre-wrap;"></pre>
+
+        <h3>Detection Info</h3>
+        <pre id="rawViewerMeta"></pre>
+
+      </div>
+    </div>
+    <script src='https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js'></script>
+    <script src="./js/orderData.js"></script>
+    <script src="./js/utils.js"></script>
+    <script src="./js/dealerParsers.js"></script>
+    <script src="./js/genericParser.js"></script>
+    <script src="./js/config.js"></script>
+    <script src="./js/priceTable.js"></script>
+    <script src="./js/parserCore.js"></script>
+    <script src="./js/app.js"></script>
+
+  </body>
+</div>
 
 </html>
