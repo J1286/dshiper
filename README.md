@@ -1,4 +1,4 @@
-Drop Ship Order V1.0
+Drop Ship Order V2.0
 
 Browser-based order processing tool that:
 
@@ -11,5 +11,5 @@ Browser-based order processing tool that:
 - Refactor completed
 
 Future Features
-- Improve generic SKU detection
 - Add parser template generator
+- Search saved order
