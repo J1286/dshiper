@@ -331,6 +331,64 @@ function closeRawViewer() {
   selectedUnknownOrder = null;
 }
 
+function updateDashboard() {
+
+    document.getElementById("dashPreview").textContent =
+        previewOrders.length;
+
+    document.getElementById("dashSaved").textContent =
+        savedOrders.length;
+
+    document.getElementById("dashUnknown").textContent =
+        unknownOrders.length;
+
+    document.getElementById("dashPrice").textContent =
+        allPriceRows.length ? "✅" : "❌";
+
+    const dealerCount = {
+        redline360:0,
+        aag:0,
+        tdot:0,
+        z1:0,
+        ntxglow:0
+    };
+
+    savedOrders.forEach(order=>{
+
+        switch(order["DShipper ID"]){
+
+            case "W7232":
+                dealerCount.redline360++;
+                break;
+
+            case "W5511":
+                dealerCount.aag++;
+                break;
+
+            case "W7290":
+                dealerCount.tdot++;
+                break;
+
+            case "W7292":
+                dealerCount.z1++;
+                break;
+
+            case "W7266":
+                dealerCount.ntxglow++;
+                break;
+
+        }
+
+    });
+
+    document.getElementById("dashRedline").textContent=dealerCount.redline360;
+    document.getElementById("dashAAG").textContent=dealerCount.aag;
+    document.getElementById("dashTDOT").textContent=dealerCount.tdot;
+    document.getElementById("dashZ1").textContent=dealerCount.z1;
+    document.getElementById("dashNTX").textContent=dealerCount.ntxglow;
+
+}
+
 function stitchNextLineSKU(lines, index) {
   const current = lines[index];
   const next = lines[index + 1];
@@ -391,6 +449,7 @@ function updateUnknownTable() {
 
     body.appendChild(tr);
   });
+  updateDashboard(); 
 }
 
 function scoreSKU(str) {
@@ -1582,6 +1641,7 @@ function clearPreview() {
   unknownOrders = [];
   selectedUnknownOrder = null;
   updateUnknownTable();
+  updateDashboard();
 
   const input = document.getElementById("input");
   if (input) input.value = "";
@@ -1634,6 +1694,7 @@ function saveOrders() {
   updateDetectionUI();
 
   updatePreview();
+  updateDashboard();
   updateSavedTable();
 }
 
@@ -1839,6 +1900,7 @@ function clearAllOrders() {
   savedOrders = [];
   localStorage.setItem("savedOrders", JSON.stringify(savedOrders));
   updateSavedTable();
+  updateDashboard();
 }
 
 // -------- INIT --------
@@ -1859,6 +1921,7 @@ window.onload = function () {
     const parsed = JSON.parse(saved);
     savedOrders = Array.isArray(parsed) ? parsed : [];
     updateSavedTable();
+    updateDashboard();
   }
 
   updatePriceStatus();
