@@ -1030,31 +1030,34 @@ function normalizeSKU(sku) {
 }
 
 function buildPriceTable() {
-  priceTable = {
-    redline360: {},
-    aag: {},
-    tdot: {},
-    pq: {}
-  };
+	priceTable = {
+		redline360: {},
+		aag: {},
+		tdot: {},
+		pq: {},
+		ntxglow: {}
+	};
 
-  allPriceRows.forEach((r) => {
-    const sku = normalizeSKU(r["SKU"]);
-    if (!sku) return;
+	allPriceRows.forEach((r) => {
+		const sku = normalizeSKU(r["SKU"]);
+		if (!sku) return;
 
-    Object.keys(r).forEach((col) => {
-      const key = col.toLowerCase();
+		Object.keys(r).forEach((col) => {
+			const key = col.toLowerCase();
 
-      if (key.includes("redline")) {
-        priceTable.redline360[sku] = r[col];
-      } else if (key.includes("aag")) {
-        priceTable.aag[sku] = r[col];
-      } else if (key.includes("tdot")) {
-        priceTable.tdot[sku] = r[col];
-      } else if (key === "pq") {
-        priceTable.pq[sku] = r[col];
-      }
-    });
-  });
+			if (key.includes("redline")) {
+				priceTable.redline360[sku] = r[col];
+			} else if (key.includes("aag")) {
+				priceTable.aag[sku] = r[col];
+			} else if (key.includes("tdot")) {
+				priceTable.tdot[sku] = r[col];
+			} else if (key === "pq") {
+				priceTable.pq[sku] = r[col];
+			} else if (key.includes("ntxglow")) {
+				priceTable.ntxglow[sku] = r[col]
+			}
+		});
+	});
 }
 
 function getPrice(dealer, sku) {
