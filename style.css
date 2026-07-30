@@ -61,3 +61,34 @@ th {
 .action-btn:active {
   transform: scale(0.96);
 }
+
+#layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+#sidebar {
+  width: 240px;
+  min-width: 240px;
+  background: #f7f7f7;
+  border-right: 1px solid #ddd;
+  padding: 15px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+}
+
+#app {
+  flex: 1;
+  padding: 20px;
+}
+
+.stat {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0;
+  padding: 8px;
+  background: #3d4454;
+  border-radius: 6px;
+}
