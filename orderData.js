@@ -139,21 +139,6 @@ function updateSavedTable() {
   actionTh.textContent = "Actions";
   head.appendChild(actionTh);
 
-  // normal headers
-  headers.forEach((h) => {
-    const td = document.createElement("td");
-
-    td.textContent = r[h] || "";
-
-    td.contentEditable = editingRow === index;
-
-    if (editingRow === index) {
-      td.style.background = "#fff8c5";
-    }
-
-    tr.appendChild(td);
-  });
-
   // ---- rows ----
   savedOrders.forEach((r, index) => {
     const tr = document.createElement("tr");
