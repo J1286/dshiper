@@ -8,6 +8,7 @@ let unknownOrders = [];
 let selectedUnknownOrder = null;
 let testParserFn = null;
 let testParserName = "";
+let editingRow = -1;
 
 const PARSER_PLUGINS = {
   redline360: {
@@ -1677,6 +1678,45 @@ function updateSavedTable() {
     // actions cell
     const actionTd = document.createElement("td");
 
+    const editBtn = document.createElement("button");
+    editBtn.className = "action-btn";
+    editBtn.textContent = editingRow === index ? "💾" : "✏️";
+
+    editBtn.onclick = () => {
+      if (editingRow === index) {
+        // Save the edited row
+        const cells = tr.querySelectorAll("td");
+
+        headers.forEach((h, i) => {
+          savedOrders[index][h] = cells[i + 2].textContent;
+        });
+
+        const dealer = getDealerFromRow(savedOrders[index]);
+
+        for (let i = 1; i <= 5; i++) {
+          const skuField = `Item ID ${i}`;
+          const priceField = `Price ${i}`;
+
+          const newSku = savedOrders[index][skuField];
+          const oldSku = r[skuField];
+
+          if (newSku !== oldSku) {
+            savedOrders[index][priceField] = getPrice(dealer, newSku);
+          }
+        }
+
+        recalculateShipConfirm(savedOrders[index]);
+
+        localStorage.setItem("savedOrders", JSON.stringify(savedOrders));
+
+        editingRow = -1;
+      } else {
+        editingRow = index;
+      }
+
+      updateSavedTable();
+    };
+
     const copyBtn = document.createElement("button");
     copyBtn.textContent = "📋";
 
@@ -1711,6 +1751,7 @@ function updateSavedTable() {
     copyBtn.className = "action-btn";
     deleteBtn.className = "action-btn";
 
+    actionTd.appendChild(editBtn);
     actionTd.appendChild(copyBtn);
     actionTd.appendChild(deleteBtn);
 
@@ -1720,20 +1761,13 @@ function updateSavedTable() {
     headers.forEach((h) => {
       const td = document.createElement("td");
 
-      td.contentEditable = true;
       td.textContent = r[h] || "";
 
-      td.onblur = () => {
-        savedOrders[index][h] = td.textContent;
+      td.contentEditable = editingRow === index;
 
-        // Keep Ship Confirm updated
-        if (h.startsWith("Qty") || h.startsWith("Price")) {
-          recalculateShipConfirm(savedOrders[index]);
-          updateSavedTable();
-        }
-
-        localStorage.setItem("savedOrders", JSON.stringify(savedOrders));
-      };
+      if (editingRow === index) {
+        td.style.background = "#fff8c5";
+      }
 
       tr.appendChild(td);
     });
