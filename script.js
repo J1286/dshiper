@@ -8,6 +8,7 @@ let unknownOrders = [];
 let selectedUnknownOrder = null;
 let testParserFn = null;
 let testParserName = "";
+let editingRow = -1;
 
 const PARSER_PLUGINS = {
   redline360: {
@@ -1030,34 +1031,34 @@ function normalizeSKU(sku) {
 }
 
 function buildPriceTable() {
-	priceTable = {
-		redline360: {},
-		aag: {},
-		tdot: {},
-		pq: {},
-		ntxglow: {}
-	};
+  priceTable = {
+    redline360: {},
+    aag: {},
+    tdot: {},
+    pq: {},
+    ntxglow: {}
+  };
 
-	allPriceRows.forEach((r) => {
-		const sku = normalizeSKU(r["SKU"]);
-		if (!sku) return;
+  allPriceRows.forEach((r) => {
+    const sku = normalizeSKU(r["SKU"]);
+    if (!sku) return;
 
-		Object.keys(r).forEach((col) => {
-			const key = col.toLowerCase();
+    Object.keys(r).forEach((col) => {
+      const key = col.toLowerCase();
 
-			if (key.includes("redline")) {
-				priceTable.redline360[sku] = r[col];
-			} else if (key.includes("aag")) {
-				priceTable.aag[sku] = r[col];
-			} else if (key.includes("tdot")) {
-				priceTable.tdot[sku] = r[col];
-			} else if (key === "pq") {
-				priceTable.pq[sku] = r[col];
-			} else if (key.includes("ntxglow")) {
-				priceTable.ntxglow[sku] = r[col]
-			}
-		});
-	});
+      if (key.includes("redline")) {
+        priceTable.redline360[sku] = r[col];
+      } else if (key.includes("aag")) {
+        priceTable.aag[sku] = r[col];
+      } else if (key.includes("tdot")) {
+        priceTable.tdot[sku] = r[col];
+      } else if (key === "pq") {
+        priceTable.pq[sku] = r[col];
+      } else if (key.includes("ntxglow")) {
+        priceTable.ntxglow[sku] = r[col];
+      }
+    });
+  });
 }
 
 function getPrice(dealer, sku) {
@@ -1370,14 +1371,14 @@ function extractAddressAAG(text) {
   };
 }
 
-  function extractPhone(text) {
-    const match =
-      text.match(
-        /\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/
-      )?.[0] || "";
+function extractPhone(text) {
+  const match =
+    text.match(
+      /\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/
+    )?.[0] || "";
 
-    return match.replace(/\D/g, "");
-  }
+  return match.replace(/\D/g, "");
+}
 
 function detectCountry(addr) {
   const rawCountry = (addr.country || "").trim().toLowerCase();
@@ -1677,6 +1678,45 @@ function updateSavedTable() {
     // actions cell
     const actionTd = document.createElement("td");
 
+    const editBtn = document.createElement("button");
+    editBtn.className = "action-btn";
+    editBtn.textContent = editingRow === index ? "💾" : "✏️";
+
+    editBtn.onclick = () => {
+      if (editingRow === index) {
+        // Save the edited row
+        const cells = tr.querySelectorAll("td");
+
+        headers.forEach((h, i) => {
+          savedOrders[index][h] = cells[i + 2].textContent;
+        });
+
+        const dealer = getDealerFromRow(savedOrders[index]);
+
+        for (let i = 1; i <= 5; i++) {
+          const skuField = `Item ID ${i}`;
+          const priceField = `Price ${i}`;
+
+          const newSku = savedOrders[index][skuField];
+          const oldSku = r[skuField];
+
+          if (newSku !== oldSku) {
+            savedOrders[index][priceField] = getPrice(dealer, newSku);
+          }
+        }
+
+        recalculateShipConfirm(savedOrders[index]);
+
+        localStorage.setItem("savedOrders", JSON.stringify(savedOrders));
+
+        editingRow = -1;
+      } else {
+        editingRow = index;
+      }
+
+      updateSavedTable();
+    };
+
     const copyBtn = document.createElement("button");
     copyBtn.textContent = "📋";
 
@@ -1711,6 +1751,7 @@ function updateSavedTable() {
     copyBtn.className = "action-btn";
     deleteBtn.className = "action-btn";
 
+    actionTd.appendChild(editBtn);
     actionTd.appendChild(copyBtn);
     actionTd.appendChild(deleteBtn);
 
@@ -1719,7 +1760,15 @@ function updateSavedTable() {
     // normal cells
     headers.forEach((h) => {
       const td = document.createElement("td");
+
       td.textContent = r[h] || "";
+
+      td.contentEditable = editingRow === index;
+
+      if (editingRow === index) {
+        td.style.background = "#fff8c5";
+      }
+
       tr.appendChild(td);
     });
 
