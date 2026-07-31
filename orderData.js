@@ -242,6 +242,24 @@ function updateSavedTable() {
 
       td.textContent = r[h] || "";
 
+      // Copy SKU when clicked
+      if (h.startsWith("Item ID") && r[h]) {
+        td.style.cursor = "pointer";
+
+        td.onclick = () => {
+          if (editingRow === index) return;
+
+          navigator.clipboard.writeText(r[h]);
+
+          const old = td.textContent;
+          td.textContent = "✅ Copied!";
+
+          setTimeout(() => {
+            td.textContent = old;
+          }, 800);
+        };
+      }
+
       td.contentEditable = editingRow === index;
 
       if (editingRow === index) {
