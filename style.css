@@ -85,12 +85,11 @@ th {
   overflow-x: auto;
 }
 
-.stat strong {
+.stat {
     color: inherit;   
     font-weight: normal;
     transition: color .2s, font-weight .2s;
-    margin-bottom: 12px;
-}
+    margin-bottom: 15px;
 }
 
 .stat strong.active {
