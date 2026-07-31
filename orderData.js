@@ -244,6 +244,8 @@ function updateSavedTable() {
       updateSavedTable();
     };
 
+    const actionTd = document.createElement("td");
+    
     actionTd.className = "action-cell";
     copyBtn.className = "action-btn";
     deleteBtn.className = "action-btn";
