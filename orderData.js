@@ -134,6 +134,10 @@ function updateSavedTable() {
   numTh.textContent = "#";
   head.appendChild(numTh);
 
+  const selectTh = document.createElement("th");
+  selectTh.textContent = "✓";
+  head.appendChild(selectTh);
+
   // actions column
   const actionTh = document.createElement("th");
   actionTh.textContent = "Actions";
@@ -147,6 +151,24 @@ function updateSavedTable() {
     const numTd = document.createElement("td");
     numTd.textContent = index + 1;
     tr.appendChild(numTd);
+
+    const selectTd = document.createElement("td");
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+
+    checkbox.checked = selectedOrders.has(index);
+
+    checkbox.onchange = () => {
+      if (checkbox.checked) {
+        selectedOrders.add(index);
+      } else {
+        selectedOrders.delete(index);
+      }
+    };
+
+    selectTd.appendChild(checkbox);
+    tr.appendChild(selectTd);
 
     // actions cell
     const actionTd = document.createElement("td");
@@ -168,7 +190,7 @@ function updateSavedTable() {
         const cells = tr.querySelectorAll("td");
 
         headers.forEach((h, i) => {
-          savedOrders[index][h] = cells[i + 2].textContent;
+          savedOrders[index][h] = cells[i + 3].textContent;
         });
 
         const dealer = getDealerFromRow(savedOrders[index]);
