@@ -86,7 +86,11 @@ th {
 }
 
 .stat strong {
-  color: #4cd137;
-  font-size: 20px;
-  font-weight: bold;
+    color: inherit;   
+    font-weight: normal;
+}
+
+.stat strong.active {
+    color: black;
+    font-weight: bold;
 }
