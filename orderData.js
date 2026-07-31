@@ -143,6 +143,12 @@ function updateSavedTable() {
   actionTh.textContent = "Actions";
   head.appendChild(actionTh);
 
+  headers.forEach((h) => {
+    const th = document.createElement("th");
+    th.textContent = h;
+    head.appendChild(th);
+  });
+
   // ---- rows ----
   savedOrders.forEach((r, index) => {
     const tr = document.createElement("tr");
@@ -169,16 +175,6 @@ function updateSavedTable() {
 
     selectTd.appendChild(checkbox);
     tr.appendChild(selectTd);
-
-    // actions cell
-    const actionTd = document.createElement("td");
-    actionTh.textContent = "Actions";
-    head.appendChild(actionTh);
-    headers.forEach((h) => {
-      const th = document.createElement("th");
-      th.textContent = h;
-      head.appendChild(th);
-    });
 
     const editBtn = document.createElement("button");
     editBtn.className = "action-btn";
