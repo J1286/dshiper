@@ -89,6 +89,8 @@ th {
     color: inherit;   
     font-weight: normal;
     transition: color .2s, font-weight .2s;
+    margin-bottom: 12px;
+}
 }
 
 .stat strong.active {
