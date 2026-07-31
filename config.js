@@ -9,6 +9,7 @@ let selectedUnknownOrder = null;
 let testParserFn = null;
 let testParserName = "";
 let editingRow = -1;
+let selectedOrders = new Set(); 
 
 const PARSER_PLUGINS = {
 	redline360: {
