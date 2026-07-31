@@ -9,6 +9,12 @@ Browser-based order processing tool that:
 - Exports processed orders to Excel
 - Stores saved orders locally in the browser
 - Refactor completed
+- Refactored JavaScript into modular files:
+  - parser logic separated
+  - dealer parsers separated
+  - price table separated
+  - order management separated
+- git commit -m "Document refactor structure"
 
 Future Features
 - Add parser template generator
