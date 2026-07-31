@@ -150,6 +150,13 @@ function updateSavedTable() {
 
     // actions cell
     const actionTd = document.createElement("td");
+    actionTh.textContent = "Actions";
+    head.appendChild(actionTh);
+    headers.forEach((h) => {
+      const th = document.createElement("th");
+      th.textContent = h;
+      head.appendChild(th);
+    });
 
     const editBtn = document.createElement("button");
     editBtn.className = "action-btn";
@@ -220,7 +227,6 @@ function updateSavedTable() {
     };
 
     actionTd.className = "action-cell";
-
     copyBtn.className = "action-btn";
     deleteBtn.className = "action-btn";
 
@@ -232,28 +238,28 @@ function updateSavedTable() {
 
     // normal cells
     headers.forEach((h) => {
-    const td = document.createElement("td");
+      const td = document.createElement("td");
 
-    td.textContent = r[h] || "";
+      td.textContent = r[h] || "";
 
-    td.contentEditable = (editingRow === index);
+      td.contentEditable = editingRow === index;
 
-    if (editingRow === index) {
+      if (editingRow === index) {
         td.style.background = "#fff8c5";
-    }
+      }
 
-    td.onblur = () => {
+      td.onblur = () => {
         savedOrders[index][h] = td.textContent;
 
         if (h.startsWith("Qty") || h.startsWith("Price")) {
-            recalculateShipConfirm(savedOrders[index]);
+          recalculateShipConfirm(savedOrders[index]);
         }
 
         localStorage.setItem("savedOrders", JSON.stringify(savedOrders));
-    };
+      };
 
-    tr.appendChild(td);
-});
+      tr.appendChild(td);
+    });
 
     body.appendChild(tr);
   });
