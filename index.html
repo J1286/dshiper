@@ -6,34 +6,13 @@
   <title>DropShip Portal</title>
   <link rel="stylesheet" href="./style.css">
 </head>
+<body>
 
 <div id="layout">
   <div id="sidebar">
 
     <h2>📊 Dashboard</h2>
-
-    <div class="stat">
-      <span>Preview</span>
-      <strong id="dashPreview">0</strong>
-    </div>
-
-    <div class="stat">
-      <span>Saved</span>
-      <strong id="dashSaved">0</strong>
-    </div>
-
-    <div class="stat">
-      <span>Unknown</span>
-      <strong id="dashUnknown">0</strong>
-    </div>
-
-    <div class="stat">
-      <span>Price Table</span>
-      <strong id="dashPrice">❌</strong>
-    </div>
-
     <hr>
-
     <h3>Dealers</h3>
 
     <div class="stat">
@@ -63,7 +42,6 @@
 
   </div>
 
-  <body>
     <div id="app">
 
       <!-- Price Table Upload -->
@@ -132,9 +110,16 @@
       </div>
     </div>
     <script src='https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js'></script>
-    <script src="./script.js"></script>
+    <script src="./orderData.js"></script>
+    <script src="./utils.js"></script>
+    <script src="./dealerParsers.js"></script>
+    <script src="./genericParser.js"></script>
+    <script src="./config.js"></script>
+    <script src="./priceTable.js"></script>
+    <script src="./parserCore.js"></script>
+    <script src="./app.js"></script>
 
-  </body>
 </div>
 
+</body>
 </html>
