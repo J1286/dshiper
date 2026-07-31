@@ -3,44 +3,45 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>DropShip Portal</title>
+  <title>DropShip Test</title>
   <link rel="stylesheet" href="./style.css">
 </head>
+
 <body>
 
-<div id="layout">
-  <div id="sidebar">
+  <div id="layout">
+    <div id="sidebar">
 
-    <h2>📊 Dashboard</h2>
-    <hr>
-    <h3>Dealers</h3>
+      <h2>📊 Dashboard</h2>
+      <hr>
+      <h3>Dealers</h3>
 
-    <div class="stat">
-      <span>Redline360</span>
-      <strong id="dashRedline">0</strong>
+      <div class="stat">
+        <span>Redline360</span>
+        <strong id="dashRedline">0</strong>
+      </div>
+
+      <div class="stat">
+        <span>AAG</span>
+        <strong id="dashAAG">0</strong>
+      </div>
+
+      <div class="stat">
+        <span>TDOT</span>
+        <strong id="dashTDOT">0</strong>
+      </div>
+
+      <div class="stat">
+        <span>Z1</span>
+        <strong id="dashZ1">0</strong>
+      </div>
+
+      <div class="stat">
+        <span>NTXGlow</span>
+        <strong id="dashNTX">0</strong>
+      </div>
+
     </div>
-
-    <div class="stat">
-      <span>AAG</span>
-      <strong id="dashAAG">0</strong>
-    </div>
-
-    <div class="stat">
-      <span>TDOT</span>
-      <strong id="dashTDOT">0</strong>
-    </div>
-
-    <div class="stat">
-      <span>Z1</span>
-      <strong id="dashZ1">0</strong>
-    </div>
-
-    <div class="stat">
-      <span>NTXGlow</span>
-      <strong id="dashNTX">0</strong>
-    </div>
-
-  </div>
 
     <div id="app">
 
@@ -91,6 +92,7 @@
       <button onclick="downloadExcel()">Download</button>
       <button onclick="copyAllOrders()">📋Copy All</button>
       <button onclick="clearAllOrders()">Clear All Orders</button>
+      <button onclick="downloadSelectedOrders()">Download Selected</button>
       <br><br>
     </div>
 
@@ -119,7 +121,8 @@
     <script src="./parserCore.js"></script>
     <script src="./app.js"></script>
 
-</div>
+  </div>
 
 </body>
+
 </html>
