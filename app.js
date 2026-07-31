@@ -55,6 +55,22 @@ function downloadExcel() {
   URL.revokeObjectURL(url);
 }
 
+function downloadSelectedOrders() {
+  if (selectedOrders.size === 0) {
+    alert("No orders selected");
+    return;
+  }
+
+  const selected = [...selectedOrders].map((index) => savedOrders[index]);
+
+  const ws = XLSX.utils.json_to_sheet(selected);
+  const wb = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(wb, ws, "SelectedOrders");
+
+  XLSX.writeFile(wb, "Selected_Orders.xlsx");
+}
+
 function copyAllOrders() {
   if (!savedOrders.length) {
     alert("No saved orders to copy");
@@ -174,19 +190,18 @@ function closeRawViewer() {
 }
 
 function setDashCount(id, value) {
-    const el = document.getElementById(id);
+  const el = document.getElementById(id);
 
-    el.textContent = value;
+  el.textContent = value;
 
-    if (value > 0) {
-        el.classList.add("active");
-    } else {
-        el.classList.remove("active");
-    }
+  if (value > 0) {
+    el.classList.add("active");
+  } else {
+    el.classList.remove("active");
+  }
 }
 
 function updateDashboard() {
-
   const dealerCount = {
     redline360: 0,
     aag: 0,
