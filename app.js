@@ -173,6 +173,18 @@ function closeRawViewer() {
   selectedUnknownOrder = null;
 }
 
+function setDashCount(id, value) {
+    const el = document.getElementById(id);
+
+    el.textContent = value;
+
+    if (value > 0) {
+        el.classList.add("active");
+    } else {
+        el.classList.remove("active");
+    }
+}
+
 function updateDashboard() {
 
   const dealerCount = {
@@ -207,9 +219,9 @@ function updateDashboard() {
     }
   });
 
-  document.getElementById("dashRedline").textContent = dealerCount.redline360;
-  document.getElementById("dashAAG").textContent = dealerCount.aag;
-  document.getElementById("dashTDOT").textContent = dealerCount.tdot;
-  document.getElementById("dashZ1").textContent = dealerCount.z1;
-  document.getElementById("dashNTX").textContent = dealerCount.ntxglow;
+  setDashCount("dashRedline", dealerCount.redline360);
+  setDashCount("dashAAG", dealerCount.aag);
+  setDashCount("dashTDOT", dealerCount.tdot);
+  setDashCount("dashZ1", dealerCount.z1);
+  setDashCount("dashNTX", dealerCount.ntxglow);
 }
