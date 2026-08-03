@@ -68,8 +68,8 @@ th {
 }
 
 #sidebar {
-  width: 240px;
-  min-width: 240px;
+  width: 200px;
+  min-width: 200px;
   background: #f5f5f5;
   color: #222;
   border-right: 1px solid #555;
