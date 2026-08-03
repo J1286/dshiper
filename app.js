@@ -240,3 +240,19 @@ function updateDashboard() {
   setDashCount("dashZ1", dealerCount.z1);
   setDashCount("dashNTX", dealerCount.ntxglow);
 }
+
+async function copyQuickPaste() {
+    const text = document.getElementById("quickPaste").value;
+
+    if (!text) {
+        alert("Please choose an option first.");
+        return;
+    }
+
+    try {
+        await navigator.clipboard.writeText(text);
+        console.log("Copied:", text);
+    } catch (err) {
+        alert("Clipboard access failed.");
+    }
+}
