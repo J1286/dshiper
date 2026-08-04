@@ -242,17 +242,37 @@ function updateDashboard() {
 }
 
 async function copyQuickPaste() {
-    const text = document.getElementById("quickPaste").value;
+  const text = document.getElementById("quickPaste").value;
 
-    if (!text) {
-        alert("Please choose an option first.");
-        return;
-    }
+  if (!text) {
+    alert("Please choose an option first.");
+    return;
+  }
 
-    try {
-        await navigator.clipboard.writeText(text);
-        console.log("Copied:", text);
-    } catch (err) {
-        alert("Clipboard access failed.");
-    }
+  try {
+    await navigator.clipboard.writeText(text);
+    console.log("Copied:", text);
+  } catch (err) {
+    alert("Clipboard access failed.");
+  }
+}
+
+function filterSavedOrders() {
+
+    const search = document
+        .getElementById("savedSearch")
+        .value
+        .toLowerCase();
+
+    const rows = document.querySelectorAll("#savedBody tr");
+
+    rows.forEach(row => {
+
+        const text = row.innerText.toLowerCase();
+
+        row.style.display =
+            text.includes(search)
+                ? ""
+                : "none";
+    });
 }
