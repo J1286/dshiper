@@ -6,6 +6,7 @@ function analyzeOrder(text) {
 
   const itemSection = detectItemSection(lines);
   const itemCandidates = detectItemsFromSection(itemSection);
+  const shipToSection = detectShipToSection(lines);
 
   const phoneCandidates = [];
   const skuCandidates = [];
@@ -93,7 +94,8 @@ function analyzeOrder(text) {
 
   skuCandidates.sort((a, b) => b.score - a.score);
   console.table(skuCandidates);
-
+  console.log("SHIP TO SECTION");
+  console.table(shipToSection.lines);
   return {
     raw: text,
 
@@ -227,4 +229,42 @@ function detectItemsFromSection(itemSection) {
   });
 
   return items;
+}
+
+function detectShipToSection(lines) {
+
+    let start = -1;
+    let end = lines.length;
+
+    for (let i = 0; i < lines.length; i++) {
+
+        if (/ship\s*to|deliver\s*to|shipping address/i.test(lines[i])) {
+            start = i;
+            break;
+        }
+    }
+
+    if (start === -1) {
+        return {
+            startLine: -1,
+            endLine: -1,
+            lines: []
+        };
+    }
+
+    for (let i = start + 1; i < lines.length; i++) {
+
+        if (
+            /bill\s*to|payment|item|sku|product|vendor|subtotal|total/i.test(lines[i])
+        ) {
+            end = i;
+            break;
+        }
+    }
+
+    return {
+        startLine: start,
+        endLine: end,
+        lines: lines.slice(start + 1, end)
+    };
 }
