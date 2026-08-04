@@ -5,9 +5,11 @@ function parseGeneric(order) {
     analysis.itemCandidates && analysis.itemCandidates.length
       ? analysis.itemCandidates
       : extractItemsGeneric(order);
-  console.log("PARSER ITEMS SOURCE:", items);
 
-  const addr = extractAddressGeneric(order);
+  const addr =
+    analysis.addressCandidate && analysis.addressCandidate.addr1
+      ? analysis.addressCandidate
+      : extractAddressGeneric(order);
 
   const subject = order.match(/Subject:\s*(.*)/i)?.[1] || "";
   const paymentSection = getSection(
@@ -52,7 +54,7 @@ function parseGeneric(order) {
   for (let i = 0; i < MAX_ITEMS; i++) {
     const item = items[i] || {};
 
-    const sku = item.sku || item.altSku || "";
+    const sku = getPrimarySKU(item);
 
     row[`Item ID ${i + 1}`] = sku;
     row[`Qty ${i + 1}`] = item.qty || "";
@@ -101,7 +103,7 @@ function parseGeneric(order) {
   if (!items.length) {
     console.warn("Generic parser returned no items:", order);
   }
-
+  console.log("FINAL ROW:", row);
   return [row];
 }
 
