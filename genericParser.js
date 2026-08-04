@@ -1,303 +1,317 @@
 function parseGeneric(order) {
-	const items = extractItemsGeneric(order);
-	const addr = extractAddressGeneric(order);
+  const analysis = analyzeOrder(order);
 
-	const subject = order.match(/Subject:\s*(.*)/i)?.[1] || "";
-	const paymentSection = getSection(
-		order,
-		"Payment/Shipping",
-		"Deliver To|Products|$"
-	);
+  const items =
+    analysis.itemCandidates && analysis.itemCandidates.length
+      ? analysis.itemCandidates
+      : extractItemsGeneric(order);
+  console.log("PARSER ITEMS SOURCE:", items);
 
-	let po =
-		matchFirst(paymentSection, GENERIC_RULES.po) ||
-		matchFirst(order, GENERIC_RULES.po) ||
-		"";
+  const addr = extractAddressGeneric(order);
 
-	if (!po) {
-		const fallback = order.match(/\b(PO|ORDER)?[-\s#]*([A-Z0-9-]{6,})\b/i);
-		if (fallback) po = fallback[2];
-	}
+  const subject = order.match(/Subject:\s*(.*)/i)?.[1] || "";
+  const paymentSection = getSection(
+    order,
+    "Payment/Shipping",
+    "Deliver To|Products|$"
+  );
+
+  let po =
+    analysis.poCandidates?.[0]?.value ||
+    matchFirst(paymentSection, GENERIC_RULES.po) ||
+    matchFirst(order, GENERIC_RULES.po) ||
+    "";
+
+  if (!po) {
+    const fallback = order.match(/\b(PO|ORDER)?[-\s#]*([A-Z0-9-]{6,})\b/i);
+    if (fallback) po = fallback[2];
+  }
 
   function extractPhone(text) {
-  const match =
-    text.match(
-      /\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/
-    )?.[0] || "";
+    const match =
+      text.match(
+        /\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/
+      )?.[0] || "";
 
-  return match.replace(/\D/g, "");
-}
+    return match.replace(/\D/g, "");
+  }
 
-	const detectedDealer = detectBestDealer(order).dealer;
-	const config = DEALER_CONFIG[detectedDealer] || DEALER_CONFIG["redline360"];
+  const detectedDealer = detectBestDealer(order).dealer;
+  const config = DEALER_CONFIG[detectedDealer] || DEALER_CONFIG["redline360"];
 
-	const dealer = detectedDealer;
+  const dealer = detectedDealer;
 
-	const row = {
-		"DShipper ID": config.dshipper,
-		"Tr.Orig.No.": po,
-		"Cust. PO No.": po
-	};
+  const row = {
+    "DShipper ID": config.dshipper,
+    "Tr.Orig.No.": po,
+    "Cust. PO No.": po
+  };
 
-	const MAX_ITEMS = 5;
+  const MAX_ITEMS = 5;
 
-	for (let i = 0; i < MAX_ITEMS; i++) {
-		const item = items[i] || {};
-		const sku = item.sku || "";
+  for (let i = 0; i < MAX_ITEMS; i++) {
+    const item = items[i] || {};
 
-		row[`Item ID ${i + 1}`] = sku;
-		row[`Qty ${i + 1}`] = item.qty || "";
+    const sku = item.sku || item.altSku || "";
 
-		row[`Price ${i + 1}`] = getPrice(dealer, sku);
-	}
+    row[`Item ID ${i + 1}`] = sku;
+    row[`Qty ${i + 1}`] = item.qty || "";
+    row[`Price ${i + 1}`] = item.price || getPrice(dealer, sku);
+  }
 
-	row["Ship Name"] = addr.name || "";
-	row["Ship Addr1"] = addr.addr1 || "";
-	row["Ship Addr2"] = addr.addr2 || "";
-	row["Ship City"] = addr.city || "";
-	row["Ship State"] = addr.state || "";
-	row["Ship Zip"] = addr.zip || "";
-	row["Ship Country"] = detectCountry(addr);
-	row["Ship Phone"] = addr.phone || "";
-	row["Ship Email"] = config.email;
+  row["Ship Name"] = addr.name || "";
+  row["Ship Addr1"] = addr.addr1 || "";
+  row["Ship Addr2"] = addr.addr2 || "";
+  row["Ship City"] = addr.city || "";
+  row["Ship State"] = addr.state || "";
+  row["Ship Zip"] = addr.zip || "";
+  row["Ship Country"] = detectCountry(addr);
+  row["Ship Phone"] = addr.phone || "";
+  row["Ship Email"] = config.email;
 
-	const country = (addr.country || "").toUpperCase();
-	row["Ship Service"] = country === "CA" || country === "CANADA" ? "ST" : "GND";
-	row["Ship Ins."] = "";
-	row["Ship COD"] = "";
+  const country = (addr.country || "").toUpperCase();
+  row["Ship Service"] = country === "CA" || country === "CANADA" ? "ST" : "GND";
+  row["Ship Ins."] = "";
+  row["Ship COD"] = "";
 
-	const totalPrice = items.reduce((sum, item) => {
-		const price = Number(getPrice(dealer, item.sku)) || 0;
-		const qty = Number(item.qty) || 0;
-		return sum + price * qty;
-	}, 0);
+  const totalPrice = items.reduce((sum, item) => {
+    const price = Number(item.price) || Number(getPrice(dealer, item.sku)) || 0;
 
-	row["Ship Confirm."] = totalPrice > 500 ? "Y" : "";
+    const qty = Number(item.qty) || 0;
 
-	// Z1 always uses third-party billing
-	if (row["DShipper ID"] === "W7292") {
-		row["Ship From"] = "Y";
-		row["Ship Acct"] = "Y";
-	}
-	// TDOT only uses third-party billing for Canada
-	else if (row["DShipper ID"] === "W7290" && row["Ship Country"] === "CA") {
-		row["Ship From"] = "Y";
-		row["Ship Acct"] = "Y";
-	} else {
-		row["Ship From"] = "";
-		row["Ship Acct"] = "";
-	}
+    return sum + price * qty;
+  }, 0);
 
-	if (!items.length) {
-		console.warn("Generic parser returned no items:", order);
-	}
+  row["Ship Confirm."] = totalPrice > 500 ? "Y" : "";
 
-	return [row];
+  // Z1 always uses third-party billing
+  if (row["DShipper ID"] === "W7292") {
+    row["Ship From"] = "Y";
+    row["Ship Acct"] = "Y";
+  }
+  // TDOT only uses third-party billing for Canada
+  else if (row["DShipper ID"] === "W7290" && row["Ship Country"] === "CA") {
+    row["Ship From"] = "Y";
+    row["Ship Acct"] = "Y";
+  } else {
+    row["Ship From"] = "";
+    row["Ship Acct"] = "";
+  }
+
+  if (!items.length) {
+    console.warn("Generic parser returned no items:", order);
+  }
+
+  return [row];
 }
 
 function extractItemsGeneric(text) {
-	text = normalizeBrokenLines(text);
-	const lines = text
-		.split("\n")
-		.map((l) => l.trim())
-		.filter(Boolean);
+  text = normalizeBrokenLines(text);
+  const lines = text
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
 
-	const items = [];
+  const items = [];
 
-	for (let i = 0; i < lines.length; i++) {
-		let line = lines[i];
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i];
 
-		// skip noise
-		if (/phone|email|invoice|tracking|account/i.test(line)) continue;
+    // skip noise
+    if (/phone|email|invoice|tracking|account/i.test(line)) continue;
 
-		// ---- strong patterns first ----
-		let match =
-			line.match(/QTY[:\s]*(\d+)\s*[-:]\s*([A-Z0-9-]+)/i) ||
-			line.match(/([A-Z0-9-]{6,})\s+(\d+)\s+\$/i);
+    // ---- strong patterns first ----
+    let match =
+      line.match(/QTY[:\s]*(\d+)\s*[-:]\s*([A-Z0-9-]+)/i) ||
+      line.match(/([A-Z0-9-]{6,})\s+(\d+)\s+\$/i);
 
-		if (match) {
-			const sku = normalizeSKU(match[2] || match[1]);
-			const qty = Number(match[1] || match[2]);
+    if (match) {
+      const sku = normalizeSKU(match[2] || match[1]);
+      const qty = Number(match[1] || match[2]);
 
-			if (isLikelySKU(sku)) {
-				items.push({ sku, qty });
-				continue;
-			}
-		}
+      if (isLikelySKU(sku)) {
+        items.push({ sku, qty });
+        continue;
+      }
+    }
 
-		// ---- SKU on one line, qty on next ----
-		if (isLikelySKU(line) && lines[i + 1]) {
-			const qtyMatch = lines[i + 1].match(/^(\d+)\b/);
+    // ---- SKU on one line, qty on next ----
+    if (isLikelySKU(line) && lines[i + 1]) {
+      const qtyMatch = lines[i + 1].match(/^(\d+)\b/);
 
-			if (qtyMatch) {
-				items.push({
-					sku: normalizeSKU(line),
-					qty: Number(qtyMatch[1])
-				});
-				i++;
-				continue;
-			}
-		}
+      if (qtyMatch) {
+        items.push({
+          sku: normalizeSKU(line),
+          qty: Number(qtyMatch[1])
+        });
+        i++;
+        continue;
+      }
+    }
 
-		// ---- fallback: find SKU only ----
-		const matches = line.match(/[A-Z0-9-]{6,}/g) || [];
+    // ---- fallback: find SKU only ----
+    const matches = line.match(/[A-Z0-9-]{6,}/g) || [];
 
-		if (matches.length) {
-			const scored = matches
-				.map((m) => ({
-					raw: m,
-					score: scoreSKUWithContext(m, lines[i - 1], lines[i + 1])
-				}))
-				.filter((m) => !isUPC(m.raw))
-				.filter((m) => !/^\d{5}(-\d{4})?$/.test(m.raw));
+    if (matches.length) {
+      const scored = matches
+        .map((m) => ({
+          raw: m,
+          score: scoreSKUWithContext(m, lines[i - 1], lines[i + 1])
+        }))
+        .filter((m) => !isUPC(m.raw))
+        .filter((m) => !/^\d{5}(-\d{4})?$/.test(m.raw));
 
-			if (scored.length) {
-				const best = scored.sort((a, b) => b.score - a.score)[0];
+      if (scored.length) {
+        const best = scored.sort((a, b) => b.score - a.score)[0];
 
-				if (best.score >= 0.65) {
-					items.push({
-						sku: normalizeSKU(best.raw),
-						qty: 1
-					});
-				}
-			}
-		}
-	}
+        if (best.score >= 0.65) {
+          items.push({
+            sku: normalizeSKU(best.raw),
+            qty: 1
+          });
+        }
+      }
+    }
+  }
 
-	// remove duplicates
-	const unique = Array.from(new Map(items.map((i) => [i.sku, i])).values());
+  // remove duplicates
+  const unique = Array.from(new Map(items.map((i) => [i.sku, i])).values());
 
-	const cleaned = removeSubstrings(unique);
-	return cleaned.slice(0, 5);
+  const cleaned = removeSubstrings(unique);
+  return cleaned.slice(0, 5);
 }
 
 function extractAddressGeneric(text) {
-	const block = extractBlock(
-		text,
-		GENERIC_RULES.addressStart,
-		GENERIC_RULES.addressEnd
-	);
+  const block = extractBlock(
+    text,
+    GENERIC_RULES.addressStart,
+    GENERIC_RULES.addressEnd
+  );
 
-	if (!block) return {};
+  if (!block) return {};
 
-	let lines = block
-		.split("\n")
-		.map((l) => l.trim())
-		.filter(Boolean);
+  let lines = block
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
 
-	lines = lines.filter((l) => !/customer information/i.test(l));
+  lines = lines.filter((l) => !/customer information/i.test(l));
 
-	if (lines[0] && /deliver to/i.test(lines[0])) {
-		lines.shift();
-	}
+  if (lines[0] && /deliver to/i.test(lines[0])) {
+    lines.shift();
+  }
 
-	let name = lines[0] || "";
-	let addr1 = "",
-		addr2 = "",
-		city = "",
-		state = "",
-		zip = "";
+  let name = lines[0] || "";
+  let addr1 = "",
+    addr2 = "",
+    city = "",
+    state = "",
+    zip = "";
 
-	const addr1Index = lines.findIndex((l) => {
-		const t = l.toLowerCase().trim();
+  const addr1Index = lines.findIndex((l) => {
+    const t = l.toLowerCase().trim();
 
-		// must start with number
-		if (!/^\d+/.test(t)) return false;
+    // must start with number
+    if (!/^\d+/.test(t)) return false;
 
-		// must contain letters (street name)
-		if (!/[a-z]/i.test(t)) return false;
+    // must contain letters (street name)
+    if (!/[a-z]/i.test(t)) return false;
 
-		// reject obvious non-address lines
-		if (/ship to|bill to|customer information|phone|po#/i.test(t)) return false;
+    // reject obvious non-address lines
+    if (/ship to|bill to|customer information|phone|po#/i.test(t)) return false;
 
-		return true;
-	});
+    return true;
+  });
 
-	if (addr1Index !== -1) {
-		addr1 = lines[addr1Index];
+  if (addr1Index !== -1) {
+    addr1 = lines[addr1Index];
 
-		if (lines[addr1Index + 1] && !/,/.test(lines[addr1Index + 1])) {
-			addr2 = lines[addr1Index + 1];
-		}
-	}
+    if (lines[addr1Index + 1] && !/,/.test(lines[addr1Index + 1])) {
+      addr2 = lines[addr1Index + 1];
+    }
+  }
 
-	// find city/state/zip
-	for (let l of lines) {
-		const parsed = parseCityStateZip(l);
-		if (parsed.city) {
-			city = parsed.city;
-			state = parsed.state;
-			zip = parsed.zip;
-			break;
-		}
-	}
+  // find city/state/zip
+  for (let l of lines) {
+    const parsed = parseCityStateZip(l);
+    if (parsed.city) {
+      city = parsed.city;
+      state = parsed.state;
+      zip = parsed.zip;
+      break;
+    }
+  }
 
-	const phoneMatch =
-		matchFirst(text, GENERIC_RULES.phone) ||
-		text.match(/\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/)?.[0] ||
-		"";
+  const phoneMatch =
+    matchFirst(text, GENERIC_RULES.phone) ||
+    text.match(
+      /\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/
+    )?.[0] ||
+    "";
 
-	const phone = phoneMatch.replace(/\D/g, "");
+  const phone = phoneMatch.replace(/\D/g, "");
 
-	let country = "US";
+  let country = "US";
 
-	if (Object.values(PROVINCE_MAP).includes(state)) {
-		country = "CA";
-	}
+  if (Object.values(PROVINCE_MAP).includes(state)) {
+    country = "CA";
+  }
 
-	return {
-		name,
-		addr1,
-		addr2,
-		city,
-		state,
-		zip,
-		country,
-		phone
-	};
+  return {
+    name,
+    addr1,
+    addr2,
+    city,
+    state,
+    zip,
+    country,
+    phone
+  };
 }
 
 function getItemSection(text) {
-	const start = text.search(/Item\s+Vendor\s+SKU/i);
-	if (start === -1) return text;
+  const start = text.search(/Item\s+Vendor\s+SKU/i);
+  if (start === -1) return text;
 
-	const end = text.search(/total|subtotal|receive by/i);
-	return end > start ? text.slice(start, end) : text.slice(start);
+  const end = text.search(/total|subtotal|receive by/i);
+  return end > start ? text.slice(start, end) : text.slice(start);
 }
 
 function generatePluginSuggestion(text) {
-	return {
-		itemPattern: "[A-Z0-9-]{6,}",
-		addressHint: text.includes("Ship To"),
-		poHint: /PO|Order/i.test(text),
-		confidenceBoost: 0.3
-	};
+  return {
+    itemPattern: "[A-Z0-9-]{6,}",
+    addressHint: text.includes("Ship To"),
+    poHint: /PO|Order/i.test(text),
+    confidenceBoost: 0.3
+  };
 }
 
 function generateParserTemplate() {
-	if (!selectedUnknownOrder) return;
+  if (!selectedUnknownOrder) return;
 
-	const text = selectedUnknownOrder.raw;
+  const text = selectedUnknownOrder.raw;
+  const analysis = analyzeOrder(text);
+  console.log(analysis);
 
-	const dealerName = prompt("Name this new dealer format (e.g. newdealer)");
-	if (!dealerName) return;
+  const dealerName = prompt("Name this new dealer format (e.g. newdealer)");
+  if (!dealerName) return;
 
-	const safeName = dealerName.replace(/\s+/g, "_").toLowerCase();
+  const safeName = dealerName.replace(/\s+/g, "_").toLowerCase();
 
-	// ---- extract preview signals ----
-	const lines = text
-		.split("\n")
-		.map((l) => l.trim())
-		.filter(Boolean);
+  // ---- extract preview signals ----
+  const lines = text
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
 
-	const sampleLines = lines.slice(0, 8);
+  const sampleLines = lines.slice(0, 8);
 
-	const skuGuess = lines.find((l) => /[A-Z0-9-]{6,}/.test(l)) || "";
-	const hasShipTo = text.toLowerCase().includes("ship to");
-	const hasBillTo = text.toLowerCase().includes("bill to");
+  const skuGuess = lines.find((l) => /[A-Z0-9-]{6,}/.test(l)) || "";
+  const hasShipTo = text.toLowerCase().includes("ship to");
+  const hasBillTo = text.toLowerCase().includes("bill to");
 
-	// ---- build template ----
-	const template = `
+  // ---- build template ----
+  const template = `
 // ===== ${safeName.toUpperCase()} PARSER TEMPLATE =====
 
 function extractItems_${safeName}(text) {
@@ -366,8 +380,8 @@ function extractAddress_${safeName}(text) {
 // --- DETECTION RULE SUGGESTION ---
 if (
   text.toLowerCase().includes("${
-			lines[0]?.toLowerCase() || "unique_keyword"
-		}") &&
+    lines[0]?.toLowerCase() || "unique_keyword"
+  }") &&
   ${hasShipTo} &&
   ${hasBillTo}
 ) {
@@ -383,43 +397,43 @@ ${safeName}: {
 */
 `;
 
-	// ---- show result ----
-	const win = window.open("", "_blank");
+  // ---- show result ----
+  const win = window.open("", "_blank");
 
-	if (!win) {
-		alert("Popup blocked. Please allow popups for this site.");
-		return;
-	}
+  if (!win) {
+    alert("Popup blocked. Please allow popups for this site.");
+    return;
+  }
 
-	win.document.write(`<pre>${template}</pre>`);
-	win.document.close();
+  win.document.write(`<pre>${template}</pre>`);
+  win.document.close();
 }
 
 function runTestParser() {
-	if (!selectedUnknownOrder) return;
+  if (!selectedUnknownOrder) return;
 
-	const raw = selectedUnknownOrder.raw;
+  const raw = selectedUnknownOrder.raw;
 
-	// ---- generic result ----
-	const generic = parseGeneric(raw)[0];
+  // ---- generic result ----
+  const generic = parseGeneric(raw)[0];
 
-	// ---- test result ----
-	let testResult = null;
+  // ---- test result ----
+  let testResult = null;
 
-	if (testParserFn) {
-		testResult = testParserFn(raw)[0];
-	}
+  if (testParserFn) {
+    testResult = testParserFn(raw)[0];
+  }
 
-	// ---- render output ----
-	const metaEl = document.getElementById("rawViewerMeta");
+  // ---- render output ----
+  const metaEl = document.getElementById("rawViewerMeta");
 
-	metaEl.style.background = "";
+  metaEl.style.background = "";
 
-	if (testResult && testResult.Items > 0) {
-		metaEl.style.background = "#f3fff3";
-	}
+  if (testResult && testResult.Items > 0) {
+    metaEl.style.background = "#f3fff3";
+  }
 
-	metaEl.textContent = `
+  metaEl.textContent = `
 🧪 TEST MODE RESULTS
 
 --- Generic Parser ---
@@ -430,8 +444,8 @@ ${JSON.stringify(testResult, null, 2)}
 
 --- Comparison ---
 Items (Generic): ${
-		Object.keys(generic).filter((k) => k.includes("Item")).length
-	}
+    Object.keys(generic).filter((k) => k.includes("Item")).length
+  }
 Items (Test): ${testResult?.Items || 0}
 `.trim();
 }
