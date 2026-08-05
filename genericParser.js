@@ -412,7 +412,8 @@ if (
 /*
 ${safeName}: {
   dshipper: "",
-  email: ""
+  email: "",
+  thirdParty: false
 }
 */
 `;
