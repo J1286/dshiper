@@ -15,7 +15,7 @@ Browser-based order processing tool that:
   - price table separated
   - order management separated
 - git commit -m "Document refactor structure"
+- Generic parser template upgraded to fit all dealer formats as possible
 
 Future Features
-- Add parser template generator
-- Search saved order
+- Continue to improve template generation (generate better detection rules automatically)
