@@ -213,12 +213,12 @@ function detectItemsFromSection(itemSection) {
 
     if (detailMatch && currentSKUs.length) {
       items.push({
-    	itemId: currentSKUs[0] || "",
-    	vendorSku: currentSKUs[1] || "",
-    	qty: Number(detailMatch[1]),
-    	upc: detailMatch[2],
-    	price: Number(detailMatch[3])
-	});
+        itemId: currentSKUs[0] || "",
+        vendorSku: currentSKUs[1] || "",
+        qty: Number(detailMatch[1]),
+        upc: detailMatch[2],
+        price: Number(detailMatch[3])
+      });
 
       currentSKUs = [];
     }
@@ -347,7 +347,6 @@ function detectShipToSection(lines) {
 }
 
 function getPrimarySKU(item, dealer) {
-
   switch (dealer) {
     case "specd":
       return item.vendorSku || item.itemId || item.sku || "";
