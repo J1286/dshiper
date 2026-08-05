@@ -24,9 +24,12 @@ function parseGeneric(order) {
     matchFirst(order, GENERIC_RULES.po) ||
     "";
 
-  if (!po) {
-    const fallback = order.match(/\b(PO|ORDER)?[-\s#]*([A-Z0-9-]{6,})\b/i);
-    if (fallback) po = fallback[2];
+  const fallback = order.match(
+    /(?:PO|Purchase\s*Order|Customer\s*PO)\s*[#:()\-]*\s*([A-Z0-9-]+)/i
+  );
+
+  if (fallback) {
+    po = fallback[1];
   }
 
   function extractPhone(text) {
@@ -103,8 +106,8 @@ function parseGeneric(order) {
   if (!items.length) {
     console.warn("Generic parser returned no items:", order);
   }
-console.log("Final row:");
-console.table(row);
+  console.log("Final row:");
+  console.table(row);
   return [row];
 }
 
@@ -229,8 +232,9 @@ function extractAddressGeneric(text) {
   if (addr1Index !== -1) {
     addr1 = lines[addr1Index];
 
-    if (lines[addr1Index + 1] && !/,/.test(lines[addr1Index + 1])) {
-      addr2 = lines[addr1Index + 1];
+    const nextLine = lines[addr1Index + 1];
+    if (nextLine && !parseCityStateZip(nextLine).city) {
+      addr2 = nextLine;
     }
   }
 
