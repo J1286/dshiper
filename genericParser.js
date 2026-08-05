@@ -54,7 +54,7 @@ function parseGeneric(order) {
   for (let i = 0; i < MAX_ITEMS; i++) {
     const item = items[i] || {};
 
-    const sku = getPrimarySKU(item);
+    const sku = getPrimarySKU(item, dealer);
 
     row[`Item ID ${i + 1}`] = sku;
     row[`Qty ${i + 1}`] = item.qty || "";
@@ -103,7 +103,8 @@ function parseGeneric(order) {
   if (!items.length) {
     console.warn("Generic parser returned no items:", order);
   }
-
+console.log("Final row:");
+console.table(row);
   return [row];
 }
 
