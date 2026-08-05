@@ -192,6 +192,11 @@ function closeRawViewer() {
 function setDashCount(id, value) {
   const el = document.getElementById(id);
 
+  if (!el) {
+    console.warn("Dashboard element missing:", id);
+    return;
+  }
+
   el.textContent = value;
 
   if (value > 0) {
@@ -208,7 +213,9 @@ function updateDashboard() {
     tdot: 0,
     z1: 0,
     ntxglow: 0,
-    omac: 0
+    omac: 0,
+    procivic: 0,
+    proimport: 0
   };
 
   savedOrders.forEach((order) => {
@@ -232,8 +239,17 @@ function updateDashboard() {
       case "W7266":
         dealerCount.ntxglow++;
         break;
+
       case "W7500":
         dealerCount.omac++;
+        break;
+
+      case "W0640":
+        dealerCount.procivic++;
+        break;
+
+      case "W5111":
+        dealerCount.proimport++;
         break;
     }
   });
@@ -244,6 +260,8 @@ function updateDashboard() {
   setDashCount("dashZ1", dealerCount.z1);
   setDashCount("dashNTX", dealerCount.ntxglow);
   setDashCount("dashOMAC", dealerCount.omac);
+  setDashCount("dashPROCIVIC", dealerCount.procivic);
+  setDashCount("dashPROIMPORT", dealerCount.proimport);
 }
 
 async function copyQuickPaste() {
@@ -263,21 +281,13 @@ async function copyQuickPaste() {
 }
 
 function filterSavedOrders() {
+  const search = document.getElementById("savedSearch").value.toLowerCase();
 
-    const search = document
-        .getElementById("savedSearch")
-        .value
-        .toLowerCase();
+  const rows = document.querySelectorAll("#savedBody tr");
 
-    const rows = document.querySelectorAll("#savedBody tr");
+  rows.forEach((row) => {
+    const text = row.innerText.toLowerCase();
 
-    rows.forEach(row => {
-
-        const text = row.innerText.toLowerCase();
-
-        row.style.display =
-            text.includes(search)
-                ? ""
-                : "none";
-    });
+    row.style.display = text.includes(search) ? "" : "none";
+  });
 }
