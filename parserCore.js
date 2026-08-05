@@ -1,278 +1,289 @@
 // -------- MAIN PARSER --------
 function parseOrder(order) {
-	const detection = detectBestDealer(order);
-	const dealer = detection.dealer;
+  const detection = detectBestDealer(order);
+  const dealer = detection.dealer;
 
-	lastDetection = detection;
+  lastDetection = detection;
 
-	const plugin = PARSER_PLUGINS[dealer] || PARSER_PLUGINS.generic;
+  const plugin = PARSER_PLUGINS[dealer] || PARSER_PLUGINS.generic;
 
-	const result = plugin.parse(order);
+  const result = plugin.parse(order);
 
-	return result;
+  return result;
 }
 
 function safeParseOrder(order) {
-	const detection = detectBestDealer(order);
-	const detectedDealer = detection?.dealer;
-	lastDetection = detection;
+  const detection = detectBestDealer(order);
+  const detectedDealer = detection?.dealer;
+  lastDetection = detection;
 
-	let result;
+  let result;
 
-	switch (detectedDealer) {
-		case "aag":
-		case "redline360":
-		case "tdot":
-		case "z1":
-		case "ntxglow":
-			result = parseOrder(order);
-			break;
+  switch (detectedDealer) {
+    case "aag":
+    case "redline360":
+    case "tdot":
+    case "z1":
+    case "ntxglow":
+      result = parseOrder(order);
+      break;
 
-		default:
-			result = parseGeneric(order);
-	}
+    default:
+      result = parseGeneric(order);
+  }
 
-	const row = result[0] || {};
+  const row = result[0] || {};
 
-	const itemCount = Object.keys(row).filter(
-		(k) => k.includes("Item ID") && row[k]
-	).length;
+  const itemCount = Object.keys(row).filter(
+    (k) => k.includes("Item ID") && row[k]
+  ).length;
 
-	const hasItem = itemCount > 0;
-	const hasGoodAddress = row["Ship Addr1"] && row["Ship City"];
+  const hasItem = itemCount > 0;
+  const hasGoodAddress = row["Ship Addr1"] && row["Ship City"];
 
-	let qualityScore = 0;
-	if (itemCount >= 1) qualityScore += 0.4;
-	if (itemCount >= 2) qualityScore += 0.2;
-	if (itemCount >= 3) qualityScore += 0.1;
-	if (hasGoodAddress) qualityScore += 0.3;
-	if (row["Tr.Orig.No."]) qualityScore += 0.1;
+  let qualityScore = 0;
+  if (itemCount >= 1) qualityScore += 0.4;
+  if (itemCount >= 2) qualityScore += 0.2;
+  if (itemCount >= 3) qualityScore += 0.1;
+  if (hasGoodAddress) qualityScore += 0.3;
+  if (row["Tr.Orig.No."]) qualityScore += 0.1;
 
-	if (!hasItem || !hasGoodAddress) {
-		row["⚠️ Warning"] = "Missing Critical Data";
-	} else if (qualityScore < 0.5) {
-		row["⚠️ Warning"] = "Low Confidence Parse";
-	}
+  if (!hasItem || !hasGoodAddress) {
+    row["⚠️ Warning"] = "Missing Critical Data";
+  } else if (qualityScore < 0.5) {
+    row["⚠️ Warning"] = "Low Confidence Parse";
+  }
 
-	const fingerprint = order.replace(/\s+/g, " ").slice(0, 250);
+  const fingerprint = order.replace(/\s+/g, " ").slice(0, 250);
 
-	const confidence = detection?.confidence ?? 0;
+  const confidence = detection?.confidence ?? 0;
 
-	const shouldFlag =
-		detectedDealer === "unknown" ||
-		!hasItem ||
-		!hasGoodAddress ||
-		qualityScore < 0.5;
+  const shouldFlag =
+    detectedDealer === "unknown" ||
+    !hasItem ||
+    !hasGoodAddress ||
+    qualityScore < 0.5;
 
-	if (shouldFlag) {
-		const existing = unknownOrders.find((o) => o.fingerprint === fingerprint);
+  if (shouldFlag) {
+    const existing = unknownOrders.find((o) => o.fingerprint === fingerprint);
 
-		if (existing) {
-			existing.count = (existing.count || 1) + 1;
-		} else {
-			unknownOrders.push({
-				fingerprint,
-				raw: order,
-				detectedDealer,
-				confidence
-			});
-		}
-	}
+    if (existing) {
+      existing.count = (existing.count || 1) + 1;
+    } else {
+      unknownOrders.push({
+        fingerprint,
+        raw: order,
+        detectedDealer,
+        confidence
+      });
+    }
+  }
 
-	updateUnknownTable();
-	return result;
+  updateUnknownTable();
+  return result;
 }
 
 function buildRow(order, dealer, items, addr) {
-	const config = DEALER_CONFIG[dealer] || DEALER_CONFIG["redline360"];
+  const config = DEALER_CONFIG[dealer] || DEALER_CONFIG["redline360"];
 
-	const paymentSection = getSection(
-		order,
-		"Payment/Shipping",
-		"Deliver To|Products|$"
-	);
+  const paymentSection = getSection(
+    order,
+    "Payment/Shipping",
+    "Deliver To|Products|$"
+  );
 
-	let po =
-		matchFirst(paymentSection, GENERIC_RULES.po) ||
-		matchFirst(order, GENERIC_RULES.po) ||
-		"";
+  let po =
+    matchFirst(paymentSection, GENERIC_RULES.po) ||
+    matchFirst(order, GENERIC_RULES.po) ||
+    "";
 
-	const row = {
-		"DShipper ID": config.dshipper,
-		"Tr.Orig.No.": po,
-		"Cust. PO No.": po
-	};
+  const row = {
+    "DShipper ID": config.dshipper,
+    "Tr.Orig.No.": po,
+    "Cust. PO No.": po
+  };
 
-	const MAX_ITEMS = 5;
+  const MAX_ITEMS = 5;
 
-	for (let i = 0; i < MAX_ITEMS; i++) {
-		const item = items[i] || {};
-		const sku = item.sku || "";
+  for (let i = 0; i < MAX_ITEMS; i++) {
+    const item = items[i] || {};
+    const sku = item.sku || "";
 
-		row[`Item ID ${i + 1}`] = sku;
-		row[`Qty ${i + 1}`] = item.qty || "";
-		row[`Price ${i + 1}`] = getPrice(dealer, sku);
-	}
+    row[`Item ID ${i + 1}`] = sku;
+    row[`Qty ${i + 1}`] = item.qty || "";
+    row[`Price ${i + 1}`] = getPrice(dealer, sku);
+  }
 
-	row["Ship Name"] = addr.name || "";
-	row["Ship Addr1"] = addr.addr1 || "";
-	row["Ship Addr2"] = addr.addr2 || "";
-	row["Ship City"] = addr.city || "";
-	row["Ship State"] = addr.state || "";
-	row["Ship Zip"] = addr.zip || "";
-	row["Ship Country"] = detectCountry(addr);
-	row["Ship Phone"] = addr.phone || "";
+  row["Ship Name"] = addr.name || "";
+  row["Ship Addr1"] = addr.addr1 || "";
+  row["Ship Addr2"] = addr.addr2 || "";
+  row["Ship City"] = addr.city || "";
+  row["Ship State"] = addr.state || "";
+  row["Ship Zip"] = addr.zip || "";
+  row["Ship Country"] = detectCountry(addr);
+  row["Ship Phone"] = addr.phone || "";
 
-	const isUS = /^(US|USA|United States)$/i.test(row["Ship Country"]);
-	const emailConfig =
-		dealer === "tdot" && isUS && config.us ? config.us : config;
+  const isUS = /^(US|USA|United States)$/i.test(row["Ship Country"]);
+  const emailConfig =
+    dealer === "tdot" && isUS && config.us ? config.us : config;
 
-	row["Ship Email"] = emailConfig.email;
+  row["Ship Email"] = emailConfig.email;
 
-	const country = (addr.country || "").toUpperCase();
-	row["Ship Service"] = country === "CA" || country === "CANADA" ? "ST" : "GND";
+  const country = (addr.country || "").toUpperCase();
+  row["Ship Service"] = country === "CA" || country === "CANADA" ? "ST" : "GND";
 
-	row["Ship Ins."] = "";
-	row["Ship COD"] = "";
+  row["Ship Ins."] = "";
+  row["Ship COD"] = "";
 
-	const totalPrice = items.reduce((sum, item) => {
-		const price = Number(getPrice(dealer, item.sku)) || 0;
-		const qty = Number(item.qty) || 0;
-		return sum + price * qty;
-	}, 0);
+  const totalPrice = items.reduce((sum, item) => {
+    const price = Number(getPrice(dealer, item.sku)) || 0;
+    const qty = Number(item.qty) || 0;
+    return sum + price * qty;
+  }, 0);
 
-	row["Ship Confirm."] = totalPrice > 500 ? "Y" : "";
+  row["Ship Confirm."] = totalPrice > 500 ? "Y" : "";
 
-	// Z1 always uses third-party billing
-	if (row["DShipper ID"] === "W7292") {
-		row["Ship From"] = "Y";
-		row["Ship Acct"] = "Y";
-	}
-	// TDOT only uses third-party billing for Canada
-	else if (row["DShipper ID"] === "W7290" && row["Ship Country"] === "CA") {
-		row["Ship From"] = "Y";
-		row["Ship Acct"] = "Y";
-	} else {
-		row["Ship From"] = "";
-		row["Ship Acct"] = "";
-	}
+  // Z1 always uses third-party billing
+  if (row["DShipper ID"] === "W7292") {
+    row["Ship From"] = "Y";
+    row["Ship Acct"] = "Y";
+  }
+  // TDOT only uses third-party billing for Canada
+  else if (row["DShipper ID"] === "W7290" && row["Ship Country"] === "CA") {
+    row["Ship From"] = "Y";
+    row["Ship Acct"] = "Y";
+  } else {
+    row["Ship From"] = "";
+    row["Ship Acct"] = "";
+  }
 
-	return [row];
+  return [row];
 }
 
 function matchFirst(text, patterns) {
-	for (let p of patterns) {
-		const m = text.match(p);
-		if (m) return (m[2] || m[1])?.trim();
-	}
-	return "";
+  for (let p of patterns) {
+    const m = text.match(p);
+    if (m) return (m[2] || m[1])?.trim();
+  }
+  return "";
 }
 
 function extractBlock(text, startPatterns, endPatterns) {
-	let startIndex = -1;
+  let startIndex = -1;
 
-	for (let p of startPatterns) {
-		const m = text.search(p);
-		if (m !== -1) {
-			startIndex = m;
-			break;
-		}
-	}
+  for (let p of startPatterns) {
+    const m = text.search(p);
+    if (m !== -1) {
+      startIndex = m;
+      break;
+    }
+  }
 
-	if (startIndex === -1) return "";
+  if (startIndex === -1) return "";
 
-	const afterStart = text.slice(startIndex);
+  const afterStart = text.slice(startIndex);
 
-	for (let p of endPatterns) {
-		const m = afterStart.search(p);
-		if (m !== -1) {
-			return afterStart.slice(0, m);
-		}
-	}
+  for (let p of endPatterns) {
+    const m = afterStart.search(p);
+    if (m !== -1) {
+      return afterStart.slice(0, m);
+    }
+  }
 
-	return afterStart;
+  return afterStart;
 }
 
 function getSection(text, startLabel, endLabel) {
-	const start = text.search(new RegExp(startLabel, "i"));
-	if (start === -1) return "";
+  const start = text.search(new RegExp(startLabel, "i"));
+  if (start === -1) return "";
 
-	const slice = text.slice(start);
+  const slice = text.slice(start);
 
-	if (!endLabel) return slice;
+  if (!endLabel) return slice;
 
-	const end = slice.search(new RegExp(endLabel, "i"));
-	return end === -1 ? slice : slice.slice(0, end);
+  const end = slice.search(new RegExp(endLabel, "i"));
+  return end === -1 ? slice : slice.slice(0, end);
 }
 
 // -------- DEALER DETECTION --------
 function detectBestDealer(text) {
-	const ranked = scoreDealer(text);
+  const ranked = scoreDealer(text);
 
-	const best = ranked[0];
+  console.table(ranked);
 
-	if (!best || best.score < 0.45) {
-		return {
-			dealer: "unknown",
-			confidence: best ? best.score : 0,
-			ranked
-		};
-	}
+  const best = ranked[0];
 
-	return {
-		dealer: best.dealer,
-		confidence: best.score,
-		ranked
-	};
+  if (!best || best.score < 0.45) {
+    return {
+      dealer: "unknown",
+      confidence: best ? best.score : 0,
+      ranked
+    };
+  }
+
+  return {
+    dealer: best.dealer,
+    confidence: best.score,
+    ranked
+  };
 }
 
 function getDealerFromRow(row) {
-	return DSHIPPER_TO_DEALER[row["DShipper ID"]] || "redline360";
+  return DSHIPPER_TO_DEALER[row["DShipper ID"]] || "redline360";
 }
 
 function scoreDealer(text) {
-	const t = text.toLowerCase();
+  const t = text.toLowerCase();
 
-	const scores = {
-		aag: 0,
-		redline360: 0,
-		tdot: 0,
-		z1: 0,
-		ntxglow: 0
-	};
+  const scores = {
+    aag: 0,
+    redline360: 0,
+    tdot: 0,
+    z1: 0,
+    ntxglow: 0,
+    omac: 0
+  };
 
-	// -------- AAG --------
-	if (t.includes("spec-d tuning items purchased")) scores.aag += 0.6;
-	if (t.includes("bill to") && t.includes("ship to")) scores.aag += 0.2;
-	if (t.includes("aag")) scores.aag += 0.2;
+  // -------- AAG --------
+  if (t.includes("spec-d tuning items purchased")) scores.aag += 0.6;
+  if (t.includes("bill to") && t.includes("ship to")) scores.aag += 0.2;
+  if (t.includes("aag")) scores.aag += 0.2;
 
-	// -------- REDLINE --------
-	if (t.includes("redline360")) scores.redline360 += 0.8;
-	if (t.includes("sku:")) scores.redline360 += 0.1;
-	if (t.includes("quantity:")) scores.redline360 += 0.1;
+  // -------- REDLINE --------
+  if (t.includes("redline360")) scores.redline360 += 0.8;
+  if (t.includes("sku:")) scores.redline360 += 0.1;
+  if (t.includes("quantity:")) scores.redline360 += 0.1;
 
-	// -------- TDOT --------
-	if (t.includes("tdot")) scores.tdot += 0.7;
-	if (/tdot\s*performance/i.test(t)) scores.tdot += 0.3;
+  // -------- TDOT --------
+  if (t.includes("tdot")) scores.tdot += 0.7;
+  if (/tdot\s*performance/i.test(t)) scores.tdot += 0.3;
 
-	// TDOT US format
-	if (t.includes("new spec d tuning order po")) scores.tdot += 0.8;
-	if (t.includes("specdtuning-")) scores.tdot += 0.2;
+  // TDOT US format
+  if (t.includes("new spec d tuning order po")) scores.tdot += 0.8;
+  if (t.includes("specdtuning-")) scores.tdot += 0.2;
 
-	// -------- Z1 --------
-	if (t.includes("z1 motorsports")) scores.z1 += 0.8;
-	if (t.includes("qty") && /[a-z0-9-]{6,}/i.test(t)) scores.z1 += 0.2;
-	if (t.includes("purchase order") && t.includes("fedex")) scores.z1 += 0.2;
-	if (t.includes("deliver to")) scores.z1 += 0.2;
-	if (t.includes("purchase order number")) scores.z1 += 0.2;
-	if (t.includes("products item number")) scores.z1 += 0.3;
+  // -------- Z1 --------
+  if (t.includes("z1 motorsports")) scores.z1 += 0.8;
+  if (t.includes("qty") && /[a-z0-9-]{6,}/i.test(t)) scores.z1 += 0.2;
+  if (t.includes("purchase order") && t.includes("fedex")) scores.z1 += 0.2;
+  if (t.includes("deliver to")) scores.z1 += 0.2;
+  if (t.includes("purchase order number")) scores.z1 += 0.2;
+  if (t.includes("products item number")) scores.z1 += 0.3;
 
-	// -------- NTXGlow --------
-	if (t.includes("ntxglow")) scores.ntxglow += 0.9;
-	if (t.includes("sku / part #:")) scores.ntxglow += 0.3;
-	if (t.includes("thank you, ntxglow")) scores.ntxglow += 0.5;
+  // -------- NTXGlow --------
+  if (t.includes("ntxglow")) scores.ntxglow += 0.9;
+  if (t.includes("sku / part #:")) scores.ntxglow += 0.3;
+  if (t.includes("thank you, ntxglow")) scores.ntxglow += 0.5;
 
-	return Object.entries(scores)
-		.map(([dealer, score]) => ({ dealer, score }))
-		.sort((a, b) => b.score - a.score);
+  // -------- OMAC --------
+  if (t.includes("purchase order")) scores.omac += 0.2;
+  if (t.includes("po-us")) scores.omac += 0.4;
+  if (t.includes("vendor ship to total")) scores.omac += 0.3;
+  if (t.includes("item vendor sku item description quantity upc-ean")) {
+    scores.omac += 0.3;
+  }
+
+  return Object.entries(scores)
+    .map(([dealer, score]) => ({ dealer, score }))
+    .sort((a, b) => b.score - a.score);
 }
