@@ -95,10 +95,7 @@ function analyzeOrder(text) {
   });
 
   skuCandidates.sort((a, b) => b.score - a.score);
-  console.table(skuCandidates);
-  console.log("SHIP TO SECTION");
 
-  console.table(shipToSection.lines);
   return {
     raw: text,
 
@@ -165,7 +162,7 @@ function detectItemsFromSection(itemSection) {
   let currentSKUs = [];
 
   lines.forEach((line) => {
-    const skuMatches = line.match(/[A-Z0-9-]{6,}/gi) || [];
+    const skuMatches = line.match(/^(?=.*[A-Z])(?=.*\d)[A-Z0-9-]{6,}$/i) || [];
 
     skuMatches.forEach((sku) => {
       sku = sku.toUpperCase();
@@ -216,16 +213,12 @@ function detectItemsFromSection(itemSection) {
 
     if (detailMatch && currentSKUs.length) {
       items.push({
-        sku: currentSKUs[0],
-
-        altSku: currentSKUs.length > 1 ? currentSKUs[1] : "",
-
-        qty: Number(detailMatch[1]),
-
-        upc: detailMatch[2],
-
-        price: Number(detailMatch[3])
-      });
+    	itemId: currentSKUs[0] || "",
+    	vendorSku: currentSKUs[1] || "",
+    	qty: Number(detailMatch[1]),
+    	upc: detailMatch[2],
+    	price: Number(detailMatch[3])
+	});
 
       currentSKUs = [];
     }
@@ -353,16 +346,16 @@ function detectShipToSection(lines) {
   };
 }
 
-function getPrimarySKU(item) {
-  // prefer vendor SKU
-  if (item.sku && !item.isUPC) {
-    return item.sku;
-  }
+function getPrimarySKU(item, dealer) {
 
-  // fallback
-  if (item.altSku) {
-    return item.altSku;
-  }
+  switch (dealer) {
+    case "specd":
+      return item.vendorSku || item.itemId || item.sku || "";
 
-  return "";
+    case "dealerX":
+      return item.itemId || item.vendorSku || item.sku || "";
+
+    default:
+      return item.sku || item.vendorSku || item.itemId || "";
+  }
 }
