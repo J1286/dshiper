@@ -207,7 +207,8 @@ function updateDashboard() {
     aag: 0,
     tdot: 0,
     z1: 0,
-    ntxglow: 0
+    ntxglow: 0,
+    omac: 0
   };
 
   savedOrders.forEach((order) => {
@@ -231,6 +232,9 @@ function updateDashboard() {
       case "W7266":
         dealerCount.ntxglow++;
         break;
+      case "W7500":
+        dealerCount.omac++;
+        break;
     }
   });
 
@@ -239,6 +243,7 @@ function updateDashboard() {
   setDashCount("dashTDOT", dealerCount.tdot);
   setDashCount("dashZ1", dealerCount.z1);
   setDashCount("dashNTX", dealerCount.ntxglow);
+  setDashCount("dashOMAC", dealerCount.omac);
 }
 
 async function copyQuickPaste() {
