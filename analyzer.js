@@ -7,6 +7,8 @@ function analyzeOrder(text) {
   const itemSection = detectItemSection(lines);
   const itemCandidates = detectItemsFromSection(itemSection);
   const shipToSection = detectShipToSection(lines);
+  console.log("SHIP TO RAW:");
+  console.table(shipToSection.lines);
 
   const addressCandidate = detectAddressFromSection(shipToSection);
 
@@ -15,13 +17,13 @@ function analyzeOrder(text) {
   const poCandidates = [];
 
   lines.forEach((line, index) => {
-    const matches = line.match(/\b(?:#?PO[-\s:#]*[A-Z0-9-]+)\b/i);
+    const matches = line.match(/#?PO[-\s:#]*[A-Z0-9-]+/i);
 
     if (matches) {
       console.log("FOUND PO:", matches[0]);
 
       poCandidates.push({
-        value: matches[0].replace(/^#/, "").trim(),
+        value: matches[0].replace(/^#/, "").trim().toUpperCase(),
 
         line: index,
 
@@ -270,32 +272,54 @@ function detectAddressFromSection(shipToSection) {
       city = parsed.city;
       state = parsed.state;
       zip = parsed.zip;
+      break;
     }
   }
 
   // Street address
-  const addressIndexes = [];
+  let cityLineIndex = -1;
 
-  lines.forEach((line, i) => {
-    if (/^\d+/.test(line) && /[A-Za-z]/.test(line)) {
-      addressIndexes.push(i);
+  for (let i = 0; i < lines.length; i++) {
+    if (parseCityStateZip(lines[i]).city) {
+      cityLineIndex = i;
     }
-  });
+  }
 
-  const addrIndex = addressIndexes.length
-    ? addressIndexes[addressIndexes.length - 1]
-    : -1;
+  if (cityLineIndex > 0) {
+    // Find the first line that starts the street address
+    let addrStartIndex = -1;
 
-  if (addrIndex !== -1) {
-    addr1 = lines[addrIndex];
-
-    if (lines[addrIndex + 1] && !parseCityStateZip(lines[addrIndex + 1]).city) {
-      addr2 = lines[addrIndex + 1];
+    for (let i = cityLineIndex - 1; i >= 0; i--) {
+      if (/^\d+/.test(lines[i]) && /[A-Za-z]/.test(lines[i])) {
+        addrStartIndex = i;
+        break;
+      }
     }
 
-    // Usually customer's name is just above address
-    if (addrIndex > 0) {
-      name = lines[addrIndex - 1];
+    if (addrStartIndex !== -1) {
+      // customer name is before address
+      if (addrStartIndex > 0) {
+        for (let i = addrStartIndex - 1; i >= 0; i--) {
+          if (!/united states|ship to|vendor|spec-d|phone/i.test(lines[i])) {
+            name = lines[i];
+            break;
+          }
+        }
+      }
+
+      const addressLines = lines.slice(addrStartIndex, cityLineIndex);
+
+      addr1 = addressLines.join(" ");
+
+      const lastLine = addressLines[addressLines.length - 1];
+
+      if (/^\d+[A-Za-z]?$/.test(lastLine) && addressLines.length > 1) {
+        addr2 = lastLine;
+
+        addressLines.pop();
+
+        addr1 = addressLines.join(" ");
+      }
     }
   }
 
@@ -332,7 +356,9 @@ function detectShipToSection(lines) {
 
   for (let i = start + 1; i < lines.length; i++) {
     if (
-      /bill\s*to|payment|item|sku|product|vendor|subtotal|total/i.test(lines[i])
+      /^(bill\s*to|payment|item\s+vendor|item\s+sku|subtotal|grand total|total$)/i.test(
+        lines[i]
+      )
     ) {
       end = i;
       break;
