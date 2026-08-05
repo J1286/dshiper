@@ -97,8 +97,8 @@ function analyzeOrder(text) {
   skuCandidates.sort((a, b) => b.score - a.score);
   console.table(skuCandidates);
   console.log("SHIP TO SECTION");
+
   console.table(shipToSection.lines);
-  console.log(addressCandidate);
   return {
     raw: text,
 
