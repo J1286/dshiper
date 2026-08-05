@@ -103,7 +103,7 @@ function parseGeneric(order) {
   if (!items.length) {
     console.warn("Generic parser returned no items:", order);
   }
-  console.log("FINAL ROW:", row);
+
   return [row];
 }
 
