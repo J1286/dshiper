@@ -24,12 +24,14 @@ function parseGeneric(order) {
     matchFirst(order, GENERIC_RULES.po) ||
     "";
 
-  const fallback = order.match(
-    /(?:PO|Purchase\s*Order|Customer\s*PO)\s*[#:()\-]*\s*([A-Z0-9-]+)/i
-  );
+  if (!po) {
+    const fallback = order.match(
+      /\b(?:PO|PURCHASE ORDER)[ \t]*#?[-:]?[ \t]*([A-Z0-9-]{4,})\b/i
+    );
 
-  if (fallback) {
-    po = fallback[1];
+    if (fallback) {
+      po = fallback[1].toUpperCase();
+    }
   }
 
   function extractPhone(text) {
@@ -298,7 +300,6 @@ function generateParserTemplate() {
 
   const text = selectedUnknownOrder.raw;
   const analysis = analyzeOrder(text);
-  console.log(analysis);
 
   const dealerName = prompt("Name this new dealer format (e.g. newdealer)");
   if (!dealerName) return;
@@ -312,10 +313,26 @@ function generateParserTemplate() {
     .filter(Boolean);
 
   const sampleLines = lines.slice(0, 8);
+  const keyword = suggestDetectionKeyword(text);
 
-  const skuGuess = lines.find((l) => /[A-Z0-9-]{6,}/.test(l)) || "";
   const hasShipTo = text.toLowerCase().includes("ship to");
   const hasBillTo = text.toLowerCase().includes("bill to");
+
+  const detectionParts = [];
+
+  if (keyword) {
+    detectionParts.push(
+      `text.toLowerCase().includes("${keyword.toLowerCase()}")`
+    );
+  }
+
+  if (hasShipTo) {
+    detectionParts.push(`text.toLowerCase().includes("ship to")`);
+  }
+
+  if (hasBillTo) {
+    detectionParts.push(`text.toLowerCase().includes("bill to")`);
+  }
 
   // ---- build template ----
   const template = `
@@ -386,11 +403,7 @@ function extractAddress_${safeName}(text) {
 
 // --- DETECTION RULE SUGGESTION ---
 if (
-  text.toLowerCase().includes("${
-    lines[0]?.toLowerCase() || "unique_keyword"
-  }") &&
-  ${hasShipTo} &&
-  ${hasBillTo}
+  ${detectionParts.join("\n  &&\n  ") || 'text.includes("unique_keyword")'}
 ) {
   return "${safeName}";
 }
@@ -440,8 +453,16 @@ function runTestParser() {
     metaEl.style.background = "#f3fff3";
   }
 
+  const checklist = generateDealerChecklist(raw);
+
   metaEl.textContent = `
 🧪 TEST MODE RESULTS
+
+--- Dealer Setup Checklist ---
+
+${checklist.detected.join("\n")}
+${checklist.missing.length ? "\nNeeds Attention:\n" : ""}
+${checklist.missing.join("\n")}
 
 --- Generic Parser ---
 ${JSON.stringify(generic, null, 2)}
@@ -455,4 +476,20 @@ Items (Generic): ${
   }
 Items (Test): ${testResult?.Items || 0}
 `.trim();
+}
+
+function suggestDetectionKeyword(text) {
+  const lines = text
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  const candidates = lines.filter(
+    (line) =>
+      !/ship|address|phone|purchase|order|quantity|product|part|price/i.test(
+        line
+      )
+  );
+
+  return candidates[0] || "";
 }
