@@ -36,9 +36,13 @@ const PARSER_PLUGINS = {
     parse: parseGeneric,
     confidence: 0.9
   },
-  generic: {
+  procivic: {
     parse: parseGeneric,
-    confidence: 0.5
+    confidence: 0.9
+  },
+  proimport: {
+    parse: parseGeneric,
+    confidence: 0.9
   }
 };
 
@@ -104,6 +108,17 @@ const DEALER_CONFIG = {
     dshipper: "W7500",
     email: "info@omacshop.com",
     thirdParty: false
+  },
+
+  procivic: {
+    dshipper: "W0640",
+    email: "purchasing@procivic.com",
+    thirdParty: false
+  },
+  proimport: {
+    dshipper: "W5111",
+    email: "purchasing@proimporttuners.com",
+    thirdParty: false
   }
 };
 
@@ -113,7 +128,9 @@ const DSHIPPER_TO_DEALER = {
   W7290: "tdot",
   W7292: "z1",
   W7266: "ntxglow",
-  W7500: "omac"
+  W7500: "omac",
+  W0640: "prociviv",
+  W5111: "proimport"
 };
 
 const STATE_MAP = {
