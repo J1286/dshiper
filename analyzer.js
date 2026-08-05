@@ -272,7 +272,6 @@ function detectAddressFromSection(shipToSection) {
       city = parsed.city;
       state = parsed.state;
       zip = parsed.zip;
-      break;
     }
   }
 
