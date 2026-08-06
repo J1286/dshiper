@@ -26,7 +26,6 @@ function safeParseOrder(order) {
     case "z1":
     case "ntxglow":
     case "procivic":
-    case "proimport":
       result = parseOrder(order);
       break;
 
@@ -242,8 +241,7 @@ function scoreDealer(text) {
     z1: 0,
     ntxglow: 0,
     omac: 0,
-    procivic: 0,
-    proimport: 0
+    procivic: 0
   };
 
   // -------- AAG --------
@@ -289,18 +287,10 @@ function scoreDealer(text) {
   if (
     t.includes("car type:") &&
     t.includes("honda civic") &&
-    t.includes("ship to")
+    t.includes("ship to") &&
+    t.includes("shipping method")
   ) {
     scores.procivic += 0.9;
-  }
-
-  // -------- PROIMPORT --------
-  if (
-    t.includes("car type:") &&
-    t.includes("mazda mazda3") &&
-    t.includes("ship to")
-  ) {
-    scores.proimport += 0.9;
   }
 
   return Object.entries(scores)
