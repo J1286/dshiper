@@ -287,8 +287,9 @@ function scoreDealer(text) {
   if (
     t.includes("car type:") &&
     t.includes("honda civic") &&
+    t.includes("shipping method") &&
     t.includes("ship to") &&
-    t.includes("shipping method")
+    t.includes("pro design")
   ) {
     scores.procivic += 0.9;
   }
