@@ -120,6 +120,22 @@ function extractItemsGeneric(text) {
     .map((l) => l.trim())
     .filter(Boolean);
 
+  // Priority: Mfg SKU
+  for (let i = 0; i < lines.length - 1; i++) {
+    if (/^Mfg SKU$/i.test(lines[i])) {
+      const sku = normalizeSKU(lines[i + 1]);
+
+      if (isLikelySKU(sku)) {
+        return [
+          {
+            sku,
+            qty: 1
+          }
+        ];
+      }
+    }
+  }
+
   const items = [];
 
   for (let i = 0; i < lines.length; i++) {
@@ -187,6 +203,35 @@ function extractItemsGeneric(text) {
 
   const cleaned = removeSubstrings(unique);
   return cleaned.slice(0, 5);
+}
+
+function extractLabeledSKU(text) {
+  const lines = text
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  const preferredLabels = [
+    "mfg sku",
+    "manufacturer sku",
+    "vendor sku",
+    "part no",
+    "part number"
+  ];
+
+  for (let i = 0; i < lines.length - 1; i++) {
+    const label = lines[i].toLowerCase().replace(".", "");
+
+    if (preferredLabels.includes(label)) {
+      const candidate = normalizeSKU(lines[i + 1]);
+
+      if (isLikelySKU(candidate)) {
+        return candidate;
+      }
+    }
+  }
+
+  return "";
 }
 
 function extractAddressGeneric(text) {
