@@ -40,10 +40,6 @@ const PARSER_PLUGINS = {
     parse: parseGeneric,
     confidence: 0.9
   },
-  proimport: {
-    parse: parseGeneric,
-    confidence: 0.9
-  }
 };
 
 const GENERIC_RULES = {
@@ -114,11 +110,6 @@ const DEALER_CONFIG = {
     dshipper: "W0640",
     email: "purchasing@procivic.com",
     thirdParty: false
-  },
-  proimport: {
-    dshipper: "W5111",
-    email: "purchasing@proimporttuners.com",
-    thirdParty: false
   }
 };
 
@@ -129,8 +120,7 @@ const DSHIPPER_TO_DEALER = {
   W7292: "z1",
   W7266: "ntxglow",
   W7500: "omac",
-  W0640: "prociviv",
-  W5111: "proimport"
+  W0640: "prociviv"
 };
 
 const STATE_MAP = {
