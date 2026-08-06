@@ -17,18 +17,15 @@ function analyzeOrder(text) {
   const poCandidates = [];
 
   lines.forEach((line, index) => {
-    const matches = line.match(/#?PO[-\s:#]*[A-Z0-9-]+/i);
+    const match = line.match(
+      /\b(?:PURCHASE\s+ORDER|P\.?O\.?|PO)\b\s*#?\s*:?\s*([A-Z0-9-]{4,})/i
+    );
 
-    if (matches) {
-      console.log("FOUND PO:", matches[0]);
-
+    if (match) {
       poCandidates.push({
-        value: matches[0].replace(/^#/, "").trim().toUpperCase(),
-
+        value: match[1].toUpperCase(),
         line: index,
-
         raw: line,
-
         score: 1
       });
     }
