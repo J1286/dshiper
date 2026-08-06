@@ -284,13 +284,15 @@ function scoreDealer(text) {
   }
 
   // -------- PROCIVIC --------
-  if (
-    t.includes("car type:") &&
-    t.includes("shipping method") &&
-    t.includes("ship to") &&
-    t.includes("purchase order") &&
-    t.includes("pro design")
-  ) {
+  const signals = [
+    t.includes("car type:"),
+    t.includes("shipping method"),
+    t.includes("ship to"),
+    t.includes("purchase order"),
+    t.includes("part number")
+  ];
+
+  if (signals.filter(Boolean).length >= 4) {
     scores.procivic += 0.9;
   }
 
