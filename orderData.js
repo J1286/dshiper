@@ -43,12 +43,10 @@ function updatePreview() {
       td.textContent = r[h] || "";
 
       if (
-        h === "DShipper ID" &&
-        ["W0640", "W5111"].includes(String(r[h]).toUpperCase())
+    	h === "DShipper ID" &&
+    	manualCheckDShippers.has(String(r[h]).toUpperCase())
       ) {
-        td.style.backgroundColor = "#fff3cd";
-        td.style.color = "#b00020";
-        td.style.fontWeight = "bold";
+    	td.classList.add("manual-check");
       }
 
       tr.appendChild(td);
@@ -271,13 +269,7 @@ function updateSavedTable() {
     headers.forEach((h) => {
       const td = document.createElement("td");
 
-      td.textContent = r[h] || "";
-      if (
-        h === "DShipper ID" &&
-        manualCheckDShippers.has(String(r[h]).toUpperCase())
-      ) {
-        td.classList.add("manual-check");
-      }
+      td.textContent = r[h] || "";      
 
       // Copy SKU when clicked
       if (h.startsWith("Item ID") && r[h]) {
