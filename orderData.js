@@ -41,8 +41,19 @@ function updatePreview() {
       const td = document.createElement("td");
       td.contentEditable = true;
       td.textContent = r[h] || "";
+
+      if (
+        h === "DShipper ID" &&
+        ["W0640", "W5111"].includes(String(r[h]).toUpperCase())
+      ) {
+        td.style.backgroundColor = "#fff3cd";
+        td.style.color = "#b00020";
+        td.style.fontWeight = "bold";
+      }
+
       tr.appendChild(td);
     });
+
     body.appendChild(tr);
   });
   document.getElementById(
@@ -245,7 +256,7 @@ function updateSavedTable() {
     };
 
     const actionTd = document.createElement("td");
-    
+
     actionTd.className = "action-cell";
     copyBtn.className = "action-btn";
     deleteBtn.className = "action-btn";
@@ -261,6 +272,12 @@ function updateSavedTable() {
       const td = document.createElement("td");
 
       td.textContent = r[h] || "";
+      if (
+        h === "DShipper ID" &&
+        manualCheckDShippers.has(String(r[h]).toUpperCase())
+      ) {
+        td.classList.add("manual-check");
+      }
 
       // Copy SKU when clicked
       if (h.startsWith("Item ID") && r[h]) {
