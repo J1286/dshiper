@@ -11,6 +11,11 @@ let testParserName = "";
 let editingRow = -1;
 let selectedOrders = new Set();
 
+const manualCheckDShippers = new Set([
+    "W0640",
+    "W5111"
+]);
+
 const PARSER_PLUGINS = {
   redline360: {
     parse: parseRedlineWrapper,
