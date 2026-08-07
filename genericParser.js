@@ -307,7 +307,22 @@ function extractAddressGeneric(text) {
 
   let country = "US";
 
-  if (Object.values(PROVINCE_MAP).includes(state)) {
+  // Explicit country line takes priority
+  for (const line of lines) {
+    if (/^canada$/i.test(line.trim())) {
+      country = "CA";
+      break;
+    }
+
+    if (/^united states$/i.test(line.trim())) {
+      country = "US";
+      break;
+    }
+  }
+
+  // If there is no explicit country line, use the province/state
+  // as a fallback.
+  if (country === "US" && Object.values(PROVINCE_MAP).includes(state)) {
     country = "CA";
   }
 
