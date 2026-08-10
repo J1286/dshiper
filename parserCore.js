@@ -25,6 +25,7 @@ function safeParseOrder(order) {
     case "tdot":
     case "z1":
     case "ntxglow":
+    case "omac":
     case "procivic":
     case "ecs":
       result = parseOrder(order);
