@@ -30,6 +30,12 @@ function parseNTXGlowWrapper(order) {
   return buildRow(order, "ntxglow", items, addr);
 }
 
+function parseOMACWrapper(order) {
+  const items = extractItemsOMAC(order);
+  const addr = extractAddressOMAC(order);
+  return buildRow(order, "omac", items, addr);
+}
+
 // -------- ITEM PARSERS --------
 function extractItemsRedline(text) {
   const items = [];
@@ -194,6 +200,125 @@ function extractItemsNTXGlow(text) {
 
   return items;
 }
+
+function extractItemsOMAC(text) {
+  const items = [];
+
+  const headerMatch = text.match(
+    /Item\s+Vendor\s+SKU\s+Item\s+Description\s+Quantity\s+UPC-EAN\s+Rate\s+Amount/i
+  );
+
+  if (!headerMatch) {
+    console.warn("OMAC: item header not found");
+    return items;
+  }
+
+  let section = text.slice(
+    headerMatch.index + headerMatch[0].length
+  );
+
+  const receiveByMatch = section.search(
+    /Receive\s+By:/i
+  );
+
+  if (receiveByMatch !== -1) {
+    section = section.slice(0, receiveByMatch);
+  }
+
+  section = section.trim();
+
+  if (!section) {
+    console.warn("OMAC: empty item section");
+    return items;
+  }
+
+  const detailMatch = section.match(
+    /\b(\d+)\s+(\d{10,14})\s+\$([\d,.]+)\s+\$([\d,.]+)\b/
+  );
+
+  if (!detailMatch) {
+    console.warn(
+      "OMAC: quantity/UPC/price block not found",
+      section
+    );
+    return items;
+  }
+
+  const qty = Number(detailMatch[1]) || 1;
+  const upc = detailMatch[2];
+
+  const rate = Number(
+    detailMatch[3].replace(/,/g, "")
+  ) || 0;
+
+  const amount = Number(
+    detailMatch[4].replace(/,/g, "")
+  ) || 0;
+
+  // Everything before Quantity is the product portion.
+  const productText = section
+    .slice(0, detailMatch.index)
+    .trim();
+
+  const skuCandidates = [];
+
+  let normalizedProductText = productText.replace(
+    /\b([A-Z0-9]+-)\s+([A-Z0-9]+)\b/gi,
+    "$1$2"
+  );
+
+  const matches =
+    normalizedProductText.match(
+      /\b[A-Z0-9]+-[A-Z0-9-]+\b/gi
+    ) || [];
+
+  for (const raw of matches) {
+    const sku = normalizeSKU(raw);
+
+    if (!sku) continue;
+
+    // Reject obvious non-SKU values.
+    if (isUPC(sku)) continue;
+
+    if (
+      /^(SHIP|TO|BILL|ITEM|VENDOR|SKU|DESCRIPTION|QUANTITY|UPC|RATE|AMOUNT)$/i.test(
+        sku
+      )
+    ) {
+      continue;
+    }
+
+    if (!skuCandidates.includes(sku)) {
+      skuCandidates.push(sku);
+    }
+  }
+
+  console.log("OMAC SKU candidates:", skuCandidates);
+
+  if (!skuCandidates.length) {
+    console.warn(
+      "OMAC: no SKU candidates found",
+      productText
+    );
+    return items;
+  }
+
+  const sku =
+    skuCandidates.length >= 2
+      ? skuCandidates[1]
+      : skuCandidates[0];
+
+  items.push({
+    sku,
+    qty,
+    price: rate,
+    upc,
+    amount
+  });
+
+  return items;
+}
+
 
 // -------- ADDRESS PARSERS --------
 function extractAddressRedline(order) {
@@ -450,4 +575,176 @@ function extractAddressNTXGlow(text) {
 
 function cleanNTXGlowText(text) {
   return text.replace(/Ship to:[\s\S]*?United States/i, "");
+}
+
+function extractAddressOMAC(text) {
+
+  const shipMatch = text.match(/Ship\s+To\b/i);
+
+  if (!shipMatch) {
+    console.warn("OMAC: Ship To section not found");
+    return {};
+  }
+
+  const afterShipTo = text.slice(
+    shipMatch.index + shipMatch[0].length
+  );
+
+  const lines = afterShipTo
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  const countryIndexes = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    if (/^United States$/i.test(lines[i])) {
+      countryIndexes.push(i);
+
+      if (countryIndexes.length === 2) {
+        break;
+      }
+    }
+  }
+
+  if (countryIndexes.length < 2) {
+    console.warn(
+      "OMAC: Could not find vendor/customer country boundaries",
+      countryIndexes
+    );
+    return {};
+  }
+
+  const vendorCountryIndex = countryIndexes[0];
+  const customerCountryIndex = countryIndexes[1];
+
+  const customerLines = lines
+    .slice(
+      vendorCountryIndex + 1,
+      customerCountryIndex
+    )
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  console.log(
+    "OMAC CUSTOMER LINES:",
+    customerLines
+  );
+
+  let phone = "";
+
+  const afterCustomerCountry = lines
+    .slice(customerCountryIndex + 1);
+
+  for (const line of afterCustomerCountry) {
+    const phoneMatch = line.match(
+      /(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/
+    );
+
+    if (phoneMatch) {
+      phone = phoneMatch[0].replace(/\D/g, "");
+      break;
+    }
+
+    if (
+      /^\$[\d,.]+/.test(line) ||
+      /^Receive\s+By/i.test(line)
+    ) {
+      break;
+    }
+  }
+
+  let city = "";
+  let state = "";
+  let zip = "";
+  let cityIndex = -1;
+
+  for (let i = 0; i < customerLines.length; i++) {
+    const parsed = parseCityStateZip(customerLines[i]);
+
+    if (parsed && parsed.city) {
+      city = parsed.city.trim();
+      state = normalizeState(parsed.state || "");
+      zip = parsed.zip || "";
+      cityIndex = i;
+      break;
+    }
+
+    // OMAC fallback:
+    // City State ZIP
+    const match = customerLines[i].match(
+      /^(.+?)\s+([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/i
+    );
+
+    if (match) {
+      city = match[1].trim();
+      state = normalizeState(match[2]);
+      zip = match[3].trim();
+      cityIndex = i;
+      break;
+    }
+  }
+
+  const addrIndex = customerLines.findIndex((line) =>
+    /^\d+\s+[A-Za-z]/.test(line)
+  );
+
+  if (addrIndex === -1) {
+    console.warn(
+      "OMAC: Street address not found:",
+      customerLines
+    );
+
+    return {
+      name: customerLines[0] || "",
+      addr1: "",
+      addr2: "",
+      city,
+      state,
+      zip,
+      country: "US",
+      phone
+    };
+  }
+
+  const name =
+    addrIndex > 0
+      ? customerLines[addrIndex - 1]
+      : "";
+
+  let addressLines = [];
+
+  if (cityIndex > addrIndex) {
+    addressLines = customerLines.slice(
+      addrIndex,
+      cityIndex
+    );
+  } else {
+    addressLines = customerLines.slice(addrIndex);
+  }
+
+  const addr1 = addressLines[0] || "";
+
+  const addr2 =
+    addressLines.length > 1
+      ? addressLines.slice(1).join(" ")
+      : "";
+
+  const result = {
+    name,
+    addr1,
+    addr2,
+    city,
+    state,
+    zip,
+    country: "US",
+    phone
+  };
+
+  console.log(
+    "OMAC ADDRESS PARSED:",
+    JSON.stringify(result, null, 2)
+  );
+
+  return result;
 }
