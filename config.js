@@ -38,7 +38,7 @@ const PARSER_PLUGINS = {
     confidence: 0.95
   },
   omac: {
-    parse: parseGeneric,
+    parse: parseOMACWrapper,
     confidence: 0.9
   },
   procivic: {
@@ -53,6 +53,8 @@ const PARSER_PLUGINS = {
 
 const GENERIC_RULES = {
   po: [
+    /#\s*(PO-[A-Za-z0-9-]+)/i,
+    /\b(PO-[A-Za-z0-9-]{5,})\b/i,
     /Purchase Order\s*(?:\r?\n)\s*([A-Za-z0-9-]+)/i,
     /PO#\s*:\s*([A-Za-z0-9-]+)/i,
     /PO\s*#\s*:\s*([A-Za-z0-9-]+)/i,
