@@ -269,7 +269,11 @@ function updateSavedTable() {
     headers.forEach((h) => {
       const td = document.createElement("td");
 
-      td.textContent = r[h] || "";      
+      if (h.startsWith("Price ") && r[h] !== "") {
+  	td.textContent = Number(r[h]).toFixed(2);
+	} else {
+  	td.textContent = r[h] || "";
+      }      
 
       // Copy SKU when clicked
       if (h.startsWith("Item ID") && r[h]) {
