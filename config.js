@@ -205,5 +205,6 @@ const PROVINCE_MAP = {
   "prince edward island": "PE",
   "northwest territories": "NT",
   nunavut: "NU",
-  yukon: "YT"
+  yukon: "YT",
+  "yukon territory": "YT"
 };
