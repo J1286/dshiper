@@ -305,26 +305,34 @@ function extractAddressGeneric(text) {
 
   const phone = phoneMatch.replace(/\D/g, "");
 
-  let country = "US";
+// Normalize Canadian province/state
+const originalState = (state || "").trim();
+const stateKey = originalState.toLowerCase();
 
-  // Explicit country line takes priority
-  for (const line of lines) {
-    if (/^canada$/i.test(line.trim())) {
-      country = "CA";
-      break;
-    }
+const mappedState = PROVINCE_MAP[stateKey];
 
-    if (/^united states$/i.test(line.trim())) {
-      country = "US";
-      break;
-    }
-  }
+if (mappedState) {
+  state = mappedState;
+}
 
-  // If there is no explicit country line, use the province/state
-  // as a fallback.
-  if (country === "US" && Object.values(PROVINCE_MAP).includes(state)) {
-    country = "CA";
-  }
+// Detect Canada from province OR explicit country
+let country = "US";
+
+if (mappedState) {
+  country = "CA";
+}
+
+if (lines.some((line) => /^canada$/i.test(line.trim()))) {
+  country = "CA";
+}
+
+console.log("ADDRESS STATE NORMALIZATION:", {
+  originalState,
+  stateKey,
+  mappedState,
+  finalState: state,
+  country
+});
 
   return {
     name,
