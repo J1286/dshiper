@@ -27,7 +27,8 @@ function buildPriceTable() {
 		aag: {},
 		tdot: {},
 		pq: {},
-		ntxglow: {}
+		ntxglow: {},
+		omac: {}
 	};
 
 	allPriceRows.forEach((r) => {
@@ -46,9 +47,11 @@ function buildPriceTable() {
 			} else if (key === "pq") {
 				priceTable.pq[sku] = r[col];
 			} else if (key.includes("ntxglow")) {
-				priceTable.ntxglow[sku] = r[col]
+				priceTable.ntxglow[sku] = r[col];
+			} else if (key.includes("omac")) {
+				priceTable.omac[sku] = r[col]
 			}
-		});
+		});	
 	});
 }
 
