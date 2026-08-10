@@ -163,6 +163,46 @@ function buildRow(order, dealer, items, addr) {
   return [row];
 }
 
+function refreshOrderPrices(row) {
+  const dealer = getDealerFromRow(row);
+
+  let totalPrice = 0;
+
+  for (let i = 1; i <= 5; i++) {
+    const sku = (row[`Item ID ${i}`] || "").trim();
+    const qty = Number(row[`Qty ${i}`]) || 0;
+
+    if (!sku) {
+      row[`Price ${i}`] = "";
+      continue;
+    }
+
+    const price = Number(getPrice(dealer, sku)) || 0;
+
+    row[`Price ${i}`] = price;
+
+    totalPrice += price * qty;
+  }
+
+  // Recalculate Ship Confirm using refreshed prices
+  row["Ship Confirm."] = totalPrice > 500 ? "Y" : "";
+
+  return row;
+}
+
+function refreshAllPrices() {
+  if (!Array.isArray(savedOrders) || !savedOrders.length) {
+    console.warn("No saved orders to refresh.");
+    return;
+  }
+
+  savedOrders.forEach((row) => {
+    refreshOrderPrices(row);
+  });
+
+  updateSavedTable();
+}
+
 function matchFirst(text, patterns) {
   for (let p of patterns) {
     const m = text.match(p);
