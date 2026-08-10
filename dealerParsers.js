@@ -14,6 +14,7 @@ function parseAAGWrapper(order) {
 function parseTDOTWrapper(order) {
   const items = extractItemsTDOT(order);
   const addr = extractAddressGeneric(order);
+console.log("TDOT ADDRESS FROM GENERIC:", addr);
   return buildRow(order, "tdot", items, addr);
 }
 
