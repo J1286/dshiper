@@ -103,3 +103,10 @@ th {
     font-weight: bold;
     border: 2px solid #f57f17;
 }
+
+.duplicate-item {
+  background-color: #ffe0e0 !important;
+  color: #b00020;
+  font-weight: 700;
+  outline: 2px solid #ff4d4d;
+}
