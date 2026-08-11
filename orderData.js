@@ -43,10 +43,10 @@ function updatePreview() {
       td.textContent = r[h] || "";
 
       if (
-    	h === "DShipper ID" &&
-    	manualCheckDShippers.has(String(r[h]).toUpperCase())
+        h === "DShipper ID" &&
+        manualCheckDShippers.has(String(r[h]).toUpperCase())
       ) {
-    	td.classList.add("manual-check");
+        td.classList.add("manual-check");
       }
 
       tr.appendChild(td);
@@ -135,6 +135,27 @@ function updateSavedTable() {
 
   if (!savedOrders.length) return;
 
+  // Find duplicate SKUs within each Item ID column
+  const duplicateItemColumns = {};
+
+  for (let i = 1; i <= 5; i++) {
+    const field = `Item ID ${i}`;
+
+    const values = savedOrders
+      .map((row) => (row[field] || "").trim().toUpperCase())
+      .filter(Boolean);
+
+    const counts = {};
+
+    values.forEach((sku) => {
+      counts[sku] = (counts[sku] || 0) + 1;
+    });
+
+    duplicateItemColumns[field] = new Set(
+      Object.keys(counts).filter((sku) => counts[sku] > 1)
+    );
+  }
+
   // ---- headers ----
   const headers = Object.keys(savedOrders[0]);
 
@@ -162,6 +183,22 @@ function updateSavedTable() {
   savedOrders.forEach((r, index) => {
     const tr = document.createElement("tr");
 
+    // DUPLICATE ITEM DETECTION
+    const itemValues = [];
+
+    for (let i = 1; i <= 5; i++) {
+      const sku = (r[`Item ID ${i}`] || "").trim().toUpperCase();
+
+      if (sku) {
+        itemValues.push(sku);
+      }
+    }
+
+    // Find SKUs appearing more than once
+    const duplicateItems = new Set(
+      itemValues.filter((sku, index) => itemValues.indexOf(sku) !== index)
+    );
+
     // # cell
     const numTd = document.createElement("td");
     numTd.textContent = index + 1;
@@ -185,6 +222,7 @@ function updateSavedTable() {
     selectTd.appendChild(checkbox);
     tr.appendChild(selectTd);
 
+    // ACTION BUTTONS
     const editBtn = document.createElement("button");
     editBtn.className = "action-btn";
     editBtn.textContent = editingRow === index ? "💾" : "✏️";
@@ -265,33 +303,44 @@ function updateSavedTable() {
 
     tr.appendChild(actionTd);
 
-    // normal cells
+    // NORMAL CELLS
     headers.forEach((h) => {
       const td = document.createElement("td");
 
       if (h.startsWith("Price ") && r[h] !== "") {
-  	td.textContent = Number(r[h]).toFixed(2);
-	} else {
-  	td.textContent = r[h] || "";
-      }      
+        td.textContent = Number(r[h]).toFixed(2);
+      } else {
+        td.textContent = r[h] || "";
+      }
+
+      // HIGHLIGHT DUPLICATE ITEM IDS
+      if (h.startsWith("Item ID") && r[h]) {
+        const normalizedSKU = r[h].trim().toUpperCase();
+
+        if (
+          duplicateItemColumns[h] &&
+          duplicateItemColumns[h].has(normalizedSKU)
+        ) {
+          td.classList.add("duplicate-item");
+          td.title = "Duplicate SKU in this column";
+        }
+      }
 
       // Copy SKU when clicked
-      if (h.startsWith("Item ID") && r[h]) {
-        td.style.cursor = "pointer";
+      td.style.cursor = "pointer";
 
-        td.onclick = () => {
-          if (editingRow === index) return;
+      td.onclick = () => {
+        if (editingRow === index) return;
 
-          navigator.clipboard.writeText(r[h]);
+        navigator.clipboard.writeText(r[h]);
 
-          const old = td.textContent;
-          td.textContent = "✅ Copied!";
+        const old = td.textContent;
+        td.textContent = "✅ Copied!";
 
-          setTimeout(() => {
-            td.textContent = old;
-          }, 800);
-        };
-      }
+        setTimeout(() => {
+          td.textContent = old;
+        }, 800);
+      };
 
       td.contentEditable = editingRow === index;
 
