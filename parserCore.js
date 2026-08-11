@@ -115,7 +115,34 @@ function buildRow(order, dealer, items, addr) {
 
     row[`Item ID ${i + 1}`] = sku;
     row[`Qty ${i + 1}`] = item.qty || "";
-    row[`Price ${i + 1}`] = getPrice(dealer, sku);
+
+    if (item.price !== undefined && item.price !== "") {
+      // Price explicitly supplied by the dealer
+      row[`Price ${i + 1}`] = Number(item.price);
+
+      setPriceSource(row, i + 1, "dealer");
+    } else {
+      // No dealer price, so use price table
+      if (item.price !== undefined && item.price !== "") {
+        // Dealer supplied the price
+        row[`Price ${i + 1}`] = Number(item.price);
+
+        setPriceSource(row, i + 1, "dealer");
+      } else {
+        // Fall back to our price table
+        const dealerPrice = Number(item.price);
+
+        if (Number.isFinite(dealerPrice) && dealerPrice > 0) {
+          row[`Price ${i + 1}`] = dealerPrice;
+        } else {
+          row[`Price ${i + 1}`] = getPrice(dealer, sku);
+        }
+
+        setPriceSource(row, i + 1, "priceTable");
+      }
+
+      setPriceSource(row, i + 1, "priceTable");
+    }
   }
 
   row["Ship Name"] = addr.name || "";
@@ -164,6 +191,33 @@ function buildRow(order, dealer, items, addr) {
   return [row];
 }
 
+function getOrderPriceKey(row, itemIndex) {
+  return [
+    row["DShipper ID"] || "",
+    row["Tr.Orig.No."] || "",
+    row[`Item ID ${itemIndex}`] || ""
+  ]
+    .join("|")
+    .toLowerCase();
+}
+
+function setOrderPriceSource(row, itemIndex, source) {
+  const sources = JSON.parse(localStorage.getItem("orderPriceSources") || "{}");
+
+  const key = getOrderPriceKey(row, itemIndex);
+
+  if (key) {
+    sources[key] = source;
+    localStorage.setItem("orderPriceSources", JSON.stringify(sources));
+  }
+}
+
+function getOrderPriceSource(row, itemIndex) {
+  const sources = JSON.parse(localStorage.getItem("orderPriceSources") || "{}");
+
+  return sources[getOrderPriceKey(row, itemIndex)] || "";
+}
+
 function refreshOrderPrices(row) {
   const dealer = getDealerFromRow(row);
 
@@ -178,6 +232,15 @@ function refreshOrderPrices(row) {
       continue;
     }
 
+    const source = getOrderPriceSource(row, i);
+
+    // Dealer supplied price: NEVER overwrite it
+    if (source === "dealer") {
+      totalPrice += (Number(row[`Price ${i}`]) || 0) * qty;
+      continue;
+    }
+
+    // Price-table price: refresh it
     const price = Number(getPrice(dealer, sku)) || 0;
 
     row[`Price ${i}`] = price;
@@ -185,10 +248,66 @@ function refreshOrderPrices(row) {
     totalPrice += price * qty;
   }
 
-  // Recalculate Ship Confirm using refreshed prices
   row["Ship Confirm."] = totalPrice > 500 ? "Y" : "";
 
   return row;
+}
+
+// -------- PRICE SOURCE MEMORY --------
+// Keeps price-source information separate from the visible order row.
+// This prevents _PriceSource columns from appearing in tables/exports.
+
+function getOrderPriceMetaKey(row) {
+  const parts = [
+    row["DShipper ID"] || "",
+    row["Tr.Orig.No."] || "",
+    row["Cust. PO No."] || "",
+    row["Ship Name"] || "",
+    row["Ship Addr1"] || "",
+    row["Ship City"] || "",
+    row["Ship State"] || "",
+    row["Ship Zip"] || "",
+    row["Item ID 1"] || "",
+    row["Item ID 2"] || "",
+    row["Item ID 3"] || "",
+    row["Item ID 4"] || "",
+    row["Item ID 5"] || ""
+  ];
+
+  return parts.join("|").toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+function loadPriceSourceMap() {
+  try {
+    return JSON.parse(localStorage.getItem("savedOrderPriceSources") || "{}");
+  } catch (err) {
+    console.warn("Could not load price source map:", err);
+    return {};
+  }
+}
+
+function savePriceSourceMap(map) {
+  localStorage.setItem("savedOrderPriceSources", JSON.stringify(map));
+}
+
+function setPriceSource(row, itemIndex, source) {
+  const map = loadPriceSourceMap();
+  const key = getOrderPriceMetaKey(row);
+
+  if (!map[key]) {
+    map[key] = {};
+  }
+
+  map[key][itemIndex] = source;
+
+  savePriceSourceMap(map);
+}
+
+function getPriceSource(row, itemIndex) {
+  const map = loadPriceSourceMap();
+  const key = getOrderPriceMetaKey(row);
+
+  return map[key]?.[itemIndex] || "";
 }
 
 function refreshAllPrices() {
@@ -343,10 +462,10 @@ function scoreDealer(text) {
 
   // -------- ECS --------
   if (t.includes("submission date")) scores.ecs += 0.3;
-  if (t.includes("es#"))             scores.ecs += 0.3;
-  if (t.includes("mfg sku"))         scores.ecs += 0.2;
-  if (t.includes("qty req"))         scores.ecs += 0.1;
-  if (t.includes("unit price"))      scores.ecs += 0.1;
+  if (t.includes("es#")) scores.ecs += 0.3;
+  if (t.includes("mfg sku")) scores.ecs += 0.2;
+  if (t.includes("qty req")) scores.ecs += 0.1;
+  if (t.includes("unit price")) scores.ecs += 0.1;
 
   // -------- Pelican --------
   if (t.includes("pelican")) scores.pelican += 0.9;
