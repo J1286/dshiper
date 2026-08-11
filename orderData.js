@@ -183,22 +183,6 @@ function updateSavedTable() {
   savedOrders.forEach((r, index) => {
     const tr = document.createElement("tr");
 
-    // DUPLICATE ITEM DETECTION
-    const itemValues = [];
-
-    for (let i = 1; i <= 5; i++) {
-      const sku = (r[`Item ID ${i}`] || "").trim().toUpperCase();
-
-      if (sku) {
-        itemValues.push(sku);
-      }
-    }
-
-    // Find SKUs appearing more than once
-    const duplicateItems = new Set(
-      itemValues.filter((sku, index) => itemValues.indexOf(sku) !== index)
-    );
-
     // # cell
     const numTd = document.createElement("td");
     numTd.textContent = index + 1;
@@ -317,6 +301,7 @@ function updateSavedTable() {
       if (h.startsWith("Item ID") && r[h]) {
         const normalizedSKU = r[h].trim().toUpperCase();
 
+        // Highlight duplicate SKU in this column
         if (
           duplicateItemColumns[h] &&
           duplicateItemColumns[h].has(normalizedSKU)
@@ -324,23 +309,23 @@ function updateSavedTable() {
           td.classList.add("duplicate-item");
           td.title = "Duplicate SKU in this column";
         }
+
+        // Only Item ID cells are clickable/copiable
+        td.style.cursor = "pointer";
+
+        td.onclick = () => {
+          if (editingRow === index) return;
+
+          navigator.clipboard.writeText(r[h]);
+
+          const old = td.textContent;
+          td.textContent = "✅ Copied!";
+
+          setTimeout(() => {
+            td.textContent = old;
+          }, 800);
+        };
       }
-
-      // Copy SKU when clicked
-      td.style.cursor = "pointer";
-
-      td.onclick = () => {
-        if (editingRow === index) return;
-
-        navigator.clipboard.writeText(r[h]);
-
-        const old = td.textContent;
-        td.textContent = "✅ Copied!";
-
-        setTimeout(() => {
-          td.textContent = old;
-        }, 800);
-      };
 
       td.contentEditable = editingRow === index;
 
