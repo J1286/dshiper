@@ -47,9 +47,12 @@ function parseGeneric(order) {
   const config = DEALER_CONFIG[detectedDealer] || DEALER_CONFIG["redline360"];
 
   const dealer = detectedDealer;
-console.log("DETECTED DEALER:", detectedDealer);
-console.log("ITEM BEFORE PRIMARY SKU:", items[0]);
-console.log("PRIMARY SKU TEST:", getPrimarySKU(items[0] || {}, detectedDealer));
+  console.log("DETECTED DEALER:", detectedDealer);
+  console.log("ITEM BEFORE PRIMARY SKU:", items[0]);
+  console.log(
+    "PRIMARY SKU TEST:",
+    getPrimarySKU(items[0] || {}, detectedDealer)
+  );
   const row = {
     "DShipper ID": config.dshipper,
     "Tr.Orig.No.": po,
@@ -65,9 +68,25 @@ console.log("PRIMARY SKU TEST:", getPrimarySKU(items[0] || {}, detectedDealer));
 
     row[`Item ID ${i + 1}`] = sku;
     row[`Qty ${i + 1}`] = item.qty || "";
-    row[`Price ${i + 1}`] = item.price || getPrice(dealer, sku);
-  }
 
+    if (item.price !== undefined && item.price !== "") {
+      row[`Price ${i + 1}`] = Number(item.price);
+      setPriceSource(row, i + 1, "dealer");
+    } else {
+      if (item.price !== undefined && item.price !== "") {
+        // Price explicitly supplied by the dealer
+        row[`Price ${i + 1}`] = Number(item.price);
+
+        setPriceSource(row, i + 1, "dealer");
+      } else {
+        // No dealer price, so use our price table
+        row[`Price ${i + 1}`] = getPrice(dealer, sku);
+
+        setPriceSource(row, i + 1, "priceTable");
+      }
+      setPriceSource(row, i + 1, "priceTable");
+    }
+  }
   row["Ship Name"] = addr.name || "";
   row["Ship Addr1"] = addr.addr1 || "";
   row["Ship Addr2"] = addr.addr2 || "";
@@ -77,6 +96,20 @@ console.log("PRIMARY SKU TEST:", getPrimarySKU(items[0] || {}, detectedDealer));
   row["Ship Country"] = detectCountry(addr);
   row["Ship Phone"] = addr.phone || "";
   row["Ship Email"] = config.email;
+
+  for (let i = 1; i <= 5; i++) {
+    const item = items[i - 1];
+
+    if (!item) continue;
+
+    const dealerPrice = Number(item.price);
+
+    if (Number.isFinite(dealerPrice) && dealerPrice > 0) {
+      setOrderPriceSource(row, i, "dealer");
+    } else {
+      setOrderPriceSource(row, i, "priceTable");
+    }
+  }
 
   const country = (addr.country || "").toUpperCase();
   row["Ship Service"] = country === "CA" || country === "CANADA" ? "ST" : "GND";
@@ -115,6 +148,23 @@ console.log("PRIMARY SKU TEST:", getPrimarySKU(items[0] || {}, detectedDealer));
   return [row];
 }
 
+function setPriceSource(row, index, source) {
+  if (!row._priceSources) {
+    Object.defineProperty(row, "_priceSources", {
+      value: {},
+      writable: true,
+      configurable: true,
+      enumerable: false
+    });
+  }
+
+  row._priceSources[index] = source;
+}
+
+function getPriceSource(row, index) {
+  return row._priceSources?.[index] || "priceTable";
+}
+
 function extractItemsGeneric(text) {
   text = normalizeBrokenLines(text);
 
@@ -122,7 +172,7 @@ function extractItemsGeneric(text) {
     .split("\n")
     .map((l) => l.trim())
     .filter(Boolean);
-  
+
   const pelicanItems = [];
 
   for (const line of lines) {
@@ -138,9 +188,7 @@ function extractItemsGeneric(text) {
     const price = Number(match[2].replace(/,/g, ""));
     const extCost = Number(match[3].replace(/,/g, ""));
     const sku = normalizeSKU(match[4]);
-    const vendorSku = match[5]
-      ? normalizeSKU(match[5])
-      : "";
+    const vendorSku = match[5] ? normalizeSKU(match[5]) : "";
 
     if (!isLikelySKU(sku)) {
       continue;
@@ -222,11 +270,7 @@ function extractItemsGeneric(text) {
       const scored = matches
         .map((m) => ({
           raw: m,
-          score: scoreSKUWithContext(
-            m,
-            lines[i - 1],
-            lines[i + 1]
-          )
+          score: scoreSKUWithContext(m, lines[i - 1], lines[i + 1])
         }))
         .filter((m) => !isUPC(m.raw))
         .filter((m) => !/^\d{5}(-\d{4})?$/.test(m.raw));
@@ -245,9 +289,7 @@ function extractItemsGeneric(text) {
   }
 
   // remove duplicates
-  const unique = Array.from(
-    new Map(items.map((i) => [i.sku, i])).values()
-  );
+  const unique = Array.from(new Map(items.map((i) => [i.sku, i])).values());
 
   const cleaned = removeSubstrings(unique);
 
@@ -354,34 +396,34 @@ function extractAddressGeneric(text) {
 
   const phone = phoneMatch.replace(/\D/g, "");
 
-// Normalize Canadian province/state
-const originalState = (state || "").trim();
-const stateKey = originalState.toLowerCase();
+  // Normalize Canadian province/state
+  const originalState = (state || "").trim();
+  const stateKey = originalState.toLowerCase();
 
-const mappedState = PROVINCE_MAP[stateKey];
+  const mappedState = PROVINCE_MAP[stateKey];
 
-if (mappedState) {
-  state = mappedState;
-}
+  if (mappedState) {
+    state = mappedState;
+  }
 
-// Detect Canada from province OR explicit country
-let country = "US";
+  // Detect Canada from province OR explicit country
+  let country = "US";
 
-if (mappedState) {
-  country = "CA";
-}
+  if (mappedState) {
+    country = "CA";
+  }
 
-if (lines.some((line) => /^canada$/i.test(line.trim()))) {
-  country = "CA";
-}
+  if (lines.some((line) => /^canada$/i.test(line.trim()))) {
+    country = "CA";
+  }
 
-console.log("ADDRESS STATE NORMALIZATION:", {
-  originalState,
-  stateKey,
-  mappedState,
-  finalState: state,
-  country
-});
+  console.log("ADDRESS STATE NORMALIZATION:", {
+    originalState,
+    stateKey,
+    mappedState,
+    finalState: state,
+    country
+  });
 
   return {
     name,
