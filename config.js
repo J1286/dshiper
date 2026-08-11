@@ -49,10 +49,15 @@ const PARSER_PLUGINS = {
     parse: parseGeneric,
     confidence: 0.9
   },
+  pelican: {
+    parse: parseGeneric,
+    confidence: 0.9
+  },
 };
 
 const GENERIC_RULES = {
   po: [
+    /^\s*PO\s+Number\s*:\s*([A-Za-z0-9-]+)\s*$/im,
     /#\s*(PO-[A-Za-z0-9-]+)/i,
     /\b(PO-[A-Za-z0-9-]{5,})\b/i,
     /Purchase Order\s*(?:\r?\n)\s*([A-Za-z0-9-]+)/i,
@@ -126,6 +131,11 @@ const DEALER_CONFIG = {
     dshipper: "W6938",
     email: "jmajstruck@ecstuning.com",
     thirdParty: true
+  },
+  pelican: {
+    dshipper: "W7505",
+    email: "tgould@pelicanparts.com",
+    thirdParty: false
   }
 };
 
@@ -137,7 +147,8 @@ const DSHIPPER_TO_DEALER = {
   W7266: "ntxglow",
   W7500: "omac",
   W0640: "procivic",
-  W6938: "ecs"
+  W6938: "ecs",
+  W7505: "pelican"
 };
 
 const STATE_MAP = {
