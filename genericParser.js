@@ -47,7 +47,9 @@ function parseGeneric(order) {
   const config = DEALER_CONFIG[detectedDealer] || DEALER_CONFIG["redline360"];
 
   const dealer = detectedDealer;
-
+console.log("DETECTED DEALER:", detectedDealer);
+console.log("ITEM BEFORE PRIMARY SKU:", items[0]);
+console.log("PRIMARY SKU TEST:", getPrimarySKU(items[0] || {}, detectedDealer));
   const row = {
     "DShipper ID": config.dshipper,
     "Tr.Orig.No.": po,
@@ -115,11 +117,50 @@ function parseGeneric(order) {
 
 function extractItemsGeneric(text) {
   text = normalizeBrokenLines(text);
+
   const lines = text
     .split("\n")
     .map((l) => l.trim())
     .filter(Boolean);
+  
+  const pelicanItems = [];
 
+  for (const line of lines) {
+    const match = line.match(
+      /^#?\s*\d+\)?\s+(\d+)\s+\$?([\d,.]+)\s+\$?([\d,.]+)\s+([A-Z0-9][A-Z0-9._-]{5,})(?:\s*\(([^)]+)\))?/i
+    );
+
+    if (!match) {
+      continue;
+    }
+
+    const qty = Number(match[1]);
+    const price = Number(match[2].replace(/,/g, ""));
+    const extCost = Number(match[3].replace(/,/g, ""));
+    const sku = normalizeSKU(match[4]);
+    const vendorSku = match[5]
+      ? normalizeSKU(match[5])
+      : "";
+
+    if (!isLikelySKU(sku)) {
+      continue;
+    }
+
+    pelicanItems.push({
+      sku,
+      itemId: sku,
+      vendorSku,
+      qty,
+      price,
+      extCost
+    });
+  }
+
+  if (pelicanItems.length) {
+    return pelicanItems.slice(0, 5);
+  }
+
+  // EXISTING GENERIC LOGIC
   // Priority: Mfg SKU
   for (let i = 0; i < lines.length - 1; i++) {
     if (/^Mfg SKU$/i.test(lines[i])) {
@@ -168,6 +209,7 @@ function extractItemsGeneric(text) {
           sku: normalizeSKU(line),
           qty: Number(qtyMatch[1])
         });
+
         i++;
         continue;
       }
@@ -180,7 +222,11 @@ function extractItemsGeneric(text) {
       const scored = matches
         .map((m) => ({
           raw: m,
-          score: scoreSKUWithContext(m, lines[i - 1], lines[i + 1])
+          score: scoreSKUWithContext(
+            m,
+            lines[i - 1],
+            lines[i + 1]
+          )
         }))
         .filter((m) => !isUPC(m.raw))
         .filter((m) => !/^\d{5}(-\d{4})?$/.test(m.raw));
@@ -199,9 +245,12 @@ function extractItemsGeneric(text) {
   }
 
   // remove duplicates
-  const unique = Array.from(new Map(items.map((i) => [i.sku, i])).values());
+  const unique = Array.from(
+    new Map(items.map((i) => [i.sku, i])).values()
+  );
 
   const cleaned = removeSubstrings(unique);
+
   return cleaned.slice(0, 5);
 }
 
