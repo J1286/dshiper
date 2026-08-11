@@ -21,8 +21,8 @@ function analyzeOrder(text) {
 
   lines.forEach((line, index) => {
     const match = line.match(
-      /\b(?:PURCHASE\s+ORDER|P\.?O\.?|PO)\b\s*#?\s*:?\s*([A-Z0-9-]{4,})/i
-    );
+  /\b(?:PURCHASE\s+ORDER|P\.?O\.?)\b\s*(?:#|NUMBER|NO\.?)?\s*:?\s*([A-Z0-9-]{4,})/i
+);
 
     if (match) {
       poCandidates.push({
@@ -463,8 +463,16 @@ function detectShipToSection(lines) {
 
 function getPrimarySKU(item, dealer) {
   switch (dealer) {
-    case "specd":
-      return item.vendorSku || item.itemId || item.sku || "";
+    case "pelican":
+    case "specd": {
+      const sku =
+        item.itemId ||
+        item.sku ||
+        item.vendorSku ||
+        "";
+
+      return sku.replace(/^SPECD?-/i, "");
+    }
 
     case "dealerX":
       return item.itemId || item.vendorSku || item.sku || "";
