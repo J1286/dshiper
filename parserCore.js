@@ -28,6 +28,7 @@ function safeParseOrder(order) {
     case "omac":
     case "procivic":
     case "ecs":
+    case "pelican":
       result = parseOrder(order);
       break;
 
@@ -284,7 +285,8 @@ function scoreDealer(text) {
     ntxglow: 0,
     omac: 0,
     procivic: 0,
-    ecs: 0
+    ecs: 0,
+    pelican: 0
   };
 
   // -------- AAG --------
@@ -345,6 +347,10 @@ function scoreDealer(text) {
   if (t.includes("mfg sku"))         scores.ecs += 0.2;
   if (t.includes("qty req"))         scores.ecs += 0.1;
   if (t.includes("unit price"))      scores.ecs += 0.1;
+
+  // -------- Pelican --------
+  if (t.includes("pelican")) scores.pelican += 0.9;
+  if (t.includes("Drop-Ship Sub PO#")) scores.pelican += 0.3;
 
   return Object.entries(scores)
     .map(([dealer, score]) => ({ dealer, score }))
