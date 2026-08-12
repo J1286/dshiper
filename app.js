@@ -39,8 +39,6 @@ function downloadExcel() {
   }
 
   const ws = XLSX.utils.json_to_sheet(savedOrders);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "SavedOrders");
 
   // Generate file as blob instead of direct download
   const csv = XLSX.utils.sheet_to_csv(ws);
@@ -74,11 +72,34 @@ function downloadSelectedOrders() {
   const selected = [...selectedOrders].map((index) => savedOrders[index]);
 
   const ws = XLSX.utils.json_to_sheet(selected);
-  const wb = XLSX.utils.book_new();
 
-  XLSX.utils.book_append_sheet(wb, ws, "SelectedOrders");
+  // Convert to CSV
+  const csv = XLSX.utils.sheet_to_csv(ws);
 
-  XLSX.writeFile(wb, "Selected_Orders.xlsx");
+  const blob = new Blob([csv], {
+    type: "text/csv;charset=utf-8;"
+  });
+
+  // Get today's date
+  const today = new Date();
+  const month = today.getMonth() + 1;
+  const day = today.getDate();
+  const year = today.getFullYear();
+
+  // Same naming format as regular download
+  const fileName = `${month}-${day}-${year} FC Batch1.csv`;
+
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  URL.revokeObjectURL(url);
 }
 
 function copyAllOrders() {
