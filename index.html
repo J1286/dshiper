@@ -110,19 +110,17 @@
       <button onclick="copyAllOrders()">📋Copy All</button>
       <button onclick="clearAllOrders()">Clear All Orders</button>
 
-      <select id="quickPaste">
+      <select id="quickPaste" onchange="copyQuickPaste()">
         <option value="">-- Quick Paste --</option>
         <option value="HOLD">HOLD</option>
         <option value="No ETA Discontinued">No ETA Discontinued</option>
         <option value="Wait to Receive">Wait to Receive</option>
         <option value="WH3">WH3</option>
-        <option value="ETA ">ETA</option>
+        <option value="ETA ">ETA </option>
         <option value="LAST">LAST</option>
         <option value="Blocked">Blocked</option>
         <option value="ETA 6-8 weeks">ETA 6-8 weeks</option>
-      </select>
-
-      <button onclick="copyQuickPaste()">📋</button>
+        </select>
       <br><br>
     </div>
 
