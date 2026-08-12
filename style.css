@@ -119,7 +119,7 @@ th {
 #quickPasteFloat {
   position: fixed;
   top: 650px;
-  right: 1300px;
+  right: 850px;
   z-index: 9999;
 
   background: white;
