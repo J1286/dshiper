@@ -11,6 +11,17 @@ let testParserName = "";
 let editingRow = -1;
 let selectedOrders = new Set();
 
+const blockedItemIDs = new Set([
+  "HOLD",
+  "NO ETA DISCONTINUED",
+  "WAIT TO RECEIVE",
+  "WH3",
+  "ETA",
+  "LAST",
+  "BLOCKED",
+  "ETA 6-8 WEEKS"
+]);
+
 const manualCheckDShippers = new Set([
     "W0640",
     "W5111"
