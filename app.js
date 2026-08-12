@@ -276,10 +276,7 @@ function updateDashboard() {
 async function copyQuickPaste() {
   const text = document.getElementById("quickPaste").value;
 
-  if (!text) {
-    alert("Please choose an option first.");
-    return;
-  }
+  if (!text) return;
 
   try {
     await navigator.clipboard.writeText(text);
