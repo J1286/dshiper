@@ -110,3 +110,8 @@ th {
   font-weight: 700;
   outline: 2px solid #ff4d4d;
 }
+
+.copied-item {
+  background-color: #e0e0e0 !important;
+  color: #666;
+}
