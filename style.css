@@ -118,8 +118,8 @@ th {
 
 #quickPasteFloat {
   position: fixed;
-  top: 650px;
-  right: 850px;
+  top: 760px;
+  right: 1870px;
   z-index: 9999;
 
   background: white;
