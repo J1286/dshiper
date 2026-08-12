@@ -314,17 +314,20 @@ function updateSavedTable() {
         td.style.cursor = "pointer";
 
         td.onclick = () => {
-          if (editingRow === index) return;
+  	  if (editingRow === index) return;
 
-          navigator.clipboard.writeText(r[h]);
+	  navigator.clipboard.writeText(r[h]);
 
-          const old = td.textContent;
-          td.textContent = "✅ Copied!";
+	// Mark this cell as copied
+	td.classList.add("copied-item");
 
-          setTimeout(() => {
-            td.textContent = old;
-          }, 800);
-        };
+	const old = td.textContent;
+	  td.textContent = "✅ Copied!";
+
+	setTimeout(() => {
+    	  td.textContent = old;
+  	  }, 800);
+	};
       }
 
       td.contentEditable = editingRow === index;
