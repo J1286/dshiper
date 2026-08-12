@@ -115,3 +115,21 @@ th {
   background-color: #e0e0e0 !important;
   color: #666;
 }
+
+#quickPasteFloat {
+  position: fixed;
+  top: 650px;
+  right: 1300px;
+  z-index: 9999;
+
+  background: white;
+  padding: 8px;
+  border-radius: 8px;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+#quickPaste {
+  padding: 6px 10px;
+  font-size: 14px;
+}
