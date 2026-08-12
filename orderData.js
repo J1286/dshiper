@@ -143,7 +143,8 @@ function updateSavedTable() {
 
     const values = savedOrders
       .map((row) => (row[field] || "").trim().toUpperCase())
-      .filter(Boolean);
+      .filter(Boolean)
+      .filter((sku) => !blockedItemIDs.has(sku));
 
     const counts = {};
 
@@ -303,12 +304,13 @@ function updateSavedTable() {
 
         // Highlight duplicate SKU in this column
         if (
-          duplicateItemColumns[h] &&
-          duplicateItemColumns[h].has(normalizedSKU)
-        ) {
-          td.classList.add("duplicate-item");
-          td.title = "Duplicate SKU in this column";
-        }
+  	  !blockedItemIDs.has(normalizedSKU) &&
+  	  duplicateItemColumns[h] &&
+   	  duplicateItemColumns[h].has(normalizedSKU)
+ 	) {
+  	  td.classList.add("duplicate-item");
+  	  td.title = "Duplicate SKU in this column";
+	}
 
         // Only Item ID cells are clickable/copiable
         td.style.cursor = "pointer";
