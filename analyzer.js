@@ -21,8 +21,8 @@ function analyzeOrder(text) {
 
   lines.forEach((line, index) => {
     const match = line.match(
-  /\b(?:PURCHASE\s+ORDER|P\.?O\.?)\b\s*(?:#|NUMBER|NO\.?)?\s*:?\s*([A-Z0-9-]{4,})/i
-);
+      /\b(?:PURCHASE\s+ORDER|P\.?O\.?)\b\s*(?:#|NUMBER|NO\.?)?\s*:?\s*([A-Z0-9-]{4,})/i
+    );
 
     if (match) {
       poCandidates.push({
@@ -39,60 +39,25 @@ function analyzeOrder(text) {
   );
 
   itemSection.lines.forEach((line, index) => {
-    const matches = line.match(/^(?=.*[A-Z])(?=.*\d)[A-Z0-9-]{8,20}$/i) || [];
+    const prevLine = itemSection.lines[index - 1] || "";
+    const nextLine = itemSection.lines[index + 1] || "";
 
-    const ignoreWords = [
-      "DESCRIPTION",
-      "QUANTITY",
-      "VENDOR",
-      "SKU",
-      "UPC-EAN",
-      "AMOUNT",
-      "RATE",
-      "ITEM",
-      "PRODUCT",
-      "MODEL",
-      "MODELS",
-      "TEXTURED",
-      "EXCLUDES",
-      "FENDER",
-      "FLARES",
-      "DUALLY"
-    ];
+    const cleanedLine = normalizeSKU(line);
 
-    matches.forEach((match) => {
-      match = match.toUpperCase();
+    if (!isLikelySKU(cleanedLine)) {
+      return;
+    }
 
-      if (ignoreWords.includes(match)) {
-        return;
-      }
+    const score = scoreSKUWithContext(cleanedLine, prevLine, nextLine);
 
-      let score = 0.5;
+    const upcCheck = isUPC(cleanedLine);
 
-      // SKU appears near pricing
-      if (/\$[\d,.]+/.test(line)) {
-        score += 0.2;
-      }
-
-      // SKU looks like a product line
-      if (match.length >= 8) {
-        score += 0.1;
-      }
-
-      // Pure numbers are more likely UPCs
-      if (/^\d+$/.test(match)) {
-        score -= 0.2;
-      }
-
-      const isUPC = /^\d{10,14}$/.test(match);
-
-      skuCandidates.push({
-        value: match,
-        line: itemSection.startLine + index,
-        raw: line,
-        score: isUPC ? score - 0.3 : score,
-        isUPC
-      });
+    skuCandidates.push({
+      value: cleanedLine,
+      line: itemSection.startLine + index,
+      raw: line,
+      score: upcCheck ? score - 0.3 : score,
+      isUPC: upcCheck
     });
   });
 
@@ -172,69 +137,16 @@ function detectItemsFromSection(itemSection) {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
-    const skuMatches =
-      line.match(/^(?=.*[A-Z])(?=.*\d)[A-Z0-9-]{8,20}$/i) || [];
+    const skuMatches = [];
+
+    const cleanedLine = normalizeSKU(line);
+
+    if (isLikelySKU(cleanedLine)) {
+      skuMatches.push(cleanedLine);
+    }
 
     skuMatches.forEach((sku) => {
       sku = sku.toUpperCase();
-      const digitCount = (sku.match(/\d/g) || []).length;
-      if (digitCount < 2) {
-        return;
-      }
-      // reject phone numbers
-      if (/^\d{3}[-.\s]\d{3}[-.\s]\d{4}$/.test(sku)) {
-        return;
-      }
-
-      // reject address fragments
-      if (/^[A-Z]-\d{2}-\d{4}$/i.test(sku)) {
-        return;
-      }
-
-      // reject UPC
-      if (/^\d{10,14}$/.test(sku)) {
-        return;
-      }
-
-      // Handle split SKU
-      if (sku.endsWith("-") && i + 1 < lines.length) {
-        const nextLine = lines[i + 1].trim();
-
-        if (/^[A-Z0-9-]+$/i.test(nextLine)) {
-          sku += nextLine.toUpperCase();
-        }
-      }
-
-      // Ignore obvious words
-      if (
-        [
-          "DESCRIPTION",
-          "QUANTITY",
-          "VENDOR",
-          "SKU",
-          "UPC",
-          "UPC-EAN",
-          "AMOUNT",
-          "RATE",
-          "ITEM",
-          "PRODUCT",
-          "MODEL",
-          "MODELS",
-          "TEXTURED",
-          "EXCLUDES",
-          "DUALLY",
-          "FLARES",
-          "FENDER"
-        ].includes(sku)
-      ) {
-        return;
-      }
-
-      // Ignore UPC
-      if (/^\d{10,14}$/.test(sku)) {
-        return;
-      }
-
       currentSKUs.push(sku);
     });
 
@@ -269,9 +181,7 @@ function detectAddressFromSection(shipToSection) {
   let country = "";
   let phone = "";
 
-  // -------------------------
   // Phone
-  // -------------------------
   for (const line of lines) {
     const match = line.match(
       /\b(?:\+?1[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?)\d{3}[-.\s]?\d{4}\b/
@@ -283,9 +193,7 @@ function detectAddressFromSection(shipToSection) {
     }
   }
 
-  // -------------------------
   // Country
-  // -------------------------
   for (const line of lines) {
     if (/united states/i.test(line)) {
       country = "US";
@@ -298,9 +206,7 @@ function detectAddressFromSection(shipToSection) {
     }
   }
 
-  // -------------------------
   // City / State / ZIP
-  // -------------------------
   let cityLineIndex = -1;
 
   for (let i = 0; i < lines.length; i++) {
@@ -315,9 +221,7 @@ function detectAddressFromSection(shipToSection) {
     }
   }
 
-  // -------------------------
-  // Street address + name
-  // -------------------------
+  // Street address + name/company
   if (cityLineIndex > 0) {
     let addrStartIndex = -1;
 
@@ -330,15 +234,23 @@ function detectAddressFromSection(shipToSection) {
     }
 
     if (addrStartIndex !== -1) {
-      // Find customer name immediately before address
-      for (let i = addrStartIndex - 1; i >= 0; i--) {
-        const candidate = lines[i].trim();
+      const beforeAddress = lines
+        .slice(0, addrStartIndex)
+        .map((line) => line.trim())
+        .filter(Boolean);
 
-        if (!candidate) {
+      // Find the closest meaningful line before address
+      let previousLine = "";
+      let previousPreviousLine = "";
+
+      for (let i = beforeAddress.length - 1; i >= 0; i--) {
+        const candidate = beforeAddress[i];
+
+        if (/^(ship\s*to|deliver\s*to|shipping\s*address)$/i.test(candidate)) {
           continue;
         }
 
-        if (/^(ship\s*to|deliver\s*to|shipping\s*address)$/i.test(candidate)) {
+        if (/^drop-ship these parts/i.test(candidate)) {
           continue;
         }
 
@@ -346,11 +258,7 @@ function detectAddressFromSection(shipToSection) {
           continue;
         }
 
-        if (/united states|canada/i.test(candidate)) {
-          continue;
-        }
-
-        if (/^\d+/.test(candidate)) {
+        if (/united states|canada|^us$/i.test(candidate)) {
           continue;
         }
 
@@ -358,34 +266,102 @@ function detectAddressFromSection(shipToSection) {
           continue;
         }
 
-        name = candidate;
+        if (/^[-=*#]+$/.test(candidate)) {
+          continue;
+        }
+
+        if (!previousLine) {
+          previousLine = candidate;
+          continue;
+        }
+
+        previousPreviousLine = candidate;
         break;
       }
 
-      // Get address lines
-      const addressLines = lines.slice(addrStartIndex, cityLineIndex);
+      // Actual street address lines
+      const streetLines = lines.slice(addrStartIndex, cityLineIndex);
 
-      // Find Apt / Unit / Suite
-      const unitIndex = addressLines.findIndex((line) =>
-        /^(apt|apartment|unit|suite|ste|#)\b/i.test(line)
-      );
+      function looksLikePersonName(value) {
+        if (!value) return false;
 
-      if (unitIndex !== -1) {
-        addr2 = addressLines[unitIndex];
-        addressLines.splice(unitIndex, 1);
-      }
+        const words = value.trim().split(/\s+/);
 
-      // Handle numeric/unit-only second address line
-      if (!addr2 && addressLines.length > 1) {
-        const lastLine = addressLines[addressLines.length - 1];
-
-        if (/^(?:[A-Z]?\d+[A-Z]?|[A-Z]\d+)$/i.test(lastLine)) {
-          addr2 = lastLine;
-          addressLines.pop();
+        // Usually 2-4 words
+        if (words.length < 2 || words.length > 4) {
+          return false;
         }
+
+        // Only normal name characters
+        if (!/^[A-Za-z.'-]+(?:\s+[A-Za-z.'-]+)+$/.test(value)) {
+          return false;
+        }
+
+        // Reject obvious company / instruction text
+        if (
+          /electric|company|corp|corporation|inc|llc|ltd|parts|warehouse|shop|store|dealer|supply|group|address|drop|ship/i.test(
+            value
+          )
+        ) {
+          return false;
+        }
+
+        return true;
       }
 
-      addr1 = addressLines.join(" ");
+      // Assign Name / Addr1 / Addr2
+      if (looksLikePersonName(previousPreviousLine)) {
+        name = previousPreviousLine;
+        addr1 = previousLine;
+        addr2 = streetLines.join(" ");
+      } else if (previousLine) {
+        name = previousLine;
+        addr1 = streetLines.join(" ");
+      } else {
+        // Street only
+        addr1 = streetLines.join(" ");
+      }
+
+      function looksLikePersonName(value) {
+        if (!value) return false;
+
+        const words = value.trim().split(/\s+/);
+
+        // Usually 2-4 words
+        if (words.length < 2 || words.length > 4) {
+          return false;
+        }
+
+        // Only normal name characters
+        if (!/^[A-Za-z.'-]+(?:\s+[A-Za-z.'-]+)+$/.test(value)) {
+          return false;
+        }
+
+        // Reject obvious company / instruction text
+        if (
+          /electric|company|corp|corporation|inc|llc|ltd|parts|warehouse|shop|store|dealer|supply|group|address|drop|ship/i.test(
+            value
+          )
+        ) {
+          return false;
+        }
+
+        return true;
+      }
+
+      // Assign Name / Addr1 / Addr2
+      if (looksLikePersonName(previousPreviousLine)) {
+        name = previousPreviousLine;
+        addr1 = previousLine;
+        addr2 = streetLines.join(" ");
+      } else if (previousLine) {
+        name = previousLine;
+        addr1 = streetLines.join(" ");
+      }
+      // STREET ONLY
+      else {
+        addr1 = streetLines.join(" ");
+      }
     }
   }
 
@@ -465,11 +441,7 @@ function getPrimarySKU(item, dealer) {
   switch (dealer) {
     case "pelican":
     case "specd": {
-      const sku =
-        item.itemId ||
-        item.sku ||
-        item.vendorSku ||
-        "";
+      const sku = item.itemId || item.sku || item.vendorSku || "";
 
       return sku.replace(/^SPECD?-/i, "");
     }
