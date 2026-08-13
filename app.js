@@ -318,3 +318,93 @@ function filterSavedOrders() {
     row.style.display = text.includes(search) ? "" : "none";
   });
 }
+
+document.addEventListener("DOMContentLoaded", function () {
+  const quickPasteFloat = document.getElementById("quickPasteFloat");
+
+  if (!quickPasteFloat) return;
+
+  let isDragging = false;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  // Restore saved position
+  const savedPosition = localStorage.getItem("quickPastePosition");
+
+  if (savedPosition) {
+    try {
+      const position = JSON.parse(savedPosition);
+
+      quickPasteFloat.style.right = "auto";
+      quickPasteFloat.style.left = position.left;
+      quickPasteFloat.style.top = position.top;
+    } catch (e) {
+      console.log("Could not restore Quick Paste position");
+    }
+  }
+
+  // Start dragging
+  quickPasteFloat.addEventListener("mousedown", function (e) {
+
+    // Don't drag when clicking the dropdown
+    if (e.target.closest("select")) {
+      return;
+    }
+
+    e.preventDefault();
+
+    isDragging = true;
+
+    const rect = quickPasteFloat.getBoundingClientRect();
+
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+
+    // Convert current position to left/top
+    quickPasteFloat.style.right = "auto";
+    quickPasteFloat.style.left = rect.left + "px";
+    quickPasteFloat.style.top = rect.top + "px";
+
+    quickPasteFloat.style.cursor = "grabbing";
+  });
+
+  // Move
+  document.addEventListener("mousemove", function (e) {
+
+    if (!isDragging) return;
+
+    e.preventDefault();
+
+    let newLeft = e.clientX - offsetX;
+    let newTop = e.clientY - offsetY;
+
+    // Keep it inside the browser window
+    const maxLeft = window.innerWidth - quickPasteFloat.offsetWidth;
+    const maxTop = window.innerHeight - quickPasteFloat.offsetHeight;
+
+    newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+    newTop = Math.max(0, Math.min(newTop, maxTop));
+
+    quickPasteFloat.style.left = newLeft + "px";
+    quickPasteFloat.style.top = newTop + "px";
+  });
+
+  // Stop dragging
+  document.addEventListener("mouseup", function () {
+
+    if (!isDragging) return;
+
+    isDragging = false;
+
+    quickPasteFloat.style.cursor = "grab";
+
+    // Save position
+    localStorage.setItem(
+      "quickPastePosition",
+      JSON.stringify({
+        left: quickPasteFloat.style.left,
+        top: quickPasteFloat.style.top
+      })
+    );
+  });
+});
