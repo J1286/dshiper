@@ -68,6 +68,7 @@ const PARSER_PLUGINS = {
 
 const GENERIC_RULES = {
   po: [
+    /^\s*Order\s+ID\s*:\s*([A-Za-z0-9-]+)\s*$/im,
     /^\s*PO\s+Number\s*:\s*([A-Za-z0-9-]+)\s*$/im,
     /#\s*(PO-[A-Za-z0-9-]+)/i,
     /\b(PO-[A-Za-z0-9-]{5,})\b/i,
