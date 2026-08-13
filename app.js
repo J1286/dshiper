@@ -239,14 +239,14 @@ function setDashCount(id, value) {
 
 function updateDashboard() {
   const dealerCount = {
-    redline360: 0,
-    aag: 0,
-    tdot: 0,
-    z1: 0,
-    ntxglow: 0,
-    omac: 0,
-    procivic: 0,
-    pelican: 0
+    redline360: null,
+    aag: null,
+    tdot: null,
+    z1: null,
+    ntxglow: null,
+    omac: null,
+    procivic: null,
+    pelican: null
   };
 
   savedOrders.forEach((order) => {
