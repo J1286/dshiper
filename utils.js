@@ -183,35 +183,28 @@ function normalizeCountry(addr) {
 function parseCityStateZip(line) {
   if (!line) return {};
 
-  // --- US: City, State ZIP (State can be full name) ---
-  let m = line.match(/^(.*?),?\s+([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/i);
+  // --- US: City, Full State ZIP, Country ---
+  let m = line.match(
+    /^(.*?),\s*([A-Za-z\s]+),?\s+(\d{5}(?:-\d{4})?),\s*(?:United States|USA|US)$/i
+  );
+
+  if (m) {
+    return {
+      city: m[1].trim(),
+      state: normalizeState(m[2]),
+      zip: m[3]
+    };
+  }
+
+  // --- US: City, State ZIP ---
+  m = line.match(/^(.*?),?\s+([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/i);
+
   if (m) {
     const rawState = m[2].trim().toLowerCase();
 
     return {
       city: m[1].trim(),
       state: normalizeState(rawState),
-      zip: m[3]
-    };
-  }
-
-  m = line.match(/^(.*?),\s*([A-Za-z\s]+),?\s*([A-Z]\d[A-Z]\s?\d[A-Z]\d)$/i);
-
-  if (m) {
-    return {
-      city: m[1].trim(),
-      state: normalizeState(m[2]),
-      zip: m[3]
-    };
-  }
-
-  // --- US: City, Full State, ZIP ---
-  m = line.match(/^(.*?),\s*([A-Za-z\s]+),?\s+(\d{5}(?:-\d{4})?)$/i);
-
-  if (m) {
-    return {
-      city: m[1].trim(),
-      state: normalizeState(m[2]),
       zip: m[3]
     };
   }
@@ -226,6 +219,17 @@ function parseCityStateZip(line) {
       city: m[1].trim(),
       state: normalizeState(rawState),
       zip: m[3].toUpperCase()
+    };
+  }
+
+  // --- US: City, Full State, ZIP ---
+  m = line.match(/^(.*?),\s*([A-Za-z\s]+),?\s+(\d{5}(?:-\d{4})?)$/i);
+
+  if (m) {
+    return {
+      city: m[1].trim(),
+      state: normalizeState(m[2]),
+      zip: m[3]
     };
   }
 
