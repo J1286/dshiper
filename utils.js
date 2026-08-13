@@ -5,40 +5,98 @@ function scoreSKU(str) {
   let score = 0;
 
   // --- core signals ---
-  if (/[A-Z]/i.test(str)) score += 0.2; // has letters
-  if (/\d/.test(str)) score += 0.2; // has numbers
-  if (/[-_]/.test(str)) score += 0.2; // has separator (very common in SKUs)
+  if (/[A-Z]/i.test(str)) score += 0.2;
+  if (/\d/.test(str)) score += 0.2;
+  if (/[-_]/.test(str)) score += 0.2;
 
   // --- structure ---
   if (str.length >= 6 && str.length <= 25) score += 0.2;
-  if (/^[A-Z0-9-_]+$/i.test(str)) score += 0.2; // clean format
+  if (/^[A-Z0-9._\/-]+$/i.test(str)) score += 0.2;
 
   // --- strong SKU patterns ---
-  if (/^[A-Z]{2,}-\d{2,}/i.test(str)) score += 0.3; // ABC-123
+  if (/^[A-Z]{2,}-\d{2,}/i.test(str)) score += 0.3;
   if (/^[A-Z0-9]+-[A-Z0-9-]+$/i.test(str)) score += 0.3;
 
-  // --- penalties (VERY important) ---
-  if (/^\d{10,}$/.test(str)) score -= 0.6; // tracking number
-  if (/^\d+$/.test(str)) score -= 0.4; // pure number
-  if (/^\d{12,14}$/.test(str)) score -= 0.8; // UPC/EAN strong reject
-  if (/^\d{1,5}$/.test(str)) score -= 0.5; // small numbers
+  // --- penalties ---
+  // Tracking, pure number, UPC/EAN, small numbers
+  if (/^\d{10,}$/.test(str)) score -= 0.6;
+  if (/^\d+$/.test(str)) score -= 0.4;
+  if (/^\d{12,14}$/.test(str)) score -= 0.8;
+  if (/^\d{1,5}$/.test(str)) score -= 0.5;
   if (/invoice|order|tracking|phone/i.test(str)) score -= 0.5;
 
   return score;
 }
 
 function isLikelySKU(str) {
-  return scoreSKU(str) >= 0.5;
+  if (!str) return false;
+
+  const value = str.trim();
+
+  // Most real product SKUs contain numbers.
+  // Prevents normal description text from becoming a SKU.
+  if (!/\d/.test(value)) {
+    return false;
+  }
+
+  // Reject punctuation/text that doesn't look like SKU data.
+  if (!/^[A-Z0-9._\/-]+$/i.test(value)) {
+    return false;
+  }
+
+  return scoreSKU(value) >= 0.5;
+}
+
+function isLikelySKU(str) {
+  if (!str) return false;
+
+  const value = str.trim();
+
+  if (!/\d/.test(value)) {
+    return false;
+  }
+
+  // Reject anything containing characters that are not SKU
+  if (!/^[A-Z0-9._\/-]+$/i.test(value)) {
+    return false;
+  }
+
+  return scoreSKU(value) >= 0.5;
 }
 
 function scoreSKUWithContext(line, prevLine = "", nextLine = "") {
   let score = scoreSKU(line);
 
-  const context = (prevLine + " " + nextLine).toLowerCase();
+  const prev = prevLine.toLowerCase();
+  const next = nextLine.toLowerCase();
 
-  if (/qty|quantity|item|sku/.test(context)) score += 0.2;
-  if (/\$\d+/.test(nextLine)) score += 0.1; // price nearby
-  if (/ship|address|phone/.test(context)) score -= 0.2;
+  const context = `${prev} ${next}`;
+
+  // Strong SKU/header signals
+  if (/part\s*number|item\s*(id|number)?|sku|model/.test(prev)) {
+    score += 0.4;
+  }
+
+  // SKU followed by description
+  if (/[a-z]{3,}/i.test(next) && !/qty|quantity|rate|amount|price/.test(next)) {
+    score += 0.15;
+  }
+
+  // Quantity / pricing nearby
+  if (/qty|quantity|rate|amount|price/.test(context)) {
+    score += 0.2;
+  }
+
+  // Price on next line
+  if (/\$?\d+\.\d{2}/.test(nextLine)) {
+    score += 0.15;
+  }
+
+  // Address / shipping area penalty
+  if (/ship|address|phone|city|state|zip/.test(context)) {
+    score -= 0.3;
+  }
+
   return score;
 }
 
