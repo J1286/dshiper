@@ -246,7 +246,11 @@ function detectAddressFromSection(shipToSection) {
       for (let i = beforeAddress.length - 1; i >= 0; i--) {
         const candidate = beforeAddress[i];
 
-        if (/^(ship\s*to|deliver\s*to|shipping\s*address)$/i.test(candidate)) {
+        if (
+          /^(ship\s*to|deliver\s*to|shipping\s*address)\s*:?\s*$/i.test(
+            candidate
+          )
+        ) {
           continue;
         }
 
