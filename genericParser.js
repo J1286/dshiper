@@ -345,48 +345,89 @@ function extractAddressGeneric(text) {
     lines.shift();
   }
 
+  console.log("===== GENERIC ADDRESS DEBUG =====");
+  console.log("GENERIC ADDRESS BLOCK:", block);
+  console.log("GENERIC ADDRESS LINES:", lines);
+
   let name = lines[0] || "";
-  let addr1 = "",
-    addr2 = "",
-    city = "",
-    state = "",
-    zip = "";
+  let addr1 = "";
+  let addr2 = "";
+  let city = "";
+  let state = "";
+  let zip = "";
 
-  const addr1Index = lines.findIndex((l) => {
-    const t = l.toLowerCase().trim();
+  // Find city/state/zip first
+  let cityIndex = -1;
 
-    // must start with number
-    if (!/^\d+/.test(t)) return false;
+  for (let i = 0; i < lines.length; i++) {
+    const parsed = parseCityStateZip(lines[i]);
 
-    // must contain letters (street name)
-    if (!/[a-z]/i.test(t)) return false;
-
-    // reject obvious non-address lines
-    if (/ship to|bill to|customer information|phone|po#/i.test(t)) return false;
-
-    return true;
-  });
-
-  if (addr1Index !== -1) {
-    addr1 = lines[addr1Index];
-
-    const nextLine = lines[addr1Index + 1];
-    if (nextLine && !parseCityStateZip(nextLine).city) {
-      addr2 = nextLine;
-    }
-  }
-
-  // find city/state/zip
-  for (let l of lines) {
-    const parsed = parseCityStateZip(l);
     if (parsed.city) {
       city = parsed.city;
       state = parsed.state;
       zip = parsed.zip;
+      cityIndex = i;
       break;
     }
   }
 
+  // Find street address
+  const addr1Index = lines.findIndex((l, index) => {
+    const t = l.trim();
+
+    // Don't consider the name as an address
+    if (index === 0) return false;
+
+    // Reject obvious non-address lines
+    if (
+      /ship to|bill to|customer information|phone|po\s*#|thanks/i.test(t)
+    ) {
+      return false;
+    }
+
+    // Don't mistake city/state/zip for addr1
+    if (parseCityStateZip(t).city) {
+      return false;
+    }
+
+    // Normal street address:
+    if (/^\d+\s+[A-Za-z]/.test(t)) {
+      return true;
+    }
+
+    if (
+      /^(?:unit|apt|apartment|suite)\s*#?\s*\d+\s*[-,]?\s*\d+\s+[A-Za-z]/i.test(
+        t
+      )
+    ) {
+      return true;
+    }
+
+    // #11 22935 Lougheed Hwy
+    if (/^#\d+\s*[-,]?\s*\d+\s+[A-Za-z]/i.test(t)) {
+      return true;
+    }
+
+    return false;
+  });
+
+  console.log("GENERIC ADDR1 INDEX:", addr1Index);
+  console.log("GENERIC CITY INDEX:", cityIndex);
+
+  // Extract addr1 / addr2
+  if (addr1Index !== -1) {
+    addr1 = lines[addr1Index];
+
+    // Anything between addr1 and city/state/zip
+    // is treated as addr2.
+    if (cityIndex > addr1Index + 1) {
+      addr2 = lines
+        .slice(addr1Index + 1, cityIndex)
+        .join(", ");
+    }
+  }
+
+  // Phone
   const phoneMatch =
     matchFirst(text, GENERIC_RULES.phone) ||
     text.match(
@@ -406,7 +447,7 @@ function extractAddressGeneric(text) {
     state = mappedState;
   }
 
-  // Detect Canada from province OR explicit country
+  // Detect country
   let country = "US";
 
   if (mappedState) {
