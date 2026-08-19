@@ -206,7 +206,7 @@ function updateSavedTable() {
   }
 
   // ---- headers ----
-  const headers = Object.keys(savedOrders[0]);
+  const headers = Object.keys(savedOrders[0]).filter((h) => h !== "_notes");
 
   // # column
   const numTh = document.createElement("th");
@@ -386,9 +386,6 @@ function updateSavedTable() {
     const actionTd = document.createElement("td");
 
     actionTd.className = "action-cell";
-    copyBtn.className = "action-btn";
-    deleteBtn.className = "action-btn";
-    backorderBtn.className = "action-btn";
 
     actionTd.appendChild(editBtn);
     actionTd.appendChild(copyBtn);
@@ -397,7 +394,9 @@ function updateSavedTable() {
 
     tr.appendChild(actionTd);
 
+    // NOTES
     const notesTd = document.createElement("td");
+    notesTd.className = "notes-cell";
 
     const notesInput = document.createElement("textarea");
 
@@ -405,8 +404,10 @@ function updateSavedTable() {
     notesInput.rows = 2;
     notesInput.value = r._notes || "";
 
-    notesInput.style.width = "180px";
+    notesInput.style.width = "100px";
     notesInput.style.resize = "vertical";
+
+    notesInput.disabled = editingRow !== index;
 
     notesInput.oninput = () => {
       savedOrders[index]._notes = notesInput.value;
