@@ -37,7 +37,9 @@ function updatePreview() {
   document.getElementById("newOrdersCount").textContent = previewOrders.length;
 
   if (!previewOrders.length) return;
+
   const headers = Object.keys(previewOrders[0]);
+
   headers.forEach((h) => {
     const th = document.createElement("th");
     th.textContent = h;
@@ -46,6 +48,7 @@ function updatePreview() {
 
   previewOrders.forEach((r) => {
     const tr = document.createElement("tr");
+
     headers.forEach((h) => {
       const td = document.createElement("td");
       td.contentEditable = true;
@@ -128,6 +131,49 @@ function saveOrders() {
   updateSavedTable();
 }
 
+function showToast(message, duration = 2500) {
+  const oldToast = document.getElementById("appToast");
+
+  if (oldToast) {
+    oldToast.remove();
+  }
+
+  const toast = document.createElement("div");
+  toast.id = "appToast";
+  toast.textContent = message;
+
+  Object.assign(toast.style, {
+    position: "fixed",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    background: "#333",
+    color: "#fff",
+    padding: "12px 20px",
+    borderRadius: "8px",
+    fontSize: "14px",
+    fontWeight: "500",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+    zIndex: "99999",
+    opacity: "0",
+    transition: "opacity 0.2s ease"
+  });
+
+  document.body.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    toast.style.opacity = "1";
+  });
+
+  setTimeout(() => {
+    toast.style.opacity = "0";
+
+    setTimeout(() => {
+      toast.remove();
+    }, 200);
+  }, duration);
+}
+
 function updateSavedTable() {
   const head = document.getElementById("savedHeader");
   const body = document.getElementById("savedBody");
@@ -175,6 +221,11 @@ function updateSavedTable() {
   const actionTh = document.createElement("th");
   actionTh.textContent = "Actions";
   head.appendChild(actionTh);
+
+  // notes column
+  const notesTh = document.createElement("th");
+  notesTh.textContent = "Notes";
+  head.appendChild(notesTh);
 
   headers.forEach((h) => {
     const th = document.createElement("th");
@@ -278,17 +329,93 @@ function updateSavedTable() {
       updateSavedTable();
     };
 
+    const backorderBtn = document.createElement("button");
+
+    backorderBtn.textContent = "🚚";
+    backorderBtn.className = "action-btn";
+    backorderBtn.title = "Send to Backorder";
+
+    backorderBtn.onclick = async () => {
+      const orderNo = r["Tr.Orig.No."] || "this order";
+      const notes = r._notes || "";
+
+      const confirmed = confirm(`Send ${orderNo} to Backorder?`);
+
+      if (!confirmed) return;
+
+      backorderBtn.disabled = true;
+      backorderBtn.textContent = "⏳";
+
+      try {
+        const response = await fetch(
+          "https://adcjrkudofddvmcpmdzw.supabase.co/functions/v1/send-backorder",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(r)
+          }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          console.error("Backorder failed:", result);
+          throw new Error(result.error || "Backorder failed");
+        }
+
+        console.log("Backorder created:", result.order);
+        console.log("Notes:", notes);
+
+        backorderBtn.textContent = "✅";
+        backorderBtn.title = "Sent to Backorder";
+        backorderBtn.disabled = true;
+
+        showToast("🚚 Order sent to Backorder!");
+      } catch (error) {
+        console.error("Backorder error:", error);
+
+        backorderBtn.disabled = false;
+        backorderBtn.textContent = "🚚";
+
+        showToast("❌ Failed to send order");
+      }
+    };
+
     const actionTd = document.createElement("td");
 
     actionTd.className = "action-cell";
     copyBtn.className = "action-btn";
     deleteBtn.className = "action-btn";
+    backorderBtn.className = "action-btn";
 
     actionTd.appendChild(editBtn);
     actionTd.appendChild(copyBtn);
     actionTd.appendChild(deleteBtn);
+    actionTd.appendChild(backorderBtn);
 
     tr.appendChild(actionTd);
+
+    const notesTd = document.createElement("td");
+
+    const notesInput = document.createElement("textarea");
+
+    notesInput.placeholder = "Add note...";
+    notesInput.rows = 2;
+    notesInput.value = r._notes || "";
+
+    notesInput.style.width = "180px";
+    notesInput.style.resize = "vertical";
+
+    notesInput.oninput = () => {
+      savedOrders[index]._notes = notesInput.value;
+
+      localStorage.setItem("savedOrders", JSON.stringify(savedOrders));
+    };
+
+    notesTd.appendChild(notesInput);
+    tr.appendChild(notesTd);
 
     // NORMAL CELLS
     headers.forEach((h) => {
