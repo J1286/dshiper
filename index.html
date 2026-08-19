@@ -50,7 +50,7 @@
         <span>PROCIVIC</span>
         <strong id="dashPROCIVIC"></strong>
       </div>
-       <div class="stat">
+      <div class="stat">
         <span>PELICAN</span>
         <strong id="dashPELICAN"></strong>
       </div>
@@ -64,13 +64,11 @@
       <div id="priceStatus">No price table loaded</div>
 
       <!-- New Orders Input -->
-      <h2>🟦 New Orders</h2>
-      <textarea id="input" rows="10" placeholder="Paste order data here"></textarea><br>
+      <h2>🟦 New Orders: <span id="newOrdersCount">0</span></h2>
+      <textarea id="input" rows="10" placeholder="Paste order 	data here"></textarea><br>
+
       <button onclick="addOrders()">Add Orders</button>
       <button onclick="clearPreview()">Clear Input</button>
-      <h3>🔍 Detection Info</h3>
-      <pre id="detectionInfo">No order analyzed yet</pre>
-      <pre id="output"></pre>
 
       <!-- Preview Orders -->
       <h3>Preview Orders:</h3>
@@ -141,19 +139,19 @@
 
   </div>
 
-	 <div id="quickPasteFloat">
-  	   <select id="quickPaste" onchange="copyQuickPaste()">
-         <option value="">-- Quick Paste --</option>
-    	 <option value="HOLD">HOLD</option>
-    	 <option value="No ETA Discontinued">No ETA Discontinued</option>
-	     <option value="Wait to Receive">Wait to Receive</option>
-	     <option value="WH3">WH3</option>
-	     <option value="ETA ">ETA</option>
-	     <option value="LAST">LAST</option>
-	     <option value="Blocked">Blocked</option>
-	     <option value="ETA 6-8 weeks">ETA 6-8 weeks</option>
-	   </select>
-	 </div>
+  <div id="quickPasteFloat">
+    <select id="quickPaste" onchange="copyQuickPaste()">
+      <option value="">-- Quick Paste --</option>
+      <option value="HOLD">HOLD</option>
+      <option value="No ETA Discontinued">No ETA Discontinued</option>
+      <option value="Wait to Receive">Wait to Receive</option>
+      <option value="WH3">WH3</option>
+      <option value="ETA ">ETA</option>
+      <option value="LAST">LAST</option>
+      <option value="Blocked">Blocked</option>
+      <option value="ETA 6-8 weeks">ETA 6-8 weeks</option>
+    </select>
+  </div>
 
 </body>
 
