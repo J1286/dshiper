@@ -9,23 +9,32 @@ function processData() {
 
 function addOrders() {
   const newOrders = processData();
+
   previewOrders = previewOrders.concat(newOrders);
+
   const input = document.getElementById("input");
   if (input) input.value = "";
 
   updatePreview();
-  updateDetectionUI();
   updateUnknownTable();
+}
+
+function updateNewOrdersCount() {
+  const el = document.getElementById("newOrdersCount");
+
+  if (!el) return;
+
+  el.textContent = previewOrders.length;
 }
 
 function updatePreview() {
   const head = document.getElementById("previewHeader"),
     body = document.getElementById("previewBody");
+
   head.innerHTML = "";
   body.innerHTML = "";
-  document.getElementById(
-    "output"
-  ).textContent = `Orders: ${previewOrders.length}`;
+
+  document.getElementById("newOrdersCount").textContent = previewOrders.length;
 
   if (!previewOrders.length) return;
   const headers = Object.keys(previewOrders[0]);
@@ -54,9 +63,6 @@ function updatePreview() {
 
     body.appendChild(tr);
   });
-  document.getElementById(
-    "output"
-  ).textContent = `Orders: ${previewOrders.length}`;
 }
 
 function clearPreview() {
@@ -65,7 +71,6 @@ function clearPreview() {
   updateDashboard();
 
   lastDetection = null;
-  updateDetectionUI();
 
   unknownOrders = [];
   selectedUnknownOrder = null;
@@ -73,8 +78,6 @@ function clearPreview() {
 
   const input = document.getElementById("input");
   if (input) input.value = "";
-
-  document.getElementById("output").textContent = "Orders: 0";
 }
 
 function syncPreviewToOrders() {
@@ -118,8 +121,7 @@ function saveOrders() {
 
   previewOrders = [];
 
-  lastDetection = null; // clear detection UI
-  updateDetectionUI();
+  lastDetection = null;
 
   updatePreview();
   updateDashboard();
@@ -304,32 +306,32 @@ function updateSavedTable() {
 
         // Highlight duplicate SKU in this column
         if (
-  	  !blockedItemIDs.has(normalizedSKU) &&
-  	  duplicateItemColumns[h] &&
-   	  duplicateItemColumns[h].has(normalizedSKU)
- 	) {
-  	  td.classList.add("duplicate-item");
-  	  td.title = "Duplicate SKU in this column";
-	}
+          !blockedItemIDs.has(normalizedSKU) &&
+          duplicateItemColumns[h] &&
+          duplicateItemColumns[h].has(normalizedSKU)
+        ) {
+          td.classList.add("duplicate-item");
+          td.title = "Duplicate SKU in this column";
+        }
 
         // Only Item ID cells are clickable/copiable
         td.style.cursor = "pointer";
 
         td.onclick = () => {
-  	  if (editingRow === index) return;
+          if (editingRow === index) return;
 
-	  navigator.clipboard.writeText(r[h]);
+          navigator.clipboard.writeText(r[h]);
 
-	// Mark this cell as copied
-	td.classList.add("copied-item");
+          // Mark this cell as copied
+          td.classList.add("copied-item");
 
-	const old = td.textContent;
-	  td.textContent = "✅ Copied!";
+          const old = td.textContent;
+          td.textContent = "✅ Copied!";
 
-	setTimeout(() => {
-    	  td.textContent = old;
-  	  }, 800);
-	};
+          setTimeout(() => {
+            td.textContent = old;
+          }, 800);
+        };
       }
 
       td.contentEditable = editingRow === index;
