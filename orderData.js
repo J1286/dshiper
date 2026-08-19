@@ -271,7 +271,7 @@ function updateSavedTable() {
         const cells = tr.querySelectorAll("td");
 
         headers.forEach((h, i) => {
-          savedOrders[index][h] = cells[i + 3].textContent;
+          savedOrders[index][h] = cells[i + 4].textContent;
         });
 
         const dealer = getDealerFromRow(savedOrders[index]);
