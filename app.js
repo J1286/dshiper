@@ -176,28 +176,6 @@ function updateUnknownTable() {
   updateDashboard();
 }
 
-function updateDetectionUI() {
-  const el = document.getElementById("detectionInfo");
-
-  if (!lastDetection) {
-    el.textContent = "No order analyzed yet";
-    return;
-  }
-
-  const lines = [];
-
-  lines.push(`Best Match: ${lastDetection.dealer}`);
-  lines.push(`Confidence: ${lastDetection.confidence.toFixed(2)}`);
-  lines.push("");
-  lines.push("Ranking:");
-
-  lastDetection.ranked.forEach((r) => {
-    lines.push(`- ${r.dealer}: ${r.score.toFixed(2)}`);
-  });
-
-  el.textContent = lines.join("\n");
-}
-
 function openRawViewer(index) {
   selectedUnknownOrder = unknownOrders[index];
 
@@ -345,7 +323,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Start dragging
   quickPasteFloat.addEventListener("mousedown", function (e) {
-
     // Don't drag when clicking the dropdown
     if (e.target.closest("select")) {
       return;
@@ -370,7 +347,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Move
   document.addEventListener("mousemove", function (e) {
-
     if (!isDragging) return;
 
     e.preventDefault();
@@ -391,7 +367,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Stop dragging
   document.addEventListener("mouseup", function () {
-
     if (!isDragging) return;
 
     isDragging = false;
