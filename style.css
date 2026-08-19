@@ -139,3 +139,12 @@ th {
   padding: 6px 10px;
   font-size: 14px;
 }
+
+.notes-cell {
+  width: 100px;
+  min-width: 100px;
+  max-width: 100px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
