@@ -33,13 +33,20 @@ function isLikelySKU(str) {
 
   const value = str.trim();
 
-  // Most real product SKUs contain numbers.
-  // Prevents normal description text from becoming a SKU.
+  // Phone number
+  if (/^\+?1?[-.\s()]?\d{3}[-.\s()]?\d{3}[-.\s]?\d{4}$/.test(value)) {
+    return false;
+  }
+
+  // Vehicle/application year range, e.g. 2013-18
+  if (/^\d{4}-\d{2}$/.test(value)) {
+    return false;
+  }
+
   if (!/\d/.test(value)) {
     return false;
   }
 
-  // Reject punctuation/text that doesn't look like SKU data.
   if (!/^[A-Z0-9._\/-]+$/i.test(value)) {
     return false;
   }
@@ -47,21 +54,22 @@ function isLikelySKU(str) {
   return scoreSKU(value) >= 0.5;
 }
 
-function isLikelySKU(str) {
-  if (!str) return false;
+function isInvalidItemSKU(sku) {
+  if (!sku) return true;
 
-  const value = str.trim();
+  const value = sku.trim();
 
-  if (!/\d/.test(value)) {
-    return false;
+  // Phone number
+  if (/^\+?1?[-.\s()]?\d{3}[-.\s()]?\d{3}[-.\s]?\d{4}$/.test(value)) {
+    return true;
   }
 
-  // Reject anything containing characters that are not SKU
-  if (!/^[A-Z0-9._\/-]+$/i.test(value)) {
-    return false;
+  // Year/application ranges like 2013-18
+  if (/^\d{4}-\d{2}$/.test(value)) {
+    return true;
   }
 
-  return scoreSKU(value) >= 0.5;
+  return false;
 }
 
 function scoreSKUWithContext(line, prevLine = "", nextLine = "") {
