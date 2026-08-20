@@ -224,7 +224,8 @@ function updateDashboard() {
     ntxglow: null,
     omac: null,
     procivic: null,
-    pelican: null
+    pelican: null,
+    obsession: null
   };
 
   savedOrders.forEach((order) => {
@@ -259,6 +260,9 @@ function updateDashboard() {
       case "W7505":
         dealerCount.pelican++;
         break;
+      case "W7513":
+        dealerCount.obsession++;
+        break;
     }
   });
 
@@ -270,6 +274,7 @@ function updateDashboard() {
   setDashCount("dashOMAC", dealerCount.omac);
   setDashCount("dashPROCIVIC", dealerCount.procivic);
   setDashCount("dashPELICAN", dealerCount.pelican);
+  setDashCount("dashOBSESSION", dealerCount.obsession);
 }
 
 async function copyQuickPaste() {
