@@ -1,10 +1,18 @@
 function parseGeneric(order) {
   const analysis = analyzeOrder(order);
 
-  const items =
-    analysis.itemCandidates && analysis.itemCandidates.length
-      ? analysis.itemCandidates
-      : extractItemsGeneric(order);
+  let items;
+
+  if (analysis.itemCandidates && analysis.itemCandidates.length) {
+    console.log("ITEM SOURCE: analyzeOrder.itemCandidates");
+    console.log("ANALYZER ITEMS:", analysis.itemCandidates);
+
+    items = analysis.itemCandidates;
+  } else {
+    console.log("ITEM SOURCE: extractItemsGeneric FALLBACK");
+    items = extractItemsGeneric(order);
+    console.log("GENERIC FALLBACK ITEMS:", items);
+  }
 
   const addr =
     analysis.addressCandidate && analysis.addressCandidate.addr1
@@ -278,9 +286,11 @@ function extractItemsGeneric(text) {
       if (scored.length) {
         const best = scored.sort((a, b) => b.score - a.score)[0];
 
-        if (best.score >= 0.65) {
+        const candidateSKU = normalizeSKU(best.raw);
+
+        if (best.score >= 0.65 && isLikelySKU(candidateSKU)) {
           items.push({
-            sku: normalizeSKU(best.raw),
+            sku: candidateSKU,
             qty: 1
           });
         }
@@ -379,9 +389,7 @@ function extractAddressGeneric(text) {
     if (index === 0) return false;
 
     // Reject obvious non-address lines
-    if (
-      /ship to|bill to|customer information|phone|po\s*#|thanks/i.test(t)
-    ) {
+    if (/ship to|bill to|customer information|phone|po\s*#|thanks/i.test(t)) {
       return false;
     }
 
@@ -421,9 +429,7 @@ function extractAddressGeneric(text) {
     // Anything between addr1 and city/state/zip
     // is treated as addr2.
     if (cityIndex > addr1Index + 1) {
-      addr2 = lines
-        .slice(addr1Index + 1, cityIndex)
-        .join(", ");
+      addr2 = lines.slice(addr1Index + 1, cityIndex).join(", ");
     }
   }
 
