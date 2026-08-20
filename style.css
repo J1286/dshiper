@@ -92,6 +92,10 @@ th {
     margin-bottom: 15px;
 }
 
+.stat strong {
+  margin-left: 10px;
+}
+
 .stat strong.active {
     color: black;
     font-weight: bold;
