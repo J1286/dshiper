@@ -347,6 +347,21 @@ function updateSavedTable() {
       backorderBtn.textContent = "⏳";
 
       try {
+        const backorderData = { ...r };
+
+        // Format all item prices to exactly 2 decimal places
+        for (let i = 1; i <= 5; i++) {
+          const field = `Price ${i}`;
+
+          if (backorderData[field] !== "") {
+            const price = Number(backorderData[field]);
+
+            if (Number.isFinite(price)) {
+              backorderData[field] = price.toFixed(2);
+            }
+          }
+        }
+
         const response = await fetch(
           "https://adcjrkudofddvmcpmdzw.supabase.co/functions/v1/send-backorder",
           {
@@ -354,7 +369,7 @@ function updateSavedTable() {
             headers: {
               "Content-Type": "application/json"
             },
-            body: JSON.stringify(r)
+            body: JSON.stringify(backorderData)
           }
         );
 
