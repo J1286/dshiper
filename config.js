@@ -64,6 +64,10 @@ const PARSER_PLUGINS = {
     parse: parseGeneric,
     confidence: 0.9
   },
+  obsession: {
+    parse: parseGeneric,
+    confidence: 0.9
+  },
 };
 
 const GENERIC_RULES = {
@@ -148,6 +152,11 @@ const DEALER_CONFIG = {
     dshipper: "W7505",
     email: "tgould@pelicanparts.com",
     thirdParty: false
+  },
+  obsession: {
+    dshipper: "W7513",
+    email: "management@autoobsession.com",
+    thirdParty: false
   }
 };
 
@@ -160,7 +169,8 @@ const DSHIPPER_TO_DEALER = {
   W7500: "omac",
   W0640: "procivic",
   W6938: "ecs",
-  W7505: "pelican"
+  W7505: "pelican",
+  W7513: "obsession"
 };
 
 const STATE_MAP = {
