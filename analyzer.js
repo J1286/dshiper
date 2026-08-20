@@ -13,7 +13,7 @@ function analyzeOrder(text) {
   console.log("SHIP TO RAW:");
   console.table(shipToSection.lines);
 
-  const addressCandidate = detectAddressFromSection(shipToSection);
+  const addressCandidate = detectAddressFromSection(shipToSection, lines);
 
   const phoneCandidates = [];
   const skuCandidates = [];
@@ -45,6 +45,10 @@ function analyzeOrder(text) {
     const cleanedLine = normalizeSKU(line);
 
     if (!isLikelySKU(cleanedLine)) {
+      return;
+    }
+
+    if (isInvalidItemSKU(cleanedLine)) {
       return;
     }
 
@@ -92,7 +96,7 @@ function detectItemSection(lines) {
 
   for (let i = 0; i < lines.length; i++) {
     if (
-      /^(part number|item vendor sku|item sku|sku|product|model)/i.test(
+      /^(part number|part description|item vendor sku|item sku|sku|product|model)/i.test(
         lines[i]
       )
     ) {
@@ -129,28 +133,57 @@ function detectItemSection(lines) {
 
 function detectItemsFromSection(itemSection) {
   const items = [];
-
   const lines = itemSection.lines;
 
+  // SPEC-D / AUTO OBSESSION FORMAT
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+
+    const match = line.match(/^(SPL-[A-Z0-9-]+)\s+(.+)$/i);
+
+    if (!match) continue;
+
+    const itemId = match[1].toUpperCase();
+    const description = match[2].trim();
+
+    let upc = "";
+
+    for (let j = i + 1; j < Math.min(i + 5, lines.length); j++) {
+      const candidate = lines[j].trim();
+
+      if (/^\d{10,14}$/.test(candidate)) {
+        upc = candidate;
+        break;
+      }
+    }
+
+    items.push({
+      itemId,
+      vendorSku: "",
+      qty: 1,
+      upc,
+      price: 0,
+      description
+    });
+
+    // We found the actual product.
+    // Don't let the generic parser interpret
+    // phone numbers/application years as more items.
+    return items;
+  }
+
+  // EXISTING GENERIC LOGIC
   let currentSKUs = [];
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
-    const skuMatches = [];
-
     const cleanedLine = normalizeSKU(line);
 
     if (isLikelySKU(cleanedLine)) {
-      skuMatches.push(cleanedLine);
+      currentSKUs.push(cleanedLine.toUpperCase());
     }
 
-    skuMatches.forEach((sku) => {
-      sku = sku.toUpperCase();
-      currentSKUs.push(sku);
-    });
-
-    // Quantity + UPC + price line
     const detailMatch = line.match(/(\d+)\s+([\d.]+)\s+([\d.]+)/);
 
     if (detailMatch && currentSKUs.length) {
@@ -169,7 +202,7 @@ function detectItemsFromSection(itemSection) {
   return items;
 }
 
-function detectAddressFromSection(shipToSection) {
+function detectAddressFromSection(shipToSection, allLines) {
   const lines = shipToSection.lines;
 
   let name = "";
@@ -182,15 +215,28 @@ function detectAddressFromSection(shipToSection) {
   let phone = "";
 
   // Phone
-  for (const line of lines) {
+  const phoneMatches = [];
+
+  for (const line of allLines) {
     const match = line.match(
       /\b(?:\+?1[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?)\d{3}[-.\s]?\d{4}\b/
     );
 
     if (match) {
-      phone = match[0].replace(/\D/g, "");
-      break;
+      phoneMatches.push({
+        raw: match[0],
+        phone: match[0].replace(/\D/g, ""),
+        line
+      });
     }
+  }
+
+  console.log("PHONE CANDIDATES:", phoneMatches);
+
+  if (phoneMatches.length >= 2) {
+    phone = phoneMatches[1].phone;
+  } else if (phoneMatches.length === 1) {
+    phone = phoneMatches[0].phone;
   }
 
   // Country
