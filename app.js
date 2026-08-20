@@ -198,34 +198,35 @@ function closeRawViewer() {
   selectedUnknownOrder = null;
 }
 
-function setDashCount(id, value) {
+function setDashCount(id, count) {
   const el = document.getElementById(id);
 
-  if (!el) {
-    console.warn("Dashboard element missing:", id);
-    return;
-  }
+  if (!el) return;
 
-  el.textContent = value;
+  const stat = el.closest(".stat");
 
-  if (value > 0) {
-    el.classList.add("active");
+  if (!stat) return;
+
+  if (count > 0) {
+    stat.style.display = "flex";
+    el.textContent = count;
   } else {
-    el.classList.remove("active");
+    stat.style.display = "none";
+    el.textContent = "";
   }
 }
 
 function updateDashboard() {
   const dealerCount = {
-    redline360: null,
-    aag: null,
-    tdot: null,
-    z1: null,
-    ntxglow: null,
-    omac: null,
-    procivic: null,
-    pelican: null,
-    obsession: null
+    redline360: 0,
+    aag: 0,
+    tdot: 0,
+    z1: 0,
+    ntxglow: 0,
+    omac: 0,
+    procivic: 0,
+    pelican: 0,
+    obsession: 0
   };
 
   savedOrders.forEach((order) => {
