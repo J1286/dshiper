@@ -152,3 +152,16 @@ th {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+#backOrderHoverArea {
+  height: 35px;
+}
+
+#BackOrder {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+#backOrderHoverArea:hover #BackOrder {
+  opacity: 1;
+}
