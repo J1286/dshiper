@@ -371,6 +371,22 @@ function getSection(text, startLabel, endLabel) {
 
 // -------- DEALER DETECTION --------
 function detectBestDealer(text) {
+
+  const temporary = detectTemporaryDealer(text);
+
+  console.log("TEMPORARY DETECTION:", temporary);
+
+  if (temporary) {
+    return {
+      dealer: temporary.dealer,
+      confidence: 1,
+      temporary: true,
+      config: temporary,
+      ranked: []
+    };
+  }
+
+  // existing permanent dealer detection below
   const ranked = scoreDealer(text);
 
   const best = ranked[0];
