@@ -69,7 +69,7 @@ function downloadExcel() {
 
 function downloadSelectedOrders() {
   if (selectedOrders.size === 0) {
-    alert("No orders selected");
+    showToast("No orders selected");
     return;
   }
 
@@ -108,7 +108,7 @@ function downloadSelectedOrders() {
 
 function copyAllOrders() {
   if (!savedOrders.length) {
-    alert("No saved orders to copy");
+    showToast("No saved orders to copy");
     return;
   }
 
@@ -121,11 +121,11 @@ function copyAllOrders() {
   navigator.clipboard
     .writeText(text)
     .then(() => {
-      alert(`Copied ${savedOrders.length} orders`);
+      showToast(`Copied ${savedOrders.length} orders`);
     })
     .catch((err) => {
       console.error("Copy failed:", err);
-      alert("Copy failed");
+      showToast("Copy failed");
     });
 }
 
@@ -291,7 +291,7 @@ async function copyQuickPaste() {
     await navigator.clipboard.writeText(text);
     console.log("Copied:", text);
   } catch (err) {
-    alert("Clipboard access failed.");
+    showToast("Clipboard access failed.");
   }
 }
 
