@@ -11,6 +11,9 @@ let testParserName = "";
 let editingRow = -1;
 let selectedOrders = new Set();
 
+// Temporary dealer configurations
+window.temporaryDealerConfig = window.temporaryDealerConfig || {};
+
 const blockedItemIDs = new Set([
   "HOLD",
   "NO ETA DISCONTINUED",
