@@ -14,22 +14,22 @@ window.onload = function () {
   const saved = localStorage.getItem("savedOrders");
 
   if (saved) {
-    const parsed = JSON.parse(saved);
-    savedOrders = Array.isArray(parsed) ? parsed : [];
+  const parsed = JSON.parse(saved);
+  savedOrders = Array.isArray(parsed) ? parsed : [];
 
-    // Refresh prices from the current price table
-    savedOrders.forEach((row) => {
-      refreshOrderPrices(row);
-    });
+  // Refresh prices from the current price table
+  savedOrders.forEach((row) => {
+    refreshOrderPrices(row);
+  });
 
-    // Save refreshed prices back to localStorage
-    localStorage.setItem("savedOrders", JSON.stringify(savedOrders));
+  // Save refreshed prices back to localStorage
+  localStorage.setItem("savedOrders", JSON.stringify(savedOrders));
 
-    updateSavedTable();
-    updateDashboard();
-  }
+  updateSavedTable();
+}
 
-  updatePriceStatus();
+updateDashboard();
+updatePriceStatus();
 };
 
 function openBackOrder() {
