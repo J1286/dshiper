@@ -51,10 +51,25 @@ function parseGeneric(order) {
     return match.replace(/\D/g, "");
   }
 
-  const detectedDealer = detectBestDealer(order).dealer;
-  const config = DEALER_CONFIG[detectedDealer] || DEALER_CONFIG["redline360"];
+  const detection = detectBestDealer(order);
+  const detectedDealer = detection.dealer;
+
+  const temporaryDealer = detection.temporary
+  ? detection.config
+  : null;
+
+  const config =
+    temporaryDealer ||
+    DEALER_CONFIG[detectedDealer] ||
+    DEALER_CONFIG["redline360"];
 
   const dealer = detectedDealer;
+
+  console.log("DETECTION:", detection);
+  console.log("DETECTED DEALER:", detectedDealer);
+  console.log("TEMPORARY DEALER:", temporaryDealer);
+  console.log("DEALER CONFIG:", config);
+
   console.log("DETECTED DEALER:", detectedDealer);
   console.log("ITEM BEFORE PRIMARY SKU:", items[0]);
   console.log(
@@ -78,22 +93,13 @@ function parseGeneric(order) {
     row[`Qty ${i + 1}`] = item.qty || "";
 
     if (item.price !== undefined && item.price !== "") {
-      row[`Price ${i + 1}`] = Number(item.price);
-      setPriceSource(row, i + 1, "dealer");
-    } else {
-      if (item.price !== undefined && item.price !== "") {
-        // Price explicitly supplied by the dealer
-        row[`Price ${i + 1}`] = Number(item.price);
+  row[`Price ${i + 1}`] = Number(item.price);
+  setPriceSource(row, i + 1, "dealer");
+} else {
+  row[`Price ${i + 1}`] = getPrice(dealer, sku);
+  setPriceSource(row, i + 1, "priceTable");
+}
 
-        setPriceSource(row, i + 1, "dealer");
-      } else {
-        // No dealer price, so use our price table
-        row[`Price ${i + 1}`] = getPrice(dealer, sku);
-
-        setPriceSource(row, i + 1, "priceTable");
-      }
-      setPriceSource(row, i + 1, "priceTable");
-    }
   }
   row["Ship Name"] = addr.name || "";
   row["Ship Addr1"] = addr.addr1 || "";
@@ -125,7 +131,9 @@ function parseGeneric(order) {
   row["Ship COD"] = "";
 
   const totalPrice = items.reduce((sum, item) => {
-    const price = Number(item.price) || Number(getPrice(dealer, item.sku)) || 0;
+  const sku = getPrimarySKU(item, dealer);
+  const price =
+    Number(item.price) || Number(getPrice(dealer, sku)) || 0;
 
     const qty = Number(item.qty) || 0;
 
