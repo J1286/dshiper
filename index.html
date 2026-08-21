@@ -119,21 +119,124 @@
       <br><br>
     </div>
 
-    <div id="rawViewer" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000000aa;">
-      <button onclick="generateParserTemplate()">Generate Parser Template</button>
-      <button onclick="runTestParser()">Run Test Parser</button>
-      <div style="background:white; width:80%; height:80%; margin:5% auto; padding:15px; overflow:auto;">
+    <div id="rawViewer" class="raw-viewer">
 
-        <button onclick="closeRawViewer()">Close</button>
+  <div class="raw-viewer-panel">
 
-        <h3>Raw Order</h3>
-        <pre id="rawViewerText" style="white-space:pre-wrap;"></pre>
+    <div class="raw-viewer-header">
+      <h2>🔎 Unknown Order Inspector</h2>
 
-        <h3>Detection Info</h3>
-        <pre id="rawViewerMeta"></pre>
-
-      </div>
+      <button onclick="closeRawViewer()" class="raw-viewer-close">
+        Close
+      </button>
     </div>
+
+    <div class="raw-viewer-actions">
+      <button onclick="generateParserTemplate()">
+        Generate Parser Template
+      </button>
+
+      <button onclick="runTestParser()">
+        Run Test Parser
+      </button>
+    </div>
+
+    <hr>
+
+    <h3>Raw Order</h3>
+
+    <pre id="rawViewerText" class="raw-order-text"></pre>
+
+    <h3>Detection Info</h3>
+
+    <pre id="rawViewerMeta" class="raw-viewer-meta"></pre>
+
+    <hr>
+
+    <h3>🛠️ Add This Dealer</h3>
+
+    <div class="dealer-setup-panel">
+
+      <div class="dealer-field">
+        <label for="dealerSetupName">
+          Dealer Name
+        </label>
+
+        <input
+          type="text"
+          id="dealerSetupName"
+          placeholder="e.g. newdealer"
+        >
+      </div>
+
+      <div class="dealer-field">
+        <label for="dealerSetupDshipper">
+          DShipper ID
+        </label>
+
+        <input
+          type="text"
+          id="dealerSetupDshipper"
+          placeholder="e.g. W7514"
+        >
+      </div>
+
+      <div class="dealer-field">
+        <label for="dealerSetupEmail">
+          Email
+        </label>
+
+        <input
+          type="email"
+          id="dealerSetupEmail"
+          placeholder="dealer@email.com"
+        >
+      </div>
+
+      <div class="dealer-field checkbox-field">
+        <label>
+          <input
+            type="checkbox"
+            id="dealerSetupThirdParty"
+          >
+          Third-party billing
+        </label>
+      </div>
+
+      <div class="dealer-field">
+        <label for="dealerSetupKeyword">
+          Detection Keyword
+        </label>
+
+        <input
+          type="text"
+          id="dealerSetupKeyword"
+          placeholder="Unique text from this dealer's order"
+        >
+      </div>
+
+      <div class="dealer-setup-buttons">
+        <button onclick="saveTemporaryDealer()">
+          💾 Save Dealer
+        </button>
+
+        <button onclick="generateDealerConfigFromForm()">
+          📋 Generate Config
+        </button>
+      </div>
+
+      <div id="dealerSetupStatus"></div>
+
+    </div>
+
+    <h3>Current Session Dealers</h3>
+
+    <pre id="temporaryDealersOutput" class="temporary-dealers-output">
+No temporary dealers added.
+    </pre>
+  </div>
+</div>
+      
     <script src='https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js'></script>
     <script src="./orderData.js"></script>
     <script src="./utils.js"></script>
