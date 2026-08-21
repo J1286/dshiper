@@ -25,6 +25,10 @@ window.onload = function () {
   // Save refreshed prices back to localStorage
   localStorage.setItem("savedOrders", JSON.stringify(savedOrders));
 
+  window.temporaryDealerConfig = JSON.parse(
+  localStorage.getItem("temporaryDealerConfig") || "{}"
+);
+
   updateSavedTable();
 }
 
@@ -69,7 +73,7 @@ function downloadExcel() {
 
 function downloadSelectedOrders() {
   if (selectedOrders.size === 0) {
-    showToast("No orders selected");
+    alert("No orders selected");
     return;
   }
 
@@ -108,7 +112,7 @@ function downloadSelectedOrders() {
 
 function copyAllOrders() {
   if (!savedOrders.length) {
-    showToast("No saved orders to copy");
+    alert("No saved orders to copy");
     return;
   }
 
@@ -121,11 +125,11 @@ function copyAllOrders() {
   navigator.clipboard
     .writeText(text)
     .then(() => {
-      showToast(`Copied ${savedOrders.length} orders`);
+      alert(`Copied ${savedOrders.length} orders`);
     })
     .catch((err) => {
       console.error("Copy failed:", err);
-      showToast("Copy failed");
+      alert("Copy failed");
     });
 }
 
@@ -291,7 +295,7 @@ async function copyQuickPaste() {
     await navigator.clipboard.writeText(text);
     console.log("Copied:", text);
   } catch (err) {
-    showToast("Clipboard access failed.");
+    alert("Clipboard access failed.");
   }
 }
 
