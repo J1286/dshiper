@@ -43,6 +43,10 @@ window.onload = function () {
   updatePriceStatus();
 };
 
+function openBackOrder() {
+  window.open("https://j1286.github.io/backorder/", "_blank");
+}
+
 function downloadExcel() {
   if (!savedOrders.length) {
     console.log("No orders to download");
