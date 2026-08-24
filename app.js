@@ -5,6 +5,7 @@ window.onload = function () {
 
   // restore price table
   const savedPrice = localStorage.getItem("priceRows");
+
   if (savedPrice) {
     allPriceRows = JSON.parse(savedPrice);
     buildPriceTable();
@@ -14,31 +15,33 @@ window.onload = function () {
   const saved = localStorage.getItem("savedOrders");
 
   if (saved) {
-  const parsed = JSON.parse(saved);
-  savedOrders = Array.isArray(parsed) ? parsed : [];
+    const parsed = JSON.parse(saved);
+    savedOrders = Array.isArray(parsed) ? parsed : [];
 
-  // Refresh prices from the current price table
-  savedOrders.forEach((row) => {
-    refreshOrderPrices(row);
-  });
+    // Refresh prices from the current price table
+    savedOrders.forEach((row) => {
+      refreshOrderPrices(row);
+    });
 
-  // Save refreshed prices back to localStorage
-  localStorage.setItem("savedOrders", JSON.stringify(savedOrders));
+    // Save refreshed prices back to localStorage
+    localStorage.setItem(
+      "savedOrders",
+      JSON.stringify(savedOrders)
+    );
 
+    updateSavedTable();
+  }
+
+  // restore temporary dealers
   window.temporaryDealerConfig = JSON.parse(
-  localStorage.getItem("temporaryDealerConfig") || "{}"
-);
+    localStorage.getItem("temporaryDealerConfig") || "{}"
+  );
 
-  updateSavedTable();
-}
+  updateTemporaryDealersDisplay();
 
-updateDashboard();
-updatePriceStatus();
+  updateDashboard();
+  updatePriceStatus();
 };
-
-function openBackOrder() {
-  window.open("https://j1286.github.io/backorder/", "_blank");
-}
 
 function downloadExcel() {
   if (!savedOrders.length) {
