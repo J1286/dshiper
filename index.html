@@ -89,6 +89,9 @@
       </table>
       <br>
       <button onclick="saveOrders()">Save Orders</button>
+      <button onclick="openTemporaryDealerManager()">
+  🛠️ Temporary Dealers
+</button>
       <h2>🟨 Unknown Format Inspector</h2>
       <pre id="parserTemplateOutput"></pre>
       <div id="unknownStatus"></div>
@@ -229,11 +232,11 @@
 
     </div>
 
-    <h3>Current Session Dealers</h3>
+    <h3>🛠️ Temporary Dealers</h3>
 
-    <pre id="temporaryDealersOutput" class="temporary-dealers-output">
-No temporary dealers added.
-    </pre>
+    <div id="temporaryDealersOutput" class="temporary-dealers-output">
+      No temporary dealers added.
+    </div>
   </div>
 </div>
       
@@ -250,6 +253,29 @@ No temporary dealers added.
     <script src="./app.js"></script>
 
   </div>
+
+<div id="temporaryDealerManager" class="temporary-dealer-manager">
+
+  <div class="temporary-dealer-manager-panel">
+
+    <div class="temporary-dealer-manager-header">
+      <h2>🛠️ Temporary Dealers</h2>
+
+      <button
+        onclick="closeTemporaryDealerManager()"
+        class="temporary-dealer-manager-close"
+      >
+        ✕
+      </button>
+    </div>
+
+    <hr>
+
+    <div id="temporaryDealerManagerOutput">
+      No temporary dealers added.
+    </div>
+  </div>
+</div>
 
   <div id="quickPasteFloat">
     <select id="quickPaste" onchange="copyQuickPaste()">
