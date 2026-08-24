@@ -12,12 +12,37 @@ function parseOrder(order) {
   return result;
 }
 
+function getEffectiveDealerConfig(dealerName) {
+  if (!dealerName) return null;
+
+  const normalized = dealerName.trim().toLowerCase();
+
+  // Temporary dealer takes priority
+  if (window.temporaryDealerConfig?.[normalized]) {
+    return window.temporaryDealerConfig[normalized];
+  }
+
+  // Permanent dealer
+  if (DEALER_CONFIG?.[normalized]) {
+    return DEALER_CONFIG[normalized];
+  }
+
+  return null;
+}
+
 function safeParseOrder(order) {
   const detection = detectBestDealer(order);
   const detectedDealer = detection?.dealer;
+
   lastDetection = detection;
 
   let result;
+
+  if (PARSER_PLUGINS[detectedDealer]) {
+    result = parseOrder(order);
+  } else {
+    result = parseGeneric(order);
+  }
 
   switch (detectedDealer) {
     case "aag":
@@ -88,8 +113,11 @@ function safeParseOrder(order) {
   return result;
 }
 
+
 function buildRow(order, dealer, items, addr) {
-  const config = DEALER_CONFIG[dealer] || DEALER_CONFIG["redline360"];
+  const config =
+  getEffectiveDealerConfig(dealer) ||
+  DEALER_CONFIG["redline360"];
 
   const paymentSection = getSection(
     order,
@@ -407,7 +435,28 @@ function detectBestDealer(text) {
 }
 
 function getDealerFromRow(row) {
-  return DSHIPPER_TO_DEALER[row["DShipper ID"]] || "redline360";
+  const dshipper = row["DShipper ID"];
+
+  if (!dshipper) {
+    return "redline360";
+  }
+
+  const permanentDealer = DSHIPPER_TO_DEALER[dshipper];
+
+  if (permanentDealer) {
+    return permanentDealer;
+  }
+
+  const temporaryDealers =
+    window.temporaryDealerConfig || {};
+
+  for (const [dealerName, config] of Object.entries(temporaryDealers)) {
+    if (config?.dshipper === dshipper) {
+      return dealerName;
+    }
+  }
+
+  return "redline360";
 }
 
 function scoreDealer(text) {
