@@ -17,6 +17,8 @@ Browser-based order processing tool that:
 - git commit -m "Document refactor structure"
 - Generic parser template upgraded to fit all dealer formats as possible
 - 🚚 DropShip → Backorder API Integration
+- Quick paste function added
+- New temporary dealer setup
 
 Future Features
 - Continue to improve template generation (generate better detection rules automatically)
