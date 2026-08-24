@@ -227,3 +227,122 @@ th {
   box-sizing: border-box;
   overflow: auto;
 }
+
+/* TEMPORARY DEALER CARDS */
+.temporary-dealers-output {
+  margin-top: 12px;
+}
+
+.temporary-dealer-card {
+  background: #f8fbff;
+  border: 1px solid #c8dff5;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}
+
+.temporary-dealer-header {
+  font-size: 18px;
+  margin-bottom: 12px;
+  color: #174a75;
+}
+
+.temporary-dealer-info {
+  display: grid;
+  gap: 5px;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.temporary-dealer-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.temporary-dealer-buttons button {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.temporary-dealer-buttons button:hover {
+  opacity: 0.85;
+}
+
+.delete-dealer-button {
+  background: #d32f2f !important;
+  color: white;
+}
+
+.no-temporary-dealers {
+  color: #777;
+  font-style: italic;
+  padding: 10px 0;
+}
+
+/* TEMPORARY DEALER MANAGER */
+.temporary-dealer-manager {
+  display: none;
+
+  position: fixed;
+  inset: 0;
+
+  background: rgba(0, 0, 0, 0.55);
+
+  z-index: 10000;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+}
+
+.temporary-dealer-manager-panel {
+  width: min(700px, 95vw);
+  max-height: 85vh;
+
+  overflow-y: auto;
+
+  background: white;
+
+  border-radius: 12px;
+
+  padding: 22px;
+
+  box-shadow:
+    0 10px 35px rgba(0, 0, 0, 0.3);
+}
+
+.temporary-dealer-manager-header {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+}
+
+.temporary-dealer-manager-header h2 {
+  margin: 0;
+}
+
+.temporary-dealer-manager-close {
+  background: #d32f2f;
+  color: white;
+
+  border: none;
+
+  border-radius: 6px;
+
+  padding: 7px 12px;
+
+  cursor: pointer;
+
+  font-size: 16px;
+}
+
+.temporary-dealer-manager-close:hover {
+  background: #b71c1c;
+}
