@@ -423,6 +423,7 @@ localStorage.setItem(
   status.style.color = "green";
 
   updateTemporaryDealersDisplay();
+  updateTemporaryDealerManager();
 }
 
 function updateTemporaryDealersDisplay() {
@@ -430,25 +431,214 @@ function updateTemporaryDealersDisplay() {
 
   if (!output) return;
 
-  const dealers = Object.entries(temporaryDealerConfig);
+  const dealers = Object.entries(
+    window.temporaryDealerConfig || {}
+  );
 
   if (!dealers.length) {
-    output.textContent = "No temporary dealers added.";
+    output.innerHTML = `
+      <div class="no-temporary-dealers">
+        No temporary dealers added.
+      </div>
+    `;
     return;
   }
 
-  output.textContent = dealers
+  output.innerHTML = dealers
     .map(([name, config]) => {
-      return [
-        `Dealer: ${name}`,
-        `DShipper: ${config.dshipper}`,
-        `Email: ${config.email || "(none)"}`,
-        `Third Party: ${config.thirdParty ? "YES" : "NO"}`,
-        `Keyword: ${config.keyword || "(none)"}`,
-        "-------------------------"
-      ].join("\n");
+      return `
+        <div class="temporary-dealer-card">
+
+          <div class="temporary-dealer-header">
+            <strong>${escapeHtml(name)}</strong>
+          </div>
+
+          <div class="temporary-dealer-info">
+
+            <div>
+              <strong>DShipper:</strong>
+              ${escapeHtml(config.dshipper || "(none)")}
+            </div>
+
+            <div>
+              <strong>Email:</strong>
+              ${escapeHtml(config.email || "(none)")}
+            </div>
+
+            <div>
+              <strong>Third Party:</strong>
+              ${config.thirdParty ? "YES" : "NO"}
+            </div>
+
+            <div>
+              <strong>Keyword:</strong>
+              ${escapeHtml(config.keyword || "(none)")}
+            </div>
+          </div>
+
+          <div class="temporary-dealer-buttons">
+            <button
+              onclick="editTemporaryDealer('${escapeJsString(name)}')"
+            >
+              ✏️ Edit
+            </button>
+            <button
+              onclick="testTemporaryDealer('${escapeJsString(name)}')"
+            >
+              🔎 Test
+            </button>
+
+            <button
+              onclick="generateTemporaryDealerConfig('${escapeJsString(name)}')"
+            >
+              📋 Config
+            </button>
+            <button
+              onclick="deleteTemporaryDealer('${escapeJsString(name)}')"
+              class="delete-dealer-button"
+            >
+              🗑️ Delete
+            </button>
+          </div>
+        </div>
+      `;
     })
-    .join("\n");
+    .join("");
+}
+
+function editTemporaryDealer(dealerName) {
+  const dealer =
+    window.temporaryDealerConfig?.[dealerName];
+
+  if (!dealer) {
+    alert("Temporary dealer not found.");
+    return;
+  }
+
+  // Open the existing dealer setup area
+  const rawViewer =
+    document.getElementById("rawViewer");
+
+  if (rawViewer) {
+    rawViewer.style.display = "flex";
+  }
+
+  document.getElementById("dealerSetupName").value =
+    dealerName;
+
+  document.getElementById("dealerSetupDshipper").value =
+    dealer.dshipper || "";
+
+  document.getElementById("dealerSetupEmail").value =
+    dealer.email || "";
+
+  document.getElementById("dealerSetupThirdParty").checked =
+    !!dealer.thirdParty;
+
+  document.getElementById("dealerSetupKeyword").value =
+    dealer.keyword || "";
+
+  const status =
+    document.getElementById("dealerSetupStatus");
+
+  if (status) {
+    status.textContent =
+      `✏️ Editing ${dealerName}`;
+
+    status.style.color = "#1976d2";
+  }
+
+  document
+    .getElementById("dealerSetupName")
+    ?.scrollIntoView({
+      behavior: "smooth",
+      block: "center"
+    });
+}
+
+function deleteTemporaryDealer(dealerName) {
+  const dealer =
+    window.temporaryDealerConfig?.[dealerName];
+
+  if (!dealer) return;
+
+  const confirmed = confirm(
+    `Delete temporary dealer "${dealerName}"?`
+  );
+
+  if (!confirmed) return;
+
+  delete window.temporaryDealerConfig[dealerName];
+
+  localStorage.setItem(
+    "temporaryDealerConfig",
+    JSON.stringify(window.temporaryDealerConfig)
+  );
+
+  updateTemporaryDealersDisplay();
+  updateTemporaryDealerManager();
+}
+
+function generateTemporaryDealerConfig(dealerName) {
+  const dealer =
+    window.temporaryDealerConfig?.[dealerName];
+
+  if (!dealer) {
+    alert("Temporary dealer not found.");
+    return;
+  }
+
+  const configText = generateConfigStub(
+    dealerName,
+    dealer.dshipper || "",
+    dealer.email || "",
+    !!dealer.thirdParty,
+    dealer.keyword || ""
+  );
+
+  const win = window.open("", "_blank");
+
+  if (!win) {
+    alert(
+      "Popup blocked. Please allow popups for this site."
+    );
+    return;
+  }
+
+  win.document.write(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Dealer Config - ${escapeHtml(dealerName)}</title>
+      </head>
+
+      <body style="
+        font-family: Arial, sans-serif;
+        padding: 25px;
+      ">
+
+        <h2>
+          Dealer Config: ${escapeHtml(dealerName)}
+        </h2>
+
+        <pre style="
+          background: #f5f5f5;
+          padding: 15px;
+          border-radius: 8px;
+          overflow-x: auto;
+        ">${escapeHtml(configText)}</pre>
+
+      </body>
+    </html>
+  `);
+
+  win.document.close();
+}
+
+function escapeJsString(value) {
+  return String(value || "")
+    .replace(/\\/g, "\\\\")
+    .replace(/'/g, "\\'");
 }
 
 function generateDealerConfigFromForm() {
@@ -555,4 +745,113 @@ function detectTemporaryDealer(text) {
   }
 
   return null;
+}
+
+function openTemporaryDealerManager() {
+  const manager =
+    document.getElementById("temporaryDealerManager");
+
+  if (!manager) return;
+
+  updateTemporaryDealerManager();
+
+  manager.style.display = "flex";
+}
+
+function closeTemporaryDealerManager() {
+  const manager =
+    document.getElementById("temporaryDealerManager");
+
+  if (!manager) return;
+
+  manager.style.display = "none";
+}
+
+function updateTemporaryDealerManager() {
+  const output =
+    document.getElementById("temporaryDealerManagerOutput");
+
+  if (!output) return;
+
+  const dealers = Object.entries(
+    window.temporaryDealerConfig || {}
+  );
+
+  if (!dealers.length) {
+    output.innerHTML = `
+      <div class="no-temporary-dealers">
+        No temporary dealers added.
+      </div>
+    `;
+    return;
+  }
+
+  output.innerHTML = dealers
+    .map(([name, config]) => {
+
+      return `
+        <div class="temporary-dealer-card">
+
+          <div class="temporary-dealer-header">
+            <strong>${escapeHtml(name)}</strong>
+          </div>
+
+          <div class="temporary-dealer-info">
+
+            <div>
+              <strong>DShipper:</strong>
+              ${escapeHtml(config.dshipper || "(none)")}
+            </div>
+
+            <div>
+              <strong>Email:</strong>
+              ${escapeHtml(config.email || "(none)")}
+            </div>
+
+            <div>
+              <strong>Third Party:</strong>
+              ${config.thirdParty ? "YES" : "NO"}
+            </div>
+
+            <div>
+              <strong>Keyword:</strong>
+              ${escapeHtml(config.keyword || "(none)")}
+            </div>
+
+          </div>
+
+          <div class="temporary-dealer-buttons">
+
+            <button
+              onclick="editTemporaryDealer('${escapeJsString(name)}')"
+            >
+              ✏️ Edit
+            </button>
+
+            <button
+              onclick="testTemporaryDealer('${escapeJsString(name)}')"
+            >
+              🔎 Test
+            </button>
+
+            <button
+              onclick="generateTemporaryDealerConfig('${escapeJsString(name)}')"
+            >
+              📋 Config
+            </button>
+
+            <button
+              onclick="deleteTemporaryDealer('${escapeJsString(name)}')"
+              class="delete-dealer-button"
+            >
+              🗑️ Delete
+            </button>
+
+          </div>
+
+        </div>
+      `;
+
+    })
+    .join("");
 }
