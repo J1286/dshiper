@@ -41,15 +41,19 @@ function extractItemsRedline(text) {
   const items = [];
   const blocks = text.split("SKU:");
   blocks.shift();
+
   blocks.forEach((block) => {
     const skuMatch = block.match(/^([^\n]+)/);
     const qtyMatch = block.match(/Quantity:\s*(\d+)/);
-    if (skuMatch && qtyMatch)
+
+    if (skuMatch && qtyMatch) {
       items.push({
-        sku: normalizeSKU(skuMatch[1]),
+        sku: skuMatch[1].trim().toUpperCase(),
         qty: Number(qtyMatch[1]) || 0
       });
+    }
   });
+
   return items;
 }
 
