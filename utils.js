@@ -480,3 +480,58 @@ function detectCountry(addr) {
 
   return "US";
 }
+
+function testSKURegression() {
+  const tests = [
+    {
+      input: "LH12345TM",
+      expected: "LH-12345-TM"
+    },
+    {
+      input: "LH-12345-TM",
+      expected: "LH-12345-TM"
+    },
+    {
+      input: "LTRAM1925BKLDSQ-RS",
+      expected: "LT-RAM1925BKLD-SQ-RS"
+    },
+    {
+      input: "RMXSIV99G3GLEDHP-FS",
+      expected: "RMX-SIV99G3GLEDHP-FS"
+    },
+    {
+      input: "RMXSIV99G3GLEDH-P-FS",
+      expected: "RMX-SIV99G3GLEDH-P-FS"
+    },
+    {
+      input: "RMX-SIV99G3GLEDH-P-FS",
+      expected: "RMX-SIV99G3GLEDH-P-FS"
+    }
+  ];
+
+  let passed = 0;
+
+  console.group("SKU REGRESSION TESTS");
+
+  for (const test of tests) {
+    const actual = normalizeSKU(test.input);
+    const ok = actual === test.expected;
+
+    console.log(
+      ok ? "✅ PASS" : "❌ FAIL",
+      test.input,
+      "→",
+      actual,
+      "| expected:",
+      test.expected
+    );
+
+    if (ok) passed++;
+  }
+
+  console.log(`SKU TESTS: ${passed}/${tests.length} passed`);
+
+  console.groupEnd();
+
+  return passed === tests.length;
+}
