@@ -44,24 +44,6 @@ function safeParseOrder(order) {
     result = parseGeneric(order);
   }
 
-  switch (detectedDealer) {
-    case "aag":
-    case "redline360":
-    case "tdot":
-    case "z1":
-    case "ntxglow":
-    case "omac":
-    case "procivic":
-    case "ecs":
-    case "pelican":
-    case "obsession":
-      result = parseOrder(order);
-      break;
-
-    default:
-      result = parseGeneric(order);
-  }
-
   const row = result[0] || {};
 
   const itemCount = Object.keys(row).filter(
@@ -113,11 +95,9 @@ function safeParseOrder(order) {
   return result;
 }
 
-
 function buildRow(order, dealer, items, addr) {
   const config =
-  getEffectiveDealerConfig(dealer) ||
-  DEALER_CONFIG["redline360"];
+    getEffectiveDealerConfig(dealer) || DEALER_CONFIG["redline360"];
 
   const paymentSection = getSection(
     order,
@@ -399,7 +379,6 @@ function getSection(text, startLabel, endLabel) {
 
 // -------- DEALER DETECTION --------
 function detectBestDealer(text) {
-
   const temporary = detectTemporaryDealer(text);
 
   console.log("TEMPORARY DETECTION:", temporary);
@@ -447,8 +426,7 @@ function getDealerFromRow(row) {
     return permanentDealer;
   }
 
-  const temporaryDealers =
-    window.temporaryDealerConfig || {};
+  const temporaryDealers = window.temporaryDealerConfig || {};
 
   for (const [dealerName, config] of Object.entries(temporaryDealers)) {
     if (config?.dshipper === dshipper) {
