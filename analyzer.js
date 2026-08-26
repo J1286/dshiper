@@ -67,7 +67,11 @@ function analyzeOrder(text) {
 
   skuCandidates.sort((a, b) => b.score - a.score);
 
-  return {
+console.log("SKU CANDIDATES:");
+console.table(skuCandidates);
+
+return {
+
     raw: text,
 
     lines,
