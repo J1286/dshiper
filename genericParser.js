@@ -62,9 +62,10 @@ function parseGeneric(order) {
 
   console.log("DETECTION:", detection);
   console.log("DETECTED DEALER:", detectedDealer);
-  console.log("TEMPORARY DEALER:", temporaryDealer);
+  console.log("TEMPORARY DEALER:",
+    detection.temporary ? detection.config : null
+  );
   console.log("DEALER CONFIG:", config);
-
   console.log("DETECTED DEALER:", detectedDealer);
   console.log("ITEM BEFORE PRIMARY SKU:", items[0]);
   console.log(
