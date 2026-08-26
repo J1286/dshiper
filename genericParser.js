@@ -54,13 +54,8 @@ function parseGeneric(order) {
   const detection = detectBestDealer(order);
   const detectedDealer = detection.dealer;
 
-  const temporaryDealer = detection.temporary
-  ? detection.config
-  : null;
-
   const config =
-    temporaryDealer ||
-    DEALER_CONFIG[detectedDealer] ||
+    getEffectiveDealerConfig(detectedDealer) ||
     DEALER_CONFIG["redline360"];
 
   const dealer = detectedDealer;
