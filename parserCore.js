@@ -381,8 +381,6 @@ function getSection(text, startLabel, endLabel) {
 function detectBestDealer(text) {
   const temporary = detectTemporaryDealer(text);
 
-  console.log("TEMPORARY DETECTION:", temporary);
-
   if (temporary) {
     return {
       dealer: temporary.dealer,
