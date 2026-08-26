@@ -67,11 +67,10 @@ function analyzeOrder(text) {
 
   skuCandidates.sort((a, b) => b.score - a.score);
 
-console.log("SKU CANDIDATES:");
-console.table(skuCandidates);
+  console.log("SKU CANDIDATES:");
+  console.table(skuCandidates);
 
-return {
-
+  return {
     raw: text,
 
     lines,
@@ -492,18 +491,19 @@ function detectShipToSection(lines) {
 }
 
 function getPrimarySKU(item, dealer) {
-  switch (dealer) {
-    case "pelican":
-    case "specd": {
-      const sku = item.itemId || item.sku || item.vendorSku || "";
+  if (!item) return "";
 
-      return sku.replace(/^SPECD?-/i, "");
-    }
+  let sku = "";
 
-    case "dealerX":
-      return item.itemId || item.vendorSku || item.sku || "";
-
-    default:
-      return item.sku || item.vendorSku || item.itemId || "";
+  // existing selection logic
+  if (item.vendorSku) {
+    sku = item.vendorSku;
+  } else if (item.sku) {
+    sku = item.sku;
+  } else if (item.itemId) {
+    sku = item.itemId;
   }
+
+  // NEW: always apply global SKU normalization
+  return normalizeSKU(sku);
 }
