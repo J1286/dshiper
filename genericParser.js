@@ -3,16 +3,20 @@ function parseGeneric(order) {
 
   let items;
 
-  if (analysis.itemCandidates && analysis.itemCandidates.length) {
-    console.log("ITEM SOURCE: analyzeOrder.itemCandidates");
-    console.log("ANALYZER ITEMS:", analysis.itemCandidates);
+  const analyzedItems = analysis.itemCandidates || [];
+  const genericItems = extractItemsGeneric(order);
 
-    items = analysis.itemCandidates;
-  } else {
-    console.log("ITEM SOURCE: extractItemsGeneric FALLBACK");
-    items = extractItemsGeneric(order);
-    console.log("GENERIC FALLBACK ITEMS:", items);
-  }
+if (analyzedItems.length >= genericItems.length) {
+  console.log("ITEM SOURCE: analyzeOrder.itemCandidates");
+  console.log("ANALYZER ITEMS:", analyzedItems);
+
+  items = analyzedItems;
+} else {
+  console.log("ITEM SOURCE: extractItemsGeneric");
+  console.log("GENERIC ITEMS:", genericItems);
+
+  items = genericItems;
+}
 
   const addr =
     analysis.addressCandidate && analysis.addressCandidate.addr1
