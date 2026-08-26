@@ -1,8 +1,173 @@
 // --- SKU ---
+const SKU_RULES = [
+  {
+    prefixes: [
+      "2LHP-",
+      "LH-",
+      "LT-",
+      "RMX-",
+      "SPL-",
+      "2LH-",
+      "LPF-",
+      "HG-",
+      "RMV-",
+      "2LCLH-",
+      "FDF-",
+      "4LHP-",
+      "2LB-",
+      "MFCAT2-",
+      "2LC-",
+      "2LHE-",
+      "LSM-",
+      "2LBLH-",
+      "RAD3-",
+      "LHE-",
+      "2LBCLH-",
+      "MAT-",
+      "MFCAT3-",
+      "2LBLHP-",
+      "2LHES-",
+      "4LH-",
+      "4LHE-"
+    ],
+    suffixes: [
+      "-RS",
+      "-TM",
+      "-ABM",
+      "-SQ-RS",
+      "-HZ",
+      "-SQ-TM",
+      "-GO",
+      "-DL",
+      "-PQ",
+      "-FS",
+      "-AK",
+      "-G2-TM",
+      "-G3-GO",
+      "-G3-RS",
+      "-V2-TM",
+      "-V2-RS",
+      "-APC",
+      "-RO",
+      "-VS",
+      "-FS-R",
+      "-FS-L",
+      "-GL",
+      "-MP",
+      "-PK-MP",
+      "-M-FS",
+      "-SQ-VS",
+      "-JB",
+      "-JL",
+      "-JD",
+      "-SY"
+    ],
+    allowMissingSeparator: true
+  }
+];
+
+function matchSKUStructure(sku) {
+  if (!sku) return null;
+
+  const value = sku.trim().toUpperCase();
+
+  for (const rule of SKU_RULES) {
+    for (const prefix of rule.prefixes) {
+      const normalizedPrefix = prefix.toUpperCase();
+      const prefixWithoutSeparator = normalizedPrefix.replace(/[-_]+$/, "");
+
+      let prefixMatched = false;
+      let missingSeparator = false;
+
+      // Exact prefix
+      if (value.startsWith(normalizedPrefix)) {
+        prefixMatched = true;
+      }
+
+      // PDF may have removed the separator
+      else if (
+        rule.allowMissingSeparator &&
+        value.startsWith(prefixWithoutSeparator)
+      ) {
+        prefixMatched = true;
+        missingSeparator = true;
+      }
+
+      if (!prefixMatched) continue;
+
+      // If the separator was missing, put it back
+      let normalized = missingSeparator
+        ? normalizedPrefix + value.slice(prefixWithoutSeparator.length)
+        : value;
+
+      let matchedSuffix = "";
+      let missingSuffixSeparator = false;
+
+      if (rule.suffixes && rule.suffixes.length) {
+        for (const suffix of rule.suffixes) {
+          const normalizedSuffix = suffix.toUpperCase();
+          const suffixWithoutSeparator = normalizedSuffix.replace(/^[-_]+/, "");
+
+          // Normal suffix: -RS
+          if (normalized.endsWith(normalizedSuffix)) {
+            matchedSuffix = normalizedSuffix;
+            break;
+          }
+
+          // PDF may have removed the separator: RS
+          if (
+            rule.allowMissingSeparator &&
+            normalized.endsWith(suffixWithoutSeparator)
+          ) {
+            matchedSuffix = normalizedSuffix;
+            missingSuffixSeparator = true;
+            break;
+          }
+        }
+      }
+
+      if (missingSuffixSeparator && matchedSuffix) {
+        const suffixWithoutSeparator = matchedSuffix.replace(/^[-_]+/, "");
+
+        normalized =
+          normalized.slice(0, -suffixWithoutSeparator.length) + matchedSuffix;
+      }
+
+      return {
+        matched: true,
+        normalized,
+        prefix: normalizedPrefix,
+        suffix: matchedSuffix,
+        missingSeparator,
+        missingSuffixSeparator
+      };
+    }
+  }
+
+  return null;
+}
+
 function scoreSKU(str) {
   if (!str) return 0;
 
   let score = 0;
+
+  const structure = matchSKUStructure(str);
+
+  if (structure?.matched) {
+    // Known prefix
+    score += 1.5;
+
+    // Known suffix
+    if (structure.suffix) {
+      score += 1.5;
+    }
+
+    // Known prefix + known suffix = extremely strong
+    if (structure.prefix && structure.suffix) {
+      score += 2.0;
+    }
+  }
 
   // --- core signals ---
   if (/[A-Z]/i.test(str)) score += 0.2;
@@ -26,6 +191,50 @@ function scoreSKU(str) {
   if (/invoice|order|tracking|phone/i.test(str)) score -= 0.5;
 
   return score;
+}
+
+function getBestSKU(candidates) {
+  if (!Array.isArray(candidates) || !candidates.length) {
+    return null;
+  }
+
+  const seen = new Set();
+
+  const scoredCandidates = candidates
+    .map((rawSKU) => {
+      const normalizedSKU = normalizeSKU(rawSKU);
+
+      if (!normalizedSKU) {
+        return null;
+      }
+
+      if (seen.has(normalizedSKU)) {
+        return null;
+      }
+
+      seen.add(normalizedSKU);
+
+      const score = scoreSKU(normalizedSKU);
+      const structure = matchSKUStructure(normalizedSKU);
+
+      return {
+        sku: normalizedSKU,
+        score,
+        structure
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.score - a.score);
+
+  console.log("GENERIC SCORED SKU CANDIDATES:", scoredCandidates);
+
+  const best = scoredCandidates[0];
+
+  if (!best || best.score < 2) {
+    return null;
+  }
+
+  return best;
 }
 
 function isLikelySKU(str) {
@@ -113,10 +322,17 @@ function normalizeSKU(sku) {
 
   let clean = sku
     .replace(/\u00A0/g, " ")
+    .replace(/\u00AD/g, "")
     .trim()
     .toUpperCase();
 
   clean = clean.replace(/^SPECDTUNING[-_]?/i, "");
+
+  const structure = matchSKUStructure(clean);
+
+  if (structure?.matched) {
+    clean = structure.normalized;
+  }
 
   return clean;
 }
