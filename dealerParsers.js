@@ -14,7 +14,7 @@ function parseAAGWrapper(order) {
 function parseTDOTWrapper(order) {
   const items = extractItemsTDOT(order);
   const addr = extractAddressGeneric(order);
-console.log("TDOT ADDRESS FROM GENERIC:", addr);
+  console.log("TDOT ADDRESS FROM GENERIC:", addr);
   return buildRow(order, "tdot", items, addr);
 }
 
@@ -213,13 +213,9 @@ function extractItemsOMAC(text) {
     return items;
   }
 
-  let section = text.slice(
-    headerMatch.index + headerMatch[0].length
-  );
+  let section = text.slice(headerMatch.index + headerMatch[0].length);
 
-  const receiveByMatch = section.search(
-    /Receive\s+By:/i
-  );
+  const receiveByMatch = section.search(/Receive\s+By:/i);
 
   if (receiveByMatch !== -1) {
     section = section.slice(0, receiveByMatch);
@@ -237,58 +233,51 @@ function extractItemsOMAC(text) {
   );
 
   if (!detailMatch) {
-    console.warn(
-      "OMAC: quantity/UPC/price block not found",
-      section
-    );
+    console.warn("OMAC: quantity/UPC/price block not found", section);
     return items;
   }
 
   const qty = Number(detailMatch[1]) || 1;
   const upc = detailMatch[2];
 
-  const rate = Number(
-    detailMatch[3].replace(/,/g, "")
-  ) || 0;
+  const rate = Number(detailMatch[3].replace(/,/g, "")) || 0;
 
-  const amount = Number(
-    detailMatch[4].replace(/,/g, "")
-  ) || 0;
+  const amount = Number(detailMatch[4].replace(/,/g, "")) || 0;
 
   // Everything before Quantity is the product portion.
-  const productText = section
-    .slice(0, detailMatch.index)
-    .trim();
+  const productText = section.slice(0, detailMatch.index).trim();
 
   const skuCandidates = [];
 
-  let normalizedProductText = productText.replace(
-    /\b([A-Z0-9]+-)\s+([A-Z0-9]+)\b/gi,
-    "$1$2"
-  );
+  const productLines = productText
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
 
-  const matches =
-    normalizedProductText.match(
-      /\b[A-Z0-9]+-[A-Z0-9-]+\b/gi
-    ) || [];
+  for (let i = 0; i < productLines.length; i++) {
+    const current = productLines[i];
+    const next = productLines[i + 1] || "";
 
-  for (const raw of matches) {
-    const sku = normalizeSKU(raw);
+    if (/^[A-Z0-9]+$/i.test(current) && /^[A-Z0-9-]+$/i.test(next)) {
+      const combined = current + next;
 
-    if (!sku) continue;
+      const normalized = normalizeSKU(combined);
 
-    // Reject obvious non-SKU values.
-    if (isUPC(sku)) continue;
-
-    if (
-      /^(SHIP|TO|BILL|ITEM|VENDOR|SKU|DESCRIPTION|QUANTITY|UPC|RATE|AMOUNT)$/i.test(
-        sku
-      )
-    ) {
-      continue;
+      if (normalized && !isUPC(normalized)) {
+        skuCandidates.push(normalized);
+        i++;
+        continue;
+      }
     }
 
-    if (!skuCandidates.includes(sku)) {
+    const matches = current.match(/\b[A-Z0-9]+-[A-Z0-9-]+\b/gi) || [];
+
+    for (const raw of matches) {
+      const sku = normalizeSKU(raw);
+
+      if (!sku) continue;
+      if (isUPC(sku)) continue;
+
       skuCandidates.push(sku);
     }
   }
@@ -296,17 +285,15 @@ function extractItemsOMAC(text) {
   console.log("OMAC SKU candidates:", skuCandidates);
 
   if (!skuCandidates.length) {
-    console.warn(
-      "OMAC: no SKU candidates found",
-      productText
-    );
+    console.warn("OMAC: no SKU candidates found", productText);
     return items;
   }
 
-  const sku =
-    skuCandidates.length >= 2
-      ? skuCandidates[1]
-      : skuCandidates[0];
+  const bestCandidate = getBestSKU(skuCandidates);
+
+  console.log("OMAC BEST SKU:", bestCandidate);
+
+  const sku = bestCandidate?.sku || "";
 
   items.push({
     sku,
@@ -318,7 +305,6 @@ function extractItemsOMAC(text) {
 
   return items;
 }
-
 
 // -------- ADDRESS PARSERS --------
 function extractAddressRedline(order) {
@@ -578,7 +564,6 @@ function cleanNTXGlowText(text) {
 }
 
 function extractAddressOMAC(text) {
-
   const shipMatch = text.match(/Ship\s+To\b/i);
 
   if (!shipMatch) {
@@ -586,9 +571,7 @@ function extractAddressOMAC(text) {
     return {};
   }
 
-  const afterShipTo = text.slice(
-    shipMatch.index + shipMatch[0].length
-  );
+  const afterShipTo = text.slice(shipMatch.index + shipMatch[0].length);
 
   const lines = afterShipTo
     .split(/\r?\n/)
@@ -619,22 +602,15 @@ function extractAddressOMAC(text) {
   const customerCountryIndex = countryIndexes[1];
 
   const customerLines = lines
-    .slice(
-      vendorCountryIndex + 1,
-      customerCountryIndex
-    )
+    .slice(vendorCountryIndex + 1, customerCountryIndex)
     .map((l) => l.trim())
     .filter(Boolean);
 
-  console.log(
-    "OMAC CUSTOMER LINES:",
-    customerLines
-  );
+  console.log("OMAC CUSTOMER LINES:", customerLines);
 
   let phone = "";
 
-  const afterCustomerCountry = lines
-    .slice(customerCountryIndex + 1);
+  const afterCustomerCountry = lines.slice(customerCountryIndex + 1);
 
   for (const line of afterCustomerCountry) {
     const phoneMatch = line.match(
@@ -646,10 +622,7 @@ function extractAddressOMAC(text) {
       break;
     }
 
-    if (
-      /^\$[\d,.]+/.test(line) ||
-      /^Receive\s+By/i.test(line)
-    ) {
+    if (/^\$[\d,.]+/.test(line) || /^Receive\s+By/i.test(line)) {
       break;
     }
   }
@@ -690,10 +663,7 @@ function extractAddressOMAC(text) {
   );
 
   if (addrIndex === -1) {
-    console.warn(
-      "OMAC: Street address not found:",
-      customerLines
-    );
+    console.warn("OMAC: Street address not found:", customerLines);
 
     return {
       name: customerLines[0] || "",
@@ -707,28 +677,19 @@ function extractAddressOMAC(text) {
     };
   }
 
-  const name =
-    addrIndex > 0
-      ? customerLines[addrIndex - 1]
-      : "";
+  const name = addrIndex > 0 ? customerLines[addrIndex - 1] : "";
 
   let addressLines = [];
 
   if (cityIndex > addrIndex) {
-    addressLines = customerLines.slice(
-      addrIndex,
-      cityIndex
-    );
+    addressLines = customerLines.slice(addrIndex, cityIndex);
   } else {
     addressLines = customerLines.slice(addrIndex);
   }
 
   const addr1 = addressLines[0] || "";
 
-  const addr2 =
-    addressLines.length > 1
-      ? addressLines.slice(1).join(" ")
-      : "";
+  const addr2 = addressLines.length > 1 ? addressLines.slice(1).join(" ") : "";
 
   const result = {
     name,
@@ -741,10 +702,7 @@ function extractAddressOMAC(text) {
     phone
   };
 
-  console.log(
-    "OMAC ADDRESS PARSED:",
-    JSON.stringify(result, null, 2)
-  );
+  console.log("OMAC ADDRESS PARSED:", JSON.stringify(result, null, 2));
 
   return result;
 }
