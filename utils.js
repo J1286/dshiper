@@ -74,7 +74,8 @@ function matchSKUStructure(sku) {
   for (const rule of SKU_RULES) {
     for (const prefix of rule.prefixes) {
       const normalizedPrefix = prefix.toUpperCase();
-      const prefixWithoutSeparator = normalizedPrefix.replace(/[-_]+$/, "");
+      const prefixWithoutSeparator =
+        normalizedPrefix.replace(/[-_]+$/, "");
 
       let prefixMatched = false;
       let missingSeparator = false;
@@ -97,40 +98,49 @@ function matchSKUStructure(sku) {
 
       // If the separator was missing, put it back
       let normalized = missingSeparator
-        ? normalizedPrefix + value.slice(prefixWithoutSeparator.length)
+        ? normalizedPrefix +
+          value.slice(prefixWithoutSeparator.length)
         : value;
 
       let matchedSuffix = "";
       let missingSuffixSeparator = false;
 
-      if (rule.suffixes && rule.suffixes.length) {
-        for (const suffix of rule.suffixes) {
-          const normalizedSuffix = suffix.toUpperCase();
-          const suffixWithoutSeparator = normalizedSuffix.replace(/^[-_]+/, "");
+      // IMPORTANT:
+      // Check longest suffixes first.
+      const suffixes = [...(rule.suffixes || [])].sort(
+        (a, b) => b.length - a.length
+      );
 
-          // Normal suffix: -RS
-          if (normalized.endsWith(normalizedSuffix)) {
-            matchedSuffix = normalizedSuffix;
-            break;
-          }
+      for (const suffix of suffixes) {
+        const normalizedSuffix = suffix.toUpperCase();
+        const suffixWithoutSeparator =
+          normalizedSuffix.replace(/^[-_]+/, "");
 
-          // PDF may have removed the separator: RS
-          if (
-            rule.allowMissingSeparator &&
-            normalized.endsWith(suffixWithoutSeparator)
-          ) {
-            matchedSuffix = normalizedSuffix;
-            missingSuffixSeparator = true;
-            break;
-          }
+        // Normal suffix: -RS
+        if (normalized.endsWith(normalizedSuffix)) {
+          matchedSuffix = normalizedSuffix;
+          break;
+        }
+
+        // PDF may have removed the separator: RS
+        if (
+          rule.allowMissingSeparator &&
+          normalized.endsWith(suffixWithoutSeparator)
+        ) {
+          matchedSuffix = normalizedSuffix;
+          missingSuffixSeparator = true;
+          break;
         }
       }
 
+      // Restore missing suffix separator
       if (missingSuffixSeparator && matchedSuffix) {
-        const suffixWithoutSeparator = matchedSuffix.replace(/^[-_]+/, "");
+        const suffixWithoutSeparator =
+          matchedSuffix.replace(/^[-_]+/, "");
 
         normalized =
-          normalized.slice(0, -suffixWithoutSeparator.length) + matchedSuffix;
+          normalized.slice(0, -suffixWithoutSeparator.length) +
+          matchedSuffix;
       }
 
       return {
