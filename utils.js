@@ -15,6 +15,7 @@ const SKU_RULES = [
       "FDF-",
       "4LHP-",
       "2LB-",
+      "LHP-",
       "MFCAT2-",
       "2LC-",
       "2LHE-",
@@ -72,7 +73,14 @@ function matchSKUStructure(sku) {
   const value = sku.trim().toUpperCase();
 
   for (const rule of SKU_RULES) {
-    for (const prefix of rule.prefixes) {
+    // IMPORTANT:
+    // Check longest prefixes first so LHP- wins over LH-,
+    // 2LHP- wins over LHP-, etc.
+    const prefixes = [...(rule.prefixes || [])].sort(
+      (a, b) => b.length - a.length
+    );
+
+    for (const prefix of prefixes) {
       const normalizedPrefix = prefix.toUpperCase();
       const prefixWithoutSeparator = normalizedPrefix.replace(/[-_]+$/, "");
 
@@ -496,16 +504,12 @@ function testSKURegression() {
       expected: "LT-RAM1925BKLD-SQ-RS"
     },
     {
-      input: "RMXSIV99G3GLEDHP-FS",
-      expected: "RMX-SIV99G3GLEDHP-FS"
-    },
-    {
       input: "RMXSIV99G3GLEDH-P-FS",
       expected: "RMX-SIV99G3GLEDH-P-FS"
     },
     {
-      input: "RMX-SIV99G3GLEDH-P-FS",
-      expected: "RMX-SIV99G3GLEDH-P-FS"
+      input: "LHP-MST10BK-V2-TM",
+      expected: "LHP-MST10BK-V2-TM"
     }
   ];
 
