@@ -1,3 +1,25 @@
+const DEBUG = true;
+const DEBUG_VERBOSE = false;
+
+function debugLog(...args) {
+  if (DEBUG) console.log(...args);
+}
+
+function debugVerbose(...args) {
+  if (DEBUG && DEBUG_VERBOSE) console.log(...args);
+}
+
+function debugTable(label, data) {
+  if (DEBUG) {
+    console.log(label);
+    console.table(data);
+  }
+}
+
+function debugWarn(...args) {
+  if (DEBUG) console.warn(...args);
+}
+
 // --- SKU ---
 const SKU_RULES = [
   {
