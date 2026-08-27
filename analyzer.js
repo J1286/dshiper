@@ -221,8 +221,6 @@ function detectAddressFromSection(shipToSection, allLines) {
     }
   }
 
-  debugVerbose("PHONE CANDIDATES:", phoneMatches);
-
   if (phoneMatches.length >= 2) {
     phone = phoneMatches[1].phone;
   } else if (phoneMatches.length === 1) {
