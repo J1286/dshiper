@@ -6,17 +6,21 @@ function parseGeneric(order) {
   const analyzedItems = analysis.itemCandidates || [];
   const genericItems = extractItemsGeneric(order);
 
-if (analyzedItems.length >= genericItems.length) {
-  console.log("ITEM SOURCE: analyzeOrder.itemCandidates");
-  console.log("ANALYZER ITEMS:", analyzedItems);
+  if (analyzedItems.length >= genericItems.length) {
+    items = analyzedItems;
 
-  items = analyzedItems;
-} else {
-  console.log("ITEM SOURCE: extractItemsGeneric");
-  console.log("GENERIC ITEMS:", genericItems);
+    debugLog("ITEM SOURCE: analyzer", {
+      count: items.length,
+      items
+    });
+  } else {
+    items = genericItems;
 
-  items = genericItems;
-}
+    debugLog("ITEM SOURCE: generic", {
+      count: items.length,
+      items
+    });
+  }
 
   const addr =
     analysis.addressCandidate && analysis.addressCandidate.addr1
@@ -59,23 +63,18 @@ if (analyzedItems.length >= genericItems.length) {
   const detectedDealer = detection.dealer;
 
   const config =
-    getEffectiveDealerConfig(detectedDealer) ||
-    DEALER_CONFIG["redline360"];
+    getEffectiveDealerConfig(detectedDealer) || DEALER_CONFIG["redline360"];
 
   const dealer = detectedDealer;
 
-  console.log("DETECTION:", detection);
-  console.log("DETECTED DEALER:", detectedDealer);
-  console.log("TEMPORARY DEALER:",
-    detection.temporary ? detection.config : null
-  );
-  console.log("DEALER CONFIG:", config);
-  console.log("DETECTED DEALER:", detectedDealer);
-  console.log("ITEM BEFORE PRIMARY SKU:", items[0]);
-  console.log(
-    "PRIMARY SKU TEST:",
-    getPrimarySKU(items[0] || {}, detectedDealer)
-  );
+  debugLog("PARSER SUMMARY:", {
+    dealer: detectedDealer,
+    temporary: detection.temporary || false,
+    dshipper: config.dshipper,
+    itemCount: items.length,
+    primarySKU: getPrimarySKU(items[0] || {}, detectedDealer)
+  });
+
   const row = {
     "DShipper ID": config.dshipper,
     "Tr.Orig.No.": po,
@@ -93,13 +92,12 @@ if (analyzedItems.length >= genericItems.length) {
     row[`Qty ${i + 1}`] = item.qty || "";
 
     if (item.price !== undefined && item.price !== "") {
-  row[`Price ${i + 1}`] = Number(item.price);
-  setPriceSource(row, i + 1, "dealer");
-} else {
-  row[`Price ${i + 1}`] = getPrice(dealer, sku);
-  setPriceSource(row, i + 1, "priceTable");
-}
-
+      row[`Price ${i + 1}`] = Number(item.price);
+      setPriceSource(row, i + 1, "dealer");
+    } else {
+      row[`Price ${i + 1}`] = getPrice(dealer, sku);
+      setPriceSource(row, i + 1, "priceTable");
+    }
   }
   row["Ship Name"] = addr.name || "";
   row["Ship Addr1"] = addr.addr1 || "";
@@ -131,9 +129,8 @@ if (analyzedItems.length >= genericItems.length) {
   row["Ship COD"] = "";
 
   const totalPrice = items.reduce((sum, item) => {
-  const sku = getPrimarySKU(item, dealer);
-  const price =
-    Number(item.price) || Number(getPrice(dealer, sku)) || 0;
+    const sku = getPrimarySKU(item, dealer);
+    const price = Number(item.price) || Number(getPrice(dealer, sku)) || 0;
 
     const qty = Number(item.qty) || 0;
 
@@ -159,8 +156,8 @@ if (analyzedItems.length >= genericItems.length) {
   if (!items.length) {
     console.warn("Generic parser returned no items:", order);
   }
-  console.log("Final row:");
-  console.table(row);
+
+  debugTable("FINAL ROW:", row);
   return [row];
 }
 
@@ -363,9 +360,9 @@ function extractAddressGeneric(text) {
     lines.shift();
   }
 
-  console.log("===== GENERIC ADDRESS DEBUG =====");
-  console.log("GENERIC ADDRESS BLOCK:", block);
-  console.log("GENERIC ADDRESS LINES:", lines);
+  debugVerbose("===== GENERIC ADDRESS DEBUG =====");
+  debugVerbose("GENERIC ADDRESS BLOCK:", block);
+  debugVerbose("GENERIC ADDRESS LINES:", lines);
 
   let name = lines[0] || "";
   let addr1 = "";
@@ -427,8 +424,8 @@ function extractAddressGeneric(text) {
     return false;
   });
 
-  console.log("GENERIC ADDR1 INDEX:", addr1Index);
-  console.log("GENERIC CITY INDEX:", cityIndex);
+  debugVerbose("GENERIC ADDR1 INDEX:", addr1Index);
+  debugVerbose("GENERIC CITY INDEX:", cityIndex);
 
   // Extract addr1 / addr2
   if (addr1Index !== -1) {
@@ -472,7 +469,7 @@ function extractAddressGeneric(text) {
     country = "CA";
   }
 
-  console.log("ADDRESS STATE NORMALIZATION:", {
+  debugVerbose("ADDRESS STATE NORMALIZATION:", {
     originalState,
     stateKey,
     mappedState,
