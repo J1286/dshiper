@@ -16,10 +16,6 @@ function debugTable(label, data) {
   }
 }
 
-function debugWarn(...args) {
-  if (DEBUG) console.warn(...args);
-}
-
 // --- SKU ---
 const SKU_RULES = [
   {
