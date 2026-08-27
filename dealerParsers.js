@@ -67,7 +67,7 @@ function extractItemsAAG(text) {
     .map((l) => l.trim())
     .filter(Boolean);
 
-  for (let line of lines) {
+  for (const line of lines) {
     if (/^qty|^brand/i.test(line)) continue;
 
     const parts = line.split(/\s+/);
@@ -75,19 +75,10 @@ function extractItemsAAG(text) {
     const qty = Number(parts[0]);
     if (!qty || qty > 100) continue; // sanity check
 
-    // find best SKU candidate in line
-    const candidates = line.match(/[A-Z0-9-]{6,}/gi) || [];
+    // Let the centralized SKU detector find the best candidate.
+    const best = findBestSKUInText(line);
 
-    const scored = candidates
-      .map((c) => ({
-        sku: normalizeSKU(c),
-        score: scoreSKU(c)
-      }))
-      .filter((c) => c.score >= 0.6);
-
-    if (!scored.length) continue;
-
-    const best = scored.sort((a, b) => b.score - a.score)[0];
+    if (!best) continue;
 
     items.push({
       sku: best.sku,
@@ -106,9 +97,15 @@ function extractItemsTDOT(text) {
   let match;
 
   while ((match = regex.exec(text)) !== null) {
+    const qty = Number(match[1]);
+
+    const bestSKU = findBestSKUInText(match[2]);
+
+    if (!bestSKU) continue;
+
     items.push({
-      qty: Number(match[1]),
-      sku: normalizeSKU(match[2])
+      qty,
+      sku: bestSKU.sku
     });
   }
 
@@ -148,27 +145,29 @@ function extractItemsZ1(text) {
       i++;
     }
 
-    line = normalizeSKU(line);
-
-    // 🔒 STRICT SKU RULE (Z1 specific)
-    // ---- extract inline SKU + qty ----
+    // ---- inline SKU + qty ----
     const inlineMatch = line.match(
       /([A-Z]{2,5}-[A-Z0-9-]{4,})\s+(\d+)\s+\$\d+\.\d{2}/i
     );
 
     if (inlineMatch) {
-      items.push({
-        sku: normalizeSKU(inlineMatch[1]),
-        qty: Number(inlineMatch[2])
-      });
+      const best = findBestSKUInText(inlineMatch[1]);
+
+      if (best) {
+        items.push({
+          sku: best.sku,
+          qty: Number(inlineMatch[2])
+        });
+      }
 
       continue;
     }
 
     // ---- standalone SKU ----
-    if (/^[A-Z]{2,5}-[A-Z0-9-]{4,}$/i.test(line)) {
-      const nextLine = lines[i + 1] || "";
+    const best = findBestSKUInText(line);
 
+    if (best) {
+      const nextLine = lines[i + 1] || "";
       const qtyMatch = nextLine.match(/^(\d+)/);
 
       const qty = qtyMatch ? Number(qtyMatch[1]) : 1;
@@ -176,7 +175,7 @@ function extractItemsZ1(text) {
       if (qtyMatch) i++;
 
       items.push({
-        sku: normalizeSKU(line),
+        sku: best.sku,
         qty
       });
 
