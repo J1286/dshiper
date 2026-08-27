@@ -39,35 +39,27 @@ function analyzeOrder(text) {
   );
 
   itemSection.lines.forEach((line, index) => {
-    const prevLine = itemSection.lines[index - 1] || "";
-    const nextLine = itemSection.lines[index + 1] || "";
+  const best = findBestSKUInText(line);
 
-    const candidates = line.match(/[A-Z0-9._/-]{6,}/gi) || [];
+  if (!best) return;
 
-    for (const candidate of candidates) {
-      if (isInvalidItemSKU(candidate)) {
-        continue;
-      }
+  const prevLine = itemSection.lines[index - 1] || "";
+  const nextLine = itemSection.lines[index + 1] || "";
 
-      const normalizedSKU = normalizeSKU(candidate);
+  const score = scoreSKUWithContext(
+    best.sku,
+    prevLine,
+    nextLine
+  );
 
-      if (!normalizedSKU || !isLikelySKU(normalizedSKU)) {
-        continue;
-      }
-
-      const score = scoreSKUWithContext(normalizedSKU, prevLine, nextLine);
-
-      const upcCheck = isUPC(normalizedSKU);
-
-      skuCandidates.push({
-        value: normalizedSKU,
-        line: itemSection.startLine + index,
-        raw: candidate,
-        score: upcCheck ? score - 0.3 : score,
-        isUPC: upcCheck
-      });
-    }
+  skuCandidates.push({
+    value: best.sku,
+    line: itemSection.startLine + index,
+    raw: line,
+    score,
+    isUPC: isUPC(best.sku)
   });
+});
 
   skuCandidates.sort((a, b) => b.score - a.score);
 
