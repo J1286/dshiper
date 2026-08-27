@@ -8,6 +8,7 @@ const SKU_RULES = [
       "RMX-",
       "SPL-",
       "2LH-",
+      "LF-",
       "LPF-",
       "HG-",
       "RMV-",
@@ -402,8 +403,8 @@ function stitchNextLineSKU(lines, index) {
     return current + next;
   }
 
-  // ---- Case 2: trailing single fragment ----
-  if (/^[A-Z0-9-]{6,}$/i.test(current) && /^[A-Z0-9]{1,3}$/i.test(next)) {
+  // ---- Case 2: short SKU continuation ----
+  if (/^[A-Z0-9-]{6,}$/i.test(current) && /^[A-Z0-9-]{1,4}$/i.test(next)) {
     return current + next;
   }
 
