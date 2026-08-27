@@ -269,7 +269,7 @@ function getBestSKU(candidates) {
     .filter(Boolean)
     .sort((a, b) => b.score - a.score);
 
-  console.log("GENERIC SCORED SKU CANDIDATES:", scoredCandidates);
+  debugTable("GENERIC SCORED SKU CANDIDATES:", scoredCandidates);
 
   const best = scoredCandidates[0];
 
@@ -281,7 +281,7 @@ function getBestSKU(candidates) {
   const second = scoredCandidates[1];
 
   if (second && best.score - second.score < 0.5) {
-    console.warn("AMBIGUOUS SKU MATCH:", {
+    debugLog("AMBIGUOUS SKU MATCH:", {
       best,
       second,
       candidates: scoredCandidates
@@ -558,6 +558,11 @@ function testSKURegression() {
       input: "LHP-MST10BK-V2-TM",
       expected: "LHP-MST10BK-V2-TM"
     }
+  ];
+
+  const lines = [
+    "LT-G35032SMLED-S",
+    "Q-RS"
   ];
 
   let passed = 0;
