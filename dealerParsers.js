@@ -285,7 +285,7 @@ function extractItemsOMAC(text) {
     }
   }
 
-  console.log("OMAC SKU candidates:", skuCandidates);
+  debugLog("OMAC SKU CANDIDATES:", skuCandidates);
 
   if (!skuCandidates.length) {
     console.warn("OMAC: no SKU candidates found", productText);
@@ -294,7 +294,7 @@ function extractItemsOMAC(text) {
 
   const bestCandidate = getBestSKU(skuCandidates);
 
-  console.log("OMAC BEST SKU:", bestCandidate);
+  debugLog("OMAC BEST SKU:", bestCandidate);
 
   const sku = bestCandidate?.sku || "";
 
@@ -609,8 +609,6 @@ function extractAddressOMAC(text) {
     .map((l) => l.trim())
     .filter(Boolean);
 
-  console.log("OMAC CUSTOMER LINES:", customerLines);
-
   let phone = "";
 
   const afterCustomerCountry = lines.slice(customerCountryIndex + 1);
@@ -704,8 +702,6 @@ function extractAddressOMAC(text) {
     country: "US",
     phone
   };
-
-  console.log("OMAC ADDRESS PARSED:", JSON.stringify(result, null, 2));
 
   return result;
 }
