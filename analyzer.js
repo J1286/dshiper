@@ -42,27 +42,31 @@ function analyzeOrder(text) {
     const prevLine = itemSection.lines[index - 1] || "";
     const nextLine = itemSection.lines[index + 1] || "";
 
-    const cleanedLine = normalizeSKU(line);
+    const candidates = line.match(/[A-Z0-9._/-]{6,}/gi) || [];
 
-    if (!isLikelySKU(cleanedLine)) {
-      return;
+    for (const candidate of candidates) {
+      if (isInvalidItemSKU(candidate)) {
+        continue;
+      }
+
+      const normalizedSKU = normalizeSKU(candidate);
+
+      if (!normalizedSKU || !isLikelySKU(normalizedSKU)) {
+        continue;
+      }
+
+      const score = scoreSKUWithContext(normalizedSKU, prevLine, nextLine);
+
+      const upcCheck = isUPC(normalizedSKU);
+
+      skuCandidates.push({
+        value: normalizedSKU,
+        line: itemSection.startLine + index,
+        raw: candidate,
+        score: upcCheck ? score - 0.3 : score,
+        isUPC: upcCheck
+      });
     }
-
-    if (isInvalidItemSKU(cleanedLine)) {
-      return;
-    }
-
-    const score = scoreSKUWithContext(cleanedLine, prevLine, nextLine);
-
-    const upcCheck = isUPC(cleanedLine);
-
-    skuCandidates.push({
-      value: cleanedLine,
-      line: itemSection.startLine + index,
-      raw: line,
-      score: upcCheck ? score - 0.3 : score,
-      isUPC: upcCheck
-    });
   });
 
   skuCandidates.sort((a, b) => b.score - a.score);
@@ -373,33 +377,6 @@ function detectAddressFromSection(shipToSection, allLines) {
       } else {
         // Street only
         addr1 = streetLines.join(" ");
-      }
-
-      function looksLikePersonName(value) {
-        if (!value) return false;
-
-        const words = value.trim().split(/\s+/);
-
-        // Usually 2-4 words
-        if (words.length < 2 || words.length > 4) {
-          return false;
-        }
-
-        // Only normal name characters
-        if (!/^[A-Za-z.'-]+(?:\s+[A-Za-z.'-]+)+$/.test(value)) {
-          return false;
-        }
-
-        // Reject obvious company / instruction text
-        if (
-          /electric|company|corp|corporation|inc|llc|ltd|parts|warehouse|shop|store|dealer|supply|group|address|drop|ship/i.test(
-            value
-          )
-        ) {
-          return false;
-        }
-
-        return true;
       }
 
       // Assign Name / Addr1 / Addr2
