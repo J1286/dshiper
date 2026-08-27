@@ -61,6 +61,7 @@ const SKU_RULES = [
       "-M-FS",
       "-SQ-VS",
       "-JB",
+      "-R-RO",
       "-JL",
       "-JD",
       "-SY"
@@ -254,6 +255,19 @@ function getBestSKU(candidates) {
   const best = scoredCandidates[0];
 
   if (!best || best.score < 2) {
+    return null;
+  }
+
+  // Detect ambiguous / low-confidence matches
+  const second = scoredCandidates[1];
+
+  if (second && best.score - second.score < 0.5) {
+    console.warn("AMBIGUOUS SKU MATCH:", {
+      best,
+      second,
+      candidates: scoredCandidates
+    });
+
     return null;
   }
 
@@ -516,6 +530,10 @@ function testSKURegression() {
     {
       input: "RMXSIV99G3GLEDH-P-FS",
       expected: "RMX-SIV99G3GLEDH-P-FS"
+    },
+    {
+      input: "2LH-SIV1915JMR-RO",
+      expected: "2LH-SIV1915JM-R-RO"
     },
     {
       input: "LHP-MST10BK-V2-TM",
