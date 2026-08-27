@@ -8,10 +8,6 @@ function analyzeOrder(text) {
   const itemCandidates = detectItemsFromSection(itemSection);
 
   const shipToSection = detectShipToSection(lines);
-  console.log("ALL LINES:");
-  console.table(lines);
-  console.log("SHIP TO RAW:");
-  console.table(shipToSection.lines);
 
   const addressCandidate = detectAddressFromSection(shipToSection, lines);
 
@@ -39,32 +35,27 @@ function analyzeOrder(text) {
   );
 
   itemSection.lines.forEach((line, index) => {
-  const best = findBestSKUInText(line);
+    const best = findBestSKUInText(line);
 
-  if (!best) return;
+    if (!best) return;
 
-  const prevLine = itemSection.lines[index - 1] || "";
-  const nextLine = itemSection.lines[index + 1] || "";
+    const prevLine = itemSection.lines[index - 1] || "";
+    const nextLine = itemSection.lines[index + 1] || "";
 
-  const score = scoreSKUWithContext(
-    best.sku,
-    prevLine,
-    nextLine
-  );
+    const score = scoreSKUWithContext(best.sku, prevLine, nextLine);
 
-  skuCandidates.push({
-    value: best.sku,
-    line: itemSection.startLine + index,
-    raw: line,
-    score,
-    isUPC: isUPC(best.sku)
+    skuCandidates.push({
+      value: best.sku,
+      line: itemSection.startLine + index,
+      raw: line,
+      score,
+      isUPC: isUPC(best.sku)
+    });
   });
-});
 
   skuCandidates.sort((a, b) => b.score - a.score);
 
-  console.log("SKU CANDIDATES:");
-  console.table(skuCandidates);
+  debugTable("ANALYZER SKU CANDIDATES:", skuCandidates);
 
   return {
     raw: text,
@@ -230,7 +221,7 @@ function detectAddressFromSection(shipToSection, allLines) {
     }
   }
 
-  console.log("PHONE CANDIDATES:", phoneMatches);
+  debugVerbose("PHONE CANDIDATES:", phoneMatches);
 
   if (phoneMatches.length >= 2) {
     phone = phoneMatches[1].phone;
@@ -370,24 +361,10 @@ function detectAddressFromSection(shipToSection, allLines) {
         // Street only
         addr1 = streetLines.join(" ");
       }
-
-      // Assign Name / Addr1 / Addr2
-      if (looksLikePersonName(previousPreviousLine)) {
-        name = previousPreviousLine;
-        addr1 = previousLine;
-        addr2 = streetLines.join(" ");
-      } else if (previousLine) {
-        name = previousLine;
-        addr1 = streetLines.join(" ");
-      }
-      // STREET ONLY
-      else {
-        addr1 = streetLines.join(" ");
-      }
     }
   }
 
-  console.log("ADDRESS PARSED:", {
+  debugLog("ANALYZER ADDRESS:", {
     name,
     addr1,
     addr2,
