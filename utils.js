@@ -18,6 +18,7 @@ const SKU_RULES = [
       "LHP-",
       "MFCAT2-",
       "2LC-",
+      "LPS-",
       "2LHE-",
       "LSM-",
       "2LBLH-",
@@ -41,6 +42,7 @@ const SKU_RULES = [
       "-GO",
       "-DL",
       "-PQ",
+      "-V2-LD",
       "-FS",
       "-AK",
       "-G2-TM",
@@ -158,6 +160,14 @@ function matchSKUStructure(sku) {
   }
 
   return null;
+}
+
+function findBestSKUInText(text) {
+  if (!text) return null;
+
+  const candidates = text.match(/[A-Z0-9._/-]{6,}/gi) || [];
+
+  return getBestSKU(candidates);
 }
 
 function scoreSKU(str) {
