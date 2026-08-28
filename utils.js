@@ -86,10 +86,6 @@ const SKU_RULES = [
       "-SY"
     ],
 
-    ignoredPrefixes: [
-      "SPECD-"
-    ],
-    
     allowMissingSeparator: true
   }
 ];
@@ -387,7 +383,8 @@ function normalizeSKU(sku) {
     .trim()
     .toUpperCase();
 
-  clean = clean.replace(/^SPECDTUNING[-_]?/i, "");
+  // Remove known non-SKU vendor/order wrappers
+clean = clean.replace(/^SPECD(?:TUNING)?[-_]?/i, "");
 
   const structure = matchSKUStructure(clean);
 
@@ -544,8 +541,8 @@ function testSKURegression() {
       expected: "LH-12345-TM"
     },
     {
-      input: "LH-12345-TM",
-      expected: "LH-12345-TM"
+      input: "SPECD-LHP-BOX97JM-TM",
+      expected: "LHP-BOX97JM-TM"
     },
     {
       input: "LTRAM1925BKLDSQ-RS",
