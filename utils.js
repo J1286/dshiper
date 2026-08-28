@@ -85,6 +85,11 @@ const SKU_RULES = [
       "-JD",
       "-SY"
     ],
+
+    ignoredPrefixes: [
+      "SPECD-"
+    ],
+    
     allowMissingSeparator: true
   }
 ];
