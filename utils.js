@@ -559,6 +559,10 @@ function testSKURegression() {
     {
       input: "LHP-MST10BK-V2-TM",
       expected: "LHP-MST10BK-V2-TM"
+    },
+    {
+      input: "SPE-RMX-F15007F3H-P-FS",
+      expected: "RMX-F15007F3H-P-FS"
     }
   ];
 
