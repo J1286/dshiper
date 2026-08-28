@@ -437,17 +437,26 @@ function detectShipToSection(lines) {
 function getPrimarySKU(item, dealer) {
   if (!item) return "";
 
-  let sku = "";
+  const candidates = [
+    item.sku,
+    item.itemId,
+    item.vendorSku
+  ].filter(Boolean);
 
-  // existing selection logic
-  if (item.vendorSku) {
-    sku = item.vendorSku;
-  } else if (item.sku) {
-    sku = item.sku;
-  } else if (item.itemId) {
-    sku = item.itemId;
+  // Prefer a candidate that matches our configured SKU structure
+  for (const candidate of candidates) {
+    const normalized = normalizeSKU(candidate);
+    const structure = matchSKUStructure(normalized);
+
+    if (structure?.matched) {
+      return normalized;
+    }
   }
 
-  // NEW: always apply global SKU normalization
-  return normalizeSKU(sku);
+  // Fallback to existing priority
+  if (item.sku) return normalizeSKU(item.sku);
+  if (item.itemId) return normalizeSKU(item.itemId);
+  if (item.vendorSku) return normalizeSKU(item.vendorSku);
+
+  return "";
 }
