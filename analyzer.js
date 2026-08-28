@@ -347,12 +347,25 @@ function detectAddressFromSection(shipToSection, allLines) {
         return true;
       }
 
+      // Remove SPEC-D Tuning vendor prefix from shipping name
+      if (/^SPEC[-\s]?D\s+Tuning\s+/i.test(previousLine)) {
+        previousLine = previousLine
+          .replace(/^SPEC[-\s]?D\s+Tuning\s+/i, "")
+          .trim();
+      }
+
+      if (/^SPEC[-\s]?D\s+Tuning\s+/i.test(previousPreviousLine)) {
+        previousPreviousLine = previousPreviousLine
+          .replace(/^SPEC[-\s]?D\s+Tuning\s+/i, "")
+          .trim();
+      }
+
       // Assign Name / Addr1 / Addr2
       if (looksLikePersonName(previousPreviousLine)) {
         name = previousPreviousLine;
         addr1 = previousLine;
         addr2 = streetLines.join(" ");
-      } else if (previousLine) {
+      } else if (looksLikePersonName(previousLine)) {
         name = previousLine;
         addr1 = streetLines.join(" ");
       } else {
@@ -437,11 +450,7 @@ function detectShipToSection(lines) {
 function getPrimarySKU(item, dealer) {
   if (!item) return "";
 
-  const candidates = [
-    item.sku,
-    item.itemId,
-    item.vendorSku
-  ].filter(Boolean);
+  const candidates = [item.sku, item.itemId, item.vendorSku].filter(Boolean);
 
   // Prefer a candidate that matches our configured SKU structure
   for (const candidate of candidates) {
