@@ -118,40 +118,32 @@ function buildRow(order, dealer, items, addr) {
 
   const MAX_ITEMS = 5;
 
+  const priceSources = {};
+
   for (let i = 0; i < MAX_ITEMS; i++) {
     const item = items[i] || {};
     const sku = item.sku || "";
 
+    // ALWAYS create all 5 item columns
     row[`Item ID ${i + 1}`] = sku;
     row[`Qty ${i + 1}`] = item.qty || "";
 
     if (item.price !== undefined && item.price !== "") {
-      // Price explicitly supplied by the dealer
+      // Dealer explicitly supplied a price
       row[`Price ${i + 1}`] = Number(item.price);
 
-      setPriceSource(row, i + 1, "dealer");
+      priceSources[i + 1] = "dealer";
     } else {
-      // No dealer price, so use price table
-      if (item.price !== undefined && item.price !== "") {
-        // Dealer supplied the price
-        row[`Price ${i + 1}`] = Number(item.price);
+      // No dealer price → use Supabase price table
+      row[`Price ${i + 1}`] = getPrice(dealer, sku);
 
-        setPriceSource(row, i + 1, "dealer");
-      } else {
-        // Fall back to our price table
-        const dealerPrice = Number(item.price);
-
-        if (Number.isFinite(dealerPrice) && dealerPrice > 0) {
-          row[`Price ${i + 1}`] = dealerPrice;
-        } else {
-          row[`Price ${i + 1}`] = getPrice(dealer, sku);
-        }
-
-        setPriceSource(row, i + 1, "priceTable");
-      }
-
-      setPriceSource(row, i + 1, "priceTable");
+      priceSources[i + 1] = "priceTable";
     }
+  }
+
+  // Save price sources AFTER all Item IDs exist
+  for (let i = 1; i <= MAX_ITEMS; i++) {
+    setPriceSource(row, i, priceSources[i] || "");
   }
 
   row["Ship Name"] = addr.name || "";
@@ -175,13 +167,7 @@ function buildRow(order, dealer, items, addr) {
   row["Ship Ins."] = "";
   row["Ship COD"] = "";
 
-  const totalPrice = items.reduce((sum, item) => {
-    const price = Number(getPrice(dealer, item.sku)) || 0;
-    const qty = Number(item.qty) || 0;
-    return sum + price * qty;
-  }, 0);
-
-  row["Ship Confirm."] = totalPrice > 500 ? "Y" : "";
+  row["Ship Confirm."] = "";
 
   // Z1 always uses third-party billing
   if (row["DShipper ID"] === "W7292") {

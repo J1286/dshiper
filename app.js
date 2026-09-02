@@ -3,13 +3,16 @@ window.onload = function () {
   updateUnknownTable();
   document.getElementById("app").style.display = "block";
 
-  // restore price table
-  const savedPrice = localStorage.getItem("priceRows");
+  // Initialize price source
+  const savedPriceSource = localStorage.getItem("priceSource") || "api";
 
-  if (savedPrice) {
-    allPriceRows = JSON.parse(savedPrice);
-    buildPriceTable();
+  const priceApiToggle = document.getElementById("priceApiToggle");
+
+  if (priceApiToggle) {
+    priceApiToggle.checked = savedPriceSource === "api";
   }
+
+  handlePriceSourceToggle();
 
   // restore saved orders
   const saved = localStorage.getItem("savedOrders");
@@ -19,15 +22,10 @@ window.onload = function () {
     savedOrders = Array.isArray(parsed) ? parsed : [];
 
     // Refresh prices from the current price table
-    savedOrders.forEach((row) => {
-      refreshOrderPrices(row);
-    });
+    savedOrders.forEach((row) => {});
 
     // Save refreshed prices back to localStorage
-    localStorage.setItem(
-      "savedOrders",
-      JSON.stringify(savedOrders)
-    );
+    localStorage.setItem("savedOrders", JSON.stringify(savedOrders));
 
     updateSavedTable();
   }
@@ -49,7 +47,7 @@ function openBackOrder() {
 
 function downloadExcel() {
   if (!savedOrders.length) {
-    console.log("No orders to download");
+    showToast("No orders to download");
     return;
   }
 
@@ -80,7 +78,7 @@ function downloadExcel() {
 
 function downloadSelectedOrders() {
   if (selectedOrders.size === 0) {
-    alert("No orders selected");
+    showToast("No orders selected");
     return;
   }
 
@@ -119,7 +117,7 @@ function downloadSelectedOrders() {
 
 function copyAllOrders() {
   if (!savedOrders.length) {
-    alert("No saved orders to copy");
+    showToast("No saved orders to copy");
     return;
   }
 
@@ -132,11 +130,11 @@ function copyAllOrders() {
   navigator.clipboard
     .writeText(text)
     .then(() => {
-      alert(`Copied ${savedOrders.length} orders`);
+      showToast(`Copied ${savedOrders.length} orders`);
     })
     .catch((err) => {
       console.error("Copy failed:", err);
-      alert("Copy failed");
+      showToast("Copy failed");
     });
 }
 
@@ -302,7 +300,7 @@ async function copyQuickPaste() {
     await navigator.clipboard.writeText(text);
     console.log("Copied:", text);
   } catch (err) {
-    alert("Clipboard access failed.");
+    showToast("Clipboard access failed.");
   }
 }
 

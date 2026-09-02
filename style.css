@@ -346,3 +346,85 @@ th {
 .temporary-dealer-manager-close:hover {
   background: #b71c1c;
 }
+
+/* PRICE SOURCE */
+
+#priceSourcePanel {
+  margin: 8px 0 14px 0;
+}
+
+.price-source-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.price-source-label {
+  font-weight: 600;
+}
+
+.price-toggle {
+  position: relative;
+  width: 42px;
+  height: 22px;
+  display: inline-block;
+}
+
+.price-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.price-toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: #999;
+  border-radius: 22px;
+  transition: 0.2s;
+}
+
+.price-toggle-slider::before {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 2px;
+  top: 2px;
+  background: white;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+
+.price-toggle input:checked + .price-toggle-slider {
+  background: #28a745;
+}
+
+.price-toggle input:checked + .price-toggle-slider::before {
+  transform: translateX(20px);
+}
+
+#priceSourceLabel {
+  font-weight: 600;
+}
+
+#excelBackupControls {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: #fff8e1;
+  border: 1px solid #e0c66b;
+  border-radius: 5px;
+}
+
+#priceBackupStatus {
+  margin-left: 8px;
+  font-size: 13px;
+}
+
+#priceStatus {
+  margin-top: 5px;
+  font-size: 13px;
+  color: #555;
+}

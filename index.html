@@ -13,10 +13,10 @@
     <div id="sidebar">
 
       <div id="backOrderHoverArea">
-  <button id="BackOrder" onclick="openBackOrder()">
-    🚚 Back Order
-  </button>
-  </div>
+        <button id="BackOrder" onclick="openBackOrder()">
+          🚚 Back Order
+        </button>
+      </div>
 
       <h2>📊 Dashboard</h2>
       <hr>
@@ -67,12 +67,39 @@
 
     <div id="app">
 
-      <!-- Price Table Upload -->
-      <label>Upload Price Table:</label>
-      <input type="file" id="priceFileInput" accept=".xlsx,.csv"><br><br>
-      <div id="priceStatus">No price table loaded</div>
-
       <!-- New Orders Input -->
+      <!-- Price Source -->
+      <div id="priceSourcePanel">
+
+        <div class="price-source-row">
+
+          <span class="price-source-label">
+            Price API
+          </span>
+
+          <label class="price-toggle">
+            <input type="checkbox" id="priceApiToggle" onchange="handlePriceSourceToggle()">
+            <span class="price-toggle-slider"></span>
+          </label>
+
+          <span id="priceSourceLabel">ON</span>
+        </div>
+        <div id="excelBackupControls" style="display:none;">
+
+          <input type="file" id="priceFileInput" accept=".xlsx,.xls" style="display:none">
+
+          <button onclick="document.getElementById('priceFileInput').click()">
+            📂 Upload Price Excel
+          </button>
+
+          <span id="priceBackupStatus">
+            ⚠️ No backup price table loaded
+          </span>
+
+        </div>
+        <div id="priceStatus"></div>
+      </div>
+
       <h2>🟦 New Orders: <span id="newOrdersCount">0</span></h2>
       <textarea id="input" rows="10" placeholder="Paste order 	data here"></textarea><br>
 
@@ -90,8 +117,8 @@
       <br>
       <button onclick="saveOrders()">Save Orders</button>
       <button onclick="openTemporaryDealerManager()">
-  🛠️ Temporary Dealers
-</button>
+        🛠️ Temporary Dealers
+      </button>
       <h2>🟨 Unknown Format Inspector</h2>
       <pre id="parserTemplateOutput"></pre>
       <div id="unknownStatus"></div>
@@ -124,118 +151,89 @@
 
     <div id="rawViewer" class="raw-viewer">
 
-  <div class="raw-viewer-panel">
+      <div class="raw-viewer-panel">
 
-    <div class="raw-viewer-header">
-      <h2>🔎 Unknown Order Inspector</h2>
+        <div class="raw-viewer-header">
+          <h2>🔎 Unknown Order Inspector</h2>
 
-      <button onclick="closeRawViewer()" class="raw-viewer-close">
-        Close
-      </button>
+          <button onclick="closeRawViewer()" class="raw-viewer-close">
+            Close
+          </button>
+        </div>
+
+        <div class="raw-viewer-actions">
+          <button onclick="runTestParser()">
+            Run Test Parser
+          </button>
+        </div>
+
+        <hr>
+        <h3>Raw Order</h3>
+        <pre id="rawViewerText" class="raw-order-text"></pre>
+        <h3>Detection Info</h3>
+        <pre id="rawViewerMeta" class="raw-viewer-meta"></pre>
+        <hr>
+
+        <h3>🛠️ Add This Dealer</h3>
+        <div class="dealer-setup-panel">
+          <div class="dealer-field">
+            <label for="dealerSetupName">
+              Dealer Name
+            </label>
+
+            <input type="text" id="dealerSetupName" placeholder="e.g. newdealer">
+          </div>
+
+          <div class="dealer-field">
+            <label for="dealerSetupDshipper">
+              DShipper ID
+            </label>
+
+            <input type="text" id="dealerSetupDshipper" placeholder="e.g. W7514">
+          </div>
+
+          <div class="dealer-field">
+            <label for="dealerSetupEmail">
+              Email
+            </label>
+
+            <input type="email" id="dealerSetupEmail" placeholder="dealer@email.com">
+          </div>
+
+          <div class="dealer-field checkbox-field">
+            <label>
+              <input type="checkbox" id="dealerSetupThirdParty">
+              Third-party billing
+            </label>
+          </div>
+
+          <div class="dealer-field">
+            <label for="dealerSetupKeyword">
+              Detection Keyword
+            </label>
+
+            <input type="text" id="dealerSetupKeyword" placeholder="Unique text from this dealer's order">
+          </div>
+
+          <div class="dealer-setup-buttons">
+            <button onclick="saveTemporaryDealer()">
+              💾 Save Dealer
+            </button>
+
+            <button onclick="generateDealerConfigFromForm()">
+              📋 Generate Config
+            </button>
+          </div>
+          <div id="dealerSetupStatus"></div>
+        </div>
+
+        <h3>🛠️ Temporary Dealers</h3>
+        <div id="temporaryDealersOutput" class="temporary-dealers-output">
+          No temporary dealers added.
+        </div>
+      </div>
     </div>
 
-    <div class="raw-viewer-actions">
-      <button onclick="runTestParser()">
-        Run Test Parser
-      </button>
-    </div>
-
-    <hr>
-
-    <h3>Raw Order</h3>
-
-    <pre id="rawViewerText" class="raw-order-text"></pre>
-
-    <h3>Detection Info</h3>
-
-    <pre id="rawViewerMeta" class="raw-viewer-meta"></pre>
-
-    <hr>
-
-    <h3>🛠️ Add This Dealer</h3>
-
-    <div class="dealer-setup-panel">
-
-      <div class="dealer-field">
-        <label for="dealerSetupName">
-          Dealer Name
-        </label>
-
-        <input
-          type="text"
-          id="dealerSetupName"
-          placeholder="e.g. newdealer"
-        >
-      </div>
-
-      <div class="dealer-field">
-        <label for="dealerSetupDshipper">
-          DShipper ID
-        </label>
-
-        <input
-          type="text"
-          id="dealerSetupDshipper"
-          placeholder="e.g. W7514"
-        >
-      </div>
-
-      <div class="dealer-field">
-        <label for="dealerSetupEmail">
-          Email
-        </label>
-
-        <input
-          type="email"
-          id="dealerSetupEmail"
-          placeholder="dealer@email.com"
-        >
-      </div>
-
-      <div class="dealer-field checkbox-field">
-        <label>
-          <input
-            type="checkbox"
-            id="dealerSetupThirdParty"
-          >
-          Third-party billing
-        </label>
-      </div>
-
-      <div class="dealer-field">
-        <label for="dealerSetupKeyword">
-          Detection Keyword
-        </label>
-
-        <input
-          type="text"
-          id="dealerSetupKeyword"
-          placeholder="Unique text from this dealer's order"
-        >
-      </div>
-
-      <div class="dealer-setup-buttons">
-        <button onclick="saveTemporaryDealer()">
-          💾 Save Dealer
-        </button>
-
-        <button onclick="generateDealerConfigFromForm()">
-          📋 Generate Config
-        </button>
-      </div>
-
-      <div id="dealerSetupStatus"></div>
-
-    </div>
-
-    <h3>🛠️ Temporary Dealers</h3>
-
-    <div id="temporaryDealersOutput" class="temporary-dealers-output">
-      No temporary dealers added.
-    </div>
-  </div>
-</div>
-      
     <script src='https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js'></script>
     <script src="./orderData.js"></script>
     <script src="./utils.js"></script>
@@ -250,28 +248,23 @@
 
   </div>
 
-<div id="temporaryDealerManager" class="temporary-dealer-manager">
+  <div id="temporaryDealerManager" class="temporary-dealer-manager">
 
-  <div class="temporary-dealer-manager-panel">
+    <div class="temporary-dealer-manager-panel">
+      <div class="temporary-dealer-manager-header">
+        <h2>🛠️ Temporary Dealers</h2>
+        <button onclick="closeTemporaryDealerManager()" class="temporary-dealer-manager-close">
+          ✕
+        </button>
+      </div>
 
-    <div class="temporary-dealer-manager-header">
-      <h2>🛠️ Temporary Dealers</h2>
+      <hr>
 
-      <button
-        onclick="closeTemporaryDealerManager()"
-        class="temporary-dealer-manager-close"
-      >
-        ✕
-      </button>
-    </div>
-
-    <hr>
-
-    <div id="temporaryDealerManagerOutput">
-      No temporary dealers added.
+      <div id="temporaryDealerManagerOutput">
+        No temporary dealers added.
+      </div>
     </div>
   </div>
-</div>
 
   <div id="quickPasteFloat">
     <select id="quickPaste" onchange="copyQuickPaste()">

@@ -7,13 +7,54 @@ function processData() {
   return result;
 }
 
-function addOrders() {
+async function addOrders() {
   const newOrders = processData();
 
+  if (!newOrders.length) {
+    return;
+  }
+
+  // Collect all SKUs from parsed orders
+  const skus = [];
+
+  newOrders.forEach((order) => {
+    for (let i = 1; i <= 5; i++) {
+      const sku = order[`Item ID ${i}`];
+
+      if (sku) {
+        skus.push(sku);
+      }
+    }
+  });
+
+  // Get prices from Supabase
+  const priceLoaded = await loadPricesForSKUs(skus);
+
+  if (!priceLoaded) {
+    const proceed = confirm(
+      "⚠️ Could not load the latest price table.\n\n" +
+        "Some prices may be blank.\n\n" +
+        "Continue anyway?"
+    );
+
+    if (!proceed) {
+      return;
+    }
+  }
+
+  // Refresh prices on newly parsed orders
+  newOrders.forEach((order) => {
+    refreshOrderPrices(order);
+  });
+
+  // Add to preview
   previewOrders = previewOrders.concat(newOrders);
 
   const input = document.getElementById("input");
-  if (input) input.value = "";
+
+  if (input) {
+    input.value = "";
+  }
 
   updatePreview();
   updateUnknownTable();
@@ -145,18 +186,18 @@ function showToast(message, duration = 2500) {
   Object.assign(toast.style, {
     position: "fixed",
     top: "50%",
-    left: "50%",
+    left: "60%",
     transform: "translate(-50%, -50%)",
     background: "#333",
     color: "#fff",
     padding: "12px 20px",
     borderRadius: "8px",
-    fontSize: "14px",
+    fontSize: "20px",
     fontWeight: "500",
     boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
     zIndex: "99999",
     opacity: "0",
-    transition: "opacity 0.2s ease"
+    transition: "opacity 0.4s ease"
   });
 
   document.body.appendChild(toast);
