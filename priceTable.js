@@ -116,7 +116,6 @@ function buildPriceTable() {
 async function loadPricesForSKUs(skus) {
   // EXCEL MODE
   if (priceSource === "excel") {
-    console.log("📊 Using Excel price backup");
 
     return true;
   }
@@ -140,14 +139,11 @@ async function loadPricesForSKUs(skus) {
 
   // EVERYTHING ALREADY CACHED
   if (!missingSKUs.length) {
-    console.log("All", normalizedSKUs.length, "SKUs already cached");
 
     updatePriceStatus();
 
     return true;
   }
-
-  console.log("Requesting prices for", missingSKUs.length, "new SKUs");
 
   // API REQUEST
   try {
@@ -231,10 +227,6 @@ async function loadPricesForSKUs(skus) {
 
     updatePriceStatus(`✓ Price Database: ${loadedPriceSKUs.size} SKUs cached`);
 
-    console.log("Price API loaded:", Object.keys(prices).length, "SKUs");
-
-    console.log("Total cached:", loadedPriceSKUs.size, "SKUs");
-
     return true;
   } catch (error) {
     console.error("Price API error:", error);
@@ -309,8 +301,6 @@ function handlePriceSourceToggle() {
 
     loadedPriceSKUs.clear();
 
-    console.log("💰 Price source: API");
-
     updatePriceStatus();
 
     return;
@@ -326,8 +316,6 @@ function handlePriceSourceToggle() {
   }
 
   loadedPriceSKUs.clear();
-
-  console.log("📊 Price source: Excel Backup");
 
   // Restore existing Excel table
   restoreExcelPriceTable();
@@ -406,8 +394,7 @@ function updatePriceStatus(message) {
 function restoreExcelPriceTable() {
   const saved = localStorage.getItem("priceRows");
 
-  if (!saved) {
-    console.log("📊 No saved Excel price table found");
+  if (!saved) {    
 
     return false;
   }
@@ -416,7 +403,6 @@ function restoreExcelPriceTable() {
     const parsed = JSON.parse(saved);
 
     if (!Array.isArray(parsed) || !parsed.length) {
-      console.log("📊 Saved Excel price table is empty");
 
       return false;
     }
@@ -424,8 +410,6 @@ function restoreExcelPriceTable() {
     allPriceRows = parsed;
 
     buildPriceTable();
-
-    console.log("📊 Restored Excel price table:", allPriceRows.length, "rows");
 
     return true;
   } catch (error) {
