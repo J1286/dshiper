@@ -152,13 +152,21 @@ function matchSKUStructure(sku) {
 
         // PDF may have removed the separator: RS
         if (
-          rule.allowMissingSeparator &&
-          normalized.endsWith(suffixWithoutSeparator)
-        ) {
-          matchedSuffix = normalizedSuffix;
-          missingSuffixSeparator = true;
-          break;
-        }
+  	  rule.allowMissingSeparator &&
+    	  normalized.endsWith(suffixWithoutSeparator)
+	) {
+  	  const suffixStart =
+    	  normalized.length - suffixWithoutSeparator.length;
+
+  	  const charBeforeSuffix =
+     	  normalized[suffixStart - 1];
+
+        if (charBeforeSuffix && !/\d/.test(charBeforeSuffix)) {
+     	  matchedSuffix = normalizedSuffix;
+    	  missingSuffixSeparator = true;
+     	  break;
+  	  }
+	}
       }
 
       // Restore missing suffix separator
@@ -563,6 +571,10 @@ function testSKURegression() {
     {
       input: "SPE-RMX-F15007F3H-P-FS",
       expected: "RMX-F15007F3H-P-FS"
+    },
+    {
+      input: "2LHP-A406JM-8V2-TM",
+      expected: "2LHP-A406JM-8V2-TM"
     }
   ];
 
