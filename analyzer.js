@@ -325,13 +325,13 @@ function detectAddressFromSection(shipToSection, allLines) {
 
         const words = value.trim().split(/\s+/);
 
-        // Usually 2-4 words
-        if (words.length < 2 || words.length > 4) {
+        // Usually 1-4 words
+        if (words.length < 1 || words.length > 4) {
           return false;
         }
 
         // Only normal name characters
-        if (!/^[A-Za-z.'-]+(?:\s+[A-Za-z.'-]+)+$/.test(value)) {
+        if (!/^[A-Za-z.'-]+(?:\s+[A-Za-z.'-]+)*$/.test(value)) {
           return false;
         }
 
@@ -410,13 +410,31 @@ function detectShipToSection(lines) {
     }
   }
 
-  // Fallback: find city/state/ZIP and look a few lines above it
+  // Fallback: find city/state/ZIP and work upward
   if (start === -1) {
     for (let i = 0; i < lines.length; i++) {
-      if (parseCityStateZip(lines[i]).city) {
-        start = Math.max(0, i - 4);
-        break;
+      if (!parseCityStateZip(lines[i]).city) {
+        continue;
       }
+
+      let streetIndex = -1;
+
+      for (let j = i - 1; j >= 0; j--) {
+        if (/^\d+\s+.*[A-Za-z]/.test(lines[j])) {
+          streetIndex = j;
+          break;
+        }
+      }
+
+      if (streetIndex !== -1) {
+        // Include the line immediately before the street
+        // address so it can be detected as the name.
+        start = Math.max(0, streetIndex - 2);
+      } else {
+        start = Math.max(0, i - 4);
+      }
+
+      break;
     }
   }
 
