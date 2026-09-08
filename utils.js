@@ -39,6 +39,7 @@ const SKU_RULES = [
       "2LC-",
 	  "LBLH-",
       "LPS-",
+	  "LB-",
       "2LHE-",
       "LSM-",
       "2LBLH-",
