@@ -404,7 +404,7 @@ function extractAddressGeneric(text) {
     }
 
     // Normal street address:
-    if (/^\d+\s+[A-Za-z]/.test(t)) {
+    if (/^\d+\s+[A-Za-z0-9]/.test(t)) {
       return true;
     }
 
