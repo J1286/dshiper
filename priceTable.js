@@ -422,86 +422,106 @@ function restoreExcelPriceTable() {
 
 // DOWNLOAD PRICE TABLE
 async function downloadPriceTable() {
-  const button = document.getElementById("downloadPriceTableButton");
+
+  const button = document.getElementById(
+    "downloadPriceTableButton"
+  );
 
   if (button) {
     button.disabled = true;
-    button.textContent = "🟡 Loading Prices...";
+    button.textContent = "🟡 Preparing Price Table...";
   }
 
   try {
-    console.log("📥 Starting price table export...");
 
-    const pageSize = 1000;
-    let from = 0;
-    const allRows = [];
+    console.log(
+      "📥 Requesting complete price database..."
+    );
 
-    while (true) {
-      const to = from + pageSize - 1;
+    const response = await fetch(
+      PRICE_API_URL,
+      {
+        method: "POST",
 
-      const response = await fetch(
-        `${PRICE_API_URL.replace(
-          "/functions/v1/get-prices",
-          "/rest/v1/prices"
-        )}?select=sku,redline360,aag,tdot,pq,ntxglow,omac&order=sku&offset=${from}&limit=${pageSize}`,
-        {
-          method: "GET",
-          headers: {
-            apikey: SUPABASE_KEY,
-            Authorization: `Bearer ${SUPABASE_KEY}`
-          }
-        }
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+          export: true
+        })
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(
+        result.error ||
+        "Price export request failed"
       );
-
-      if (!response.ok) {
-        throw new Error(
-          `Failed to load price database (${response.status})`
-        );
-      }
-
-      const rows = await response.json();
-
-      if (!Array.isArray(rows) || rows.length === 0) {
-        break;
-      }
-
-      allRows.push(...rows);
-
-      if (rows.length < pageSize) {
-        break;
-      }
-
-      from += pageSize;
-
-      if (button) {
-        button.textContent = `🟡 Loading ${allRows.length}...`;
-      }
     }
 
-    if (!allRows.length) {
-      throw new Error("No price data was found.");
+    const prices = Array.isArray(result.prices)
+      ? result.prices
+      : [];
+
+    if (!prices.length) {
+      throw new Error(
+        "The price database is empty."
+      );
     }
 
     console.log(
-      "📊 Price rows loaded for export:",
-      allRows.length
+      `📊 Received ${prices.length} price rows`
     );
 
+    // ---------------------------------------------------------
     // BUILD EXCEL ROWS
-    const exportRows = allRows.map((row) => ({
+    // ---------------------------------------------------------
+
+    const exportRows = prices.map((row) => ({
       SKU: row.sku || "",
-      Redline360: row.redline360 ?? "",
-      AAG: row.aag ?? "",
-      TDOT: row.tdot ?? "",
-      PQ: row.pq ?? "",
-      "NTX Glow": row.ntxglow ?? "",
-      OMAC: row.omac ?? ""
+
+      Redline360:
+        row.redline360 ?? "",
+
+      AAG:
+        row.aag ?? "",
+
+      TDOT:
+        row.tdot ?? "",
+
+      PQ:
+        row.pq ?? "",
+
+      "NTX Glow":
+        row.ntxglow ?? "",
+
+      OMAC:
+        row.omac ?? ""
     }));
 
+    // ---------------------------------------------------------
     // CREATE WORKBOOK
-    const worksheet = XLSX.utils.json_to_sheet(exportRows);
+    // ---------------------------------------------------------
 
-    const workbook = XLSX.utils.book_new();
+    const worksheet =
+      XLSX.utils.json_to_sheet(exportRows);
+
+    // Set useful column widths
+    worksheet["!cols"] = [
+      { wch: 24 }, // SKU
+      { wch: 14 }, // Redline360
+      { wch: 14 }, // AAG
+      { wch: 14 }, // TDOT
+      { wch: 14 }, // PQ
+      { wch: 14 }, // NTX Glow
+      { wch: 14 }  // OMAC
+    ];
+
+    const workbook =
+      XLSX.utils.book_new();
 
     XLSX.utils.book_append_sheet(
       workbook,
@@ -509,35 +529,68 @@ async function downloadPriceTable() {
       "Prices"
     );
 
-    // DOWNLOAD
+    // ---------------------------------------------------------
+    // FILE NAME
+    // ---------------------------------------------------------
+
     const now = new Date();
 
     const date =
       `${now.getFullYear()}-` +
-      `${String(now.getMonth() + 1).padStart(2, "0")}-` +
-      `${String(now.getDate()).padStart(2, "0")}`;
+      `${String(
+        now.getMonth() + 1
+      ).padStart(2, "0")}-` +
+      `${String(
+        now.getDate()
+      ).padStart(2, "0")}`;
+
+    const fileName =
+      `Price_Table_${date}.xlsx`;
+
+    // ---------------------------------------------------------
+    // DOWNLOAD
+    // ---------------------------------------------------------
 
     XLSX.writeFile(
       workbook,
-      `Price_Table_${date}.xlsx`
+      fileName
     );
 
     console.log(
-      `✅ Price table exported: ${allRows.length} SKUs`
+      `✅ Price table downloaded: ${prices.length} SKUs`
     );
 
+    if (button) {
+      button.textContent =
+        `✅ Downloaded ${prices.length} SKUs`;
+
+      setTimeout(() => {
+        button.textContent =
+          "📥 Download Price Table";
+      }, 3000);
+    }
+
   } catch (error) {
-    console.error("Price table export failed:", error);
+
+    console.error(
+      "Price table download failed:",
+      error
+    );
 
     alert(
       "❌ Failed to download price table:\n\n" +
       error.message
     );
 
+    if (button) {
+      button.textContent =
+        "📥 Download Price Table";
+    }
+
   } finally {
+
     if (button) {
       button.disabled = false;
-      button.textContent = "📥 Download Price Table";
     }
   }
 }
