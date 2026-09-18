@@ -105,7 +105,7 @@ const GENERIC_RULES = {
 const DEALER_CONFIG = {
   redline360: {
     dshipper: "W7232",
-    email: "tracking@redline360.com"
+    email: " "
   },
 
   aag: {
