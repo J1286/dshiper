@@ -52,7 +52,8 @@ const SKU_RULES = [
       "2LBLHP-",
       "2LHES-",
       "4LH-",
-      "4LHE-"
+      "4LHE-",
+	  "2LCLHP-"
     ],
     suffixes: [
       "-RS",
