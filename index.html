@@ -25,12 +25,6 @@
         📥 Price Table
       </button> 
 
-      <label class="toggle-option">
-        <span>🌙 Dark Mode</span>
-        <input type="checkbox" id="darkModeToggle">
-        <span class="toggle-slider"></span>
-      </label>
-
       <hr>
 
       <div class="stat">
@@ -85,17 +79,26 @@
 
         <div class="price-source-row">
 
-          <span class="price-source-label">
-            Price API
-          </span>
+    <!-- Price API -->
+    <span class="price-source-label">Price API</span>
 
-          <label class="price-toggle">
-            <input type="checkbox" id="priceApiToggle" onchange="handlePriceSourceToggle()">
-            <span class="price-toggle-slider"></span>
-          </label>
+    <label class="price-toggle">
+        <input type="checkbox" id="priceApiToggle" onchange="handlePriceSourceToggle()">
+        <span class="price-toggle-slider"></span>
+    </label>
 
-          <span id="priceSourceLabel">ON</span>
-        </div>
+    <span id="priceSourceLabel">ON</span>
+
+    <!-- Dark Mode -->
+    <span class="dark-mode-label">🌙 Dark Mode</span>
+
+    <label class="price-toggle">
+        <input type="checkbox" id="darkModeToggle">
+        <span class="price-toggle-slider"></span>
+    </label>
+
+</div>
+
         <div id="excelBackupControls" style="display:none;">
 
           <input type="file" id="priceFileInput" accept=".xlsx,.xls" style="display:none">
