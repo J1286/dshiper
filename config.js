@@ -20,6 +20,7 @@ const blockedItemIDs = new Set([
   "WAIT TO RECEIVE",
   "WH3",
   "ETA",
+  "MFY",
   "LAST",
   "BLOCKED",
   "ETA 6-8 WEEKS"
