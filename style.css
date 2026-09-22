@@ -428,3 +428,66 @@ th {
   font-size: 13px;
   color: #555;
 }
+
+/* =========================
+   DARK MODE
+   ========================= */
+
+body.dark-mode {
+  background: #181a1b;
+  color: #e6e6e6;
+}
+
+body.dark-mode #sidebar {
+  background: #222526;
+  color: #e6e6e6;
+  border-right-color: #444;
+}
+
+body.dark-mode #app {
+  color: #e6e6e6;
+}
+
+body.dark-mode input,
+body.dark-mode textarea,
+body.dark-mode select {
+  background: #25282a;
+  color: #e6e6e6;
+  border-color: #555;
+}
+
+body.dark-mode table {
+  color: #e6e6e6;
+}
+
+body.dark-mode td {
+  border-color: #444;
+}
+
+body.dark-mode th {
+  background-color: #111;
+}
+
+body.dark-mode button {
+  background: #2b2f31;
+  color: #e6e6e6;
+  border-color: #555;
+}
+
+body.dark-mode button:hover {
+  background: #3a3f42;
+}
+
+body.dark-mode #quickPasteFloat {
+  background: #25282a;
+  color: #e6e6e6;
+}
+
+body.dark-mode #excelBackupControls {
+  background: #3a3320;
+  border-color: #6b5b2a;
+}
+
+body.dark-mode #priceStatus {
+  color: #aaa;
+}
