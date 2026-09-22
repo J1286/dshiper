@@ -11,7 +11,6 @@
 
   <div id="layout">
     <div id="sidebar">
-
       <div id="backOrderHoverArea">
         <button id="BackOrder" onclick="openBackOrder()">
           🚚 Back Order
@@ -23,8 +22,14 @@
 
       <button id="downloadPriceTableButton" onclick="downloadPriceTable()">
         📥 Price Table
-      </button> 
+      </button><hr>
 
+      <!-- Dark Mode -->
+    <span class="dark-mode-label">🌙 Dark Mode</span>
+    <label class="price-toggle">
+        <input type="checkbox" id="darkModeToggle">
+        <span class="price-toggle-slider"></span>
+    </label>
       <hr>
 
       <div class="stat">
@@ -76,7 +81,6 @@
       <!-- New Orders Input -->
       <!-- Price Source -->
       <div id="priceSourcePanel">
-
         <div class="price-source-row">
 
     <!-- Price API -->
@@ -88,17 +92,7 @@
     </label>
 
     <span id="priceSourceLabel">ON</span>
-
-    <!-- Dark Mode -->
-    <span class="dark-mode-label">🌙 Dark Mode</span>
-
-    <label class="price-toggle">
-        <input type="checkbox" id="darkModeToggle">
-        <span class="price-toggle-slider"></span>
-    </label>
-
 </div>
-
         <div id="excelBackupControls" style="display:none;">
 
           <input type="file" id="priceFileInput" accept=".xlsx,.xls" style="display:none">
