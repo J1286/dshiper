@@ -14,6 +14,23 @@ window.onload = function () {
 
   handlePriceSourceToggle();
 
+  // Initialize dark mode
+  const darkModeToggle = document.getElementById("darkModeToggle");
+  const savedDarkMode = localStorage.getItem("darkMode") === "true";
+
+  if (darkModeToggle) {
+    darkModeToggle.checked = savedDarkMode;
+
+    if (savedDarkMode) {
+      document.body.classList.add("dark-mode");
+    }
+
+    darkModeToggle.addEventListener("change", function () {
+      document.body.classList.toggle("dark-mode", this.checked);
+      localStorage.setItem("darkMode", this.checked);
+    });
+  }
+
   // restore saved orders
   const saved = localStorage.getItem("savedOrders");
 
@@ -27,7 +44,7 @@ window.onload = function () {
     // Save refreshed prices back to localStorage
     localStorage.setItem("savedOrders", JSON.stringify(savedOrders));
 
-    updateSavedTable();
+    updateSavedTable(); 
   }
 
   // restore temporary dealers
