@@ -16,7 +16,7 @@ window.temporaryDealerConfig = window.temporaryDealerConfig || {};
 
 const blockedItemIDs = new Set([
   "HOLD",
-  "NO ETA DISCONTINUED",
+  "DISCONTINUED",
   "WAIT TO RECEIVE",
   "WH3",
   "ETA",
