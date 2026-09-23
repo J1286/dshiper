@@ -140,7 +140,17 @@
       <hr>
 
       <!-- Saved Orders -->
-      <h2>🟩 Saved Orders</h2>
+      <h2 class="saved-orders-title">
+  	🟩 Saved Orders
+  	<span id="savedOrdersCount"></span>
+  	<button
+  	  id="newSavedOrdersBadge"
+  	  class="new-saved-orders-badge"
+  	  onclick="jumpToNewSavedOrders()"
+  	  style="display: none;"
+  	></button>
+      </h2>
+
       <input type="text" id="savedSearch" placeholder="Search Order#, Customer, SKU, Dealer..." oninput="filterSavedOrders()" style="width:300px; padding:6px; margin-bottom:10px;">
 
       <table border="1" style="border-collapse: collapse; width:100%">
