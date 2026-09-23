@@ -231,7 +231,7 @@ function updateSavedOrdersBadge() {
 
   const info = window.newSavedOrders;
 
-  if (!info || !info.count) {
+  if (!info || !info.count || savedOrders.length <= 10) {
     badge.style.display = "none";
     return;
   }
