@@ -491,3 +491,53 @@ body.dark-mode #excelBackupControls {
 body.dark-mode #priceStatus {
   color: #aaa;
 }
+
+.saved-orders-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#savedOrdersCount {
+  font-size: 14px;
+  font-weight: normal;
+  color: #666;
+}
+
+.new-saved-orders-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 5px 10px;
+  margin: 0;
+
+  border: 1px solid #81c784;
+  border-radius: 6px;
+
+  background: #e8f5e9;
+  color: #2e7d32;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.new-saved-orders-badge:hover {
+  background: #c8e6c9;
+}
+
+.new-order-target {
+  animation: newOrderHighlight 1.5s ease;
+}
+
+@keyframes newOrderHighlight {
+  0% {
+    background-color: #a5d6a7;
+  }
+
+  100% {
+    background-color: transparent;
+  }
+}
