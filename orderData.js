@@ -159,9 +159,20 @@ function saveOrders() {
   syncPreviewToOrders();
   previewOrders.forEach(recalculateShipConfirm);
 
-  savedOrders = savedOrders.concat(previewOrders);
+  // Remember where this new batch starts in Saved Orders
+  const newOrdersStartIndex = savedOrders.length;
+  const newOrdersCount = previewOrders.length;
 
+  savedOrders = savedOrders.concat(previewOrders);
   localStorage.setItem("savedOrders", JSON.stringify(savedOrders));
+
+  // Remember the newly saved batch so the user can jump to it
+  if (newOrdersCount > 0) {
+    window.newSavedOrders = {
+      startIndex: newOrdersStartIndex,
+      count: newOrdersCount
+    };
+  }
 
   previewOrders = [];
 
@@ -171,6 +182,66 @@ function saveOrders() {
   updateDashboard();
   updateSavedTable();
 }
+
+
+function jumpToNewSavedOrders() {
+  const info = window.newSavedOrders;
+
+  if (!info || !info.count) return;
+
+  const rows = document.querySelectorAll("#savedBody tr");
+  const targetRow = rows[info.startIndex];
+
+  if (!targetRow) return;
+
+  // Scroll vertically only.
+  // This avoids scrollIntoView() changing the horizontal position
+  // of the main #app area.
+  const targetY =
+    targetRow.getBoundingClientRect().top +
+    window.scrollY -
+    100;
+
+  window.scrollTo({
+    top: Math.max(0, targetY),
+    behavior: "smooth"
+  });
+
+  // Briefly highlight the first order of the new batch
+  targetRow.classList.add("new-order-target");
+
+  setTimeout(() => {
+    targetRow.classList.remove("new-order-target");
+  }, 1500);
+
+  // Mark the new batch as viewed
+  window.newSavedOrders = null;
+
+  const badge = document.getElementById("newSavedOrdersBadge");
+  if (badge) {
+    badge.style.display = "none";
+  }
+}
+
+
+function updateSavedOrdersBadge() {
+  const badge = document.getElementById("newSavedOrdersBadge");
+
+  if (!badge) return;
+
+  const info = window.newSavedOrders;
+
+  if (!info || !info.count) {
+    badge.style.display = "none";
+    return;
+  }
+
+  badge.textContent =
+    `🆕 ${info.count} new order${info.count === 1 ? "" : "s"}`;
+
+  badge.style.display = "inline-flex";
+}
+
 
 function showToast(message, duration = 2500) {
   const oldToast = document.getElementById("appToast");
@@ -218,6 +289,12 @@ function showToast(message, duration = 2500) {
 function updateSavedTable() {
   const head = document.getElementById("savedHeader");
   const body = document.getElementById("savedBody");
+  const countEl = document.getElementById("savedOrdersCount");
+
+  if (countEl) {
+    countEl.textContent =
+      `${savedOrders.length} order${savedOrders.length === 1 ? "" : "s"}`;
+  }
 
   head.innerHTML = "";
   body.innerHTML = "";
@@ -539,4 +616,5 @@ function updateSavedTable() {
 
     body.appendChild(tr);
   });
+  updateSavedOrdersBadge();
 }
