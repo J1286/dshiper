@@ -226,12 +226,17 @@ function jumpToNewSavedOrders() {
 
 function updateSavedOrdersBadge() {
   const badge = document.getElementById("newSavedOrdersBadge");
+  const NEW_ORDER_BUTTON_THRESHOLD = 5;
 
   if (!badge) return;
 
   const info = window.newSavedOrders;
 
-  if (!info || !info.count || savedOrders.length <= 10) {
+  if (
+    !info ||
+    !info.count ||
+    savedOrders.length <= NEW_ORDER_BUTTON_THRESHOLD
+  ) {
     badge.style.display = "none";
     return;
   }
