@@ -37,6 +37,7 @@ const SKU_RULES = [
       "LHP-",
       "MFCAT2-",
       "2LC-",
+	  "BKT-",
 	  "LBLH-",
       "LPS-",
 	  "LB-",
