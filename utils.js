@@ -91,7 +91,8 @@ const SKU_RULES = [
       "-SY"
     ],
 
-    allowMissingSeparator: true
+    allowMissingSeparator: true,
+	allowNumericEnding: true
   }
 ];
 
@@ -101,6 +102,7 @@ function matchSKUStructure(sku) {
   const value = sku.trim().toUpperCase();
 
   for (const rule of SKU_RULES) {
+
     // IMPORTANT:
     // Check longest prefixes first so LHP- wins over LH-,
     // 2LHP- wins over LHP-, etc.
@@ -147,7 +149,8 @@ function matchSKUStructure(sku) {
 
       for (const suffix of suffixes) {
         const normalizedSuffix = suffix.toUpperCase();
-        const suffixWithoutSeparator = normalizedSuffix.replace(/^[-_]+/, "");
+        const suffixWithoutSeparator =
+          normalizedSuffix.replace(/^[-_]+/, "");
 
         // Normal suffix: -RS
         if (normalized.endsWith(normalizedSuffix)) {
@@ -157,29 +160,41 @@ function matchSKUStructure(sku) {
 
         // PDF may have removed the separator: RS
         if (
-  	  rule.allowMissingSeparator &&
-    	  normalized.endsWith(suffixWithoutSeparator)
-	) {
-  	  const suffixStart =
-    	  normalized.length - suffixWithoutSeparator.length;
+          rule.allowMissingSeparator &&
+          normalized.endsWith(suffixWithoutSeparator)
+        ) {
+          const suffixStart =
+            normalized.length - suffixWithoutSeparator.length;
 
-  	  const charBeforeSuffix =
-     	  normalized[suffixStart - 1];
+          const charBeforeSuffix =
+            normalized[suffixStart - 1];
 
-        if (charBeforeSuffix && !/\d/.test(charBeforeSuffix)) {
-     	  matchedSuffix = normalizedSuffix;
-    	  missingSuffixSeparator = true;
-     	  break;
-  	  }
-	}
+          if (charBeforeSuffix && !/\d/.test(charBeforeSuffix)) {
+            matchedSuffix = normalizedSuffix;
+            missingSuffixSeparator = true;
+            break;
+          }
+        }
       }
 
       // Restore missing suffix separator
       if (missingSuffixSeparator && matchedSuffix) {
-        const suffixWithoutSeparator = matchedSuffix.replace(/^[-_]+/, "");
+        const suffixWithoutSeparator =
+          matchedSuffix.replace(/^[-_]+/, "");
 
         normalized =
-          normalized.slice(0, -suffixWithoutSeparator.length) + matchedSuffix;
+          normalized.slice(0, -suffixWithoutSeparator.length) +
+          matchedSuffix;
+      }
+
+      let numericEnding = "";
+
+      if (!matchedSuffix && rule.allowNumericEnding) {
+        const numericMatch = normalized.match(/\d+$/);
+
+        if (numericMatch) {
+          numericEnding = numericMatch[0];
+        }
       }
 
       return {
@@ -187,6 +202,7 @@ function matchSKUStructure(sku) {
         normalized,
         prefix: normalizedPrefix,
         suffix: matchedSuffix,
+        numericEnding,
         missingSeparator,
         missingSuffixSeparator
       };
