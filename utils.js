@@ -47,6 +47,7 @@ const SKU_RULES = [
       "2LBLH-",
       "RAD3-",
       "LHE-",
+	  "RAD-",
       "2LBCLH-",
       "MAT-",
       "MFCAT3-",
