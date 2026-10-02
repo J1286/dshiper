@@ -1,5 +1,5 @@
 // -------- PRICE TABLE --------
-// API
+
 const PRICE_API_URL =
   "https://adcjrkudofddvmcpmdzw.supabase.co/functions/v1/get-prices";
 
@@ -116,7 +116,6 @@ function buildPriceTable() {
 async function loadPricesForSKUs(skus) {
   // EXCEL MODE
   if (priceSource === "excel") {
-
     return true;
   }
 
@@ -139,7 +138,6 @@ async function loadPricesForSKUs(skus) {
 
   // EVERYTHING ALREADY CACHED
   if (!missingSKUs.length) {
-
     updatePriceStatus();
 
     return true;
@@ -394,8 +392,7 @@ function updatePriceStatus(message) {
 function restoreExcelPriceTable() {
   const saved = localStorage.getItem("priceRows");
 
-  if (!saved) {    
-
+  if (!saved) {
     return false;
   }
 
@@ -403,7 +400,6 @@ function restoreExcelPriceTable() {
     const parsed = JSON.parse(saved);
 
     if (!Array.isArray(parsed) || !parsed.length) {
-
       return false;
     }
 
@@ -419,13 +415,9 @@ function restoreExcelPriceTable() {
   }
 }
 
-
 // DOWNLOAD PRICE TABLE
 async function downloadPriceTable() {
-
-  const button = document.getElementById(
-    "downloadPriceTableButton"
-  );
+  const button = document.getElementById("downloadPriceTableButton");
 
   if (button) {
     button.disabled = true;
@@ -433,48 +425,33 @@ async function downloadPriceTable() {
   }
 
   try {
+    console.log("📥 Requesting complete price database...");
 
-    console.log(
-      "📥 Requesting complete price database..."
-    );
+    const response = await fetch(PRICE_API_URL, {
+      method: "POST",
 
-    const response = await fetch(
-      PRICE_API_URL,
-      {
-        method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
 
-        headers: {
-          "Content-Type": "application/json"
-        },
-
-        body: JSON.stringify({
-          export: true
-        })
-      }
-    );
+      body: JSON.stringify({
+        export: true
+      })
+    });
 
     const result = await response.json();
 
     if (!response.ok || !result.success) {
-      throw new Error(
-        result.error ||
-        "Price export request failed"
-      );
+      throw new Error(result.error || "Price export request failed");
     }
 
-    const prices = Array.isArray(result.prices)
-      ? result.prices
-      : [];
+    const prices = Array.isArray(result.prices) ? result.prices : [];
 
     if (!prices.length) {
-      throw new Error(
-        "The price database is empty."
-      );
+      throw new Error("The price database is empty.");
     }
 
-    console.log(
-      `📊 Received ${prices.length} price rows`
-    );
+    console.log(`📊 Received ${prices.length} price rows`);
 
     // ---------------------------------------------------------
     // BUILD EXCEL ROWS
@@ -483,31 +460,24 @@ async function downloadPriceTable() {
     const exportRows = prices.map((row) => ({
       SKU: row.sku || "",
 
-      Redline360:
-        row.redline360 ?? "",
+      Redline360: row.redline360 ?? "",
 
-      AAG:
-        row.aag ?? "",
+      AAG: row.aag ?? "",
 
-      TDOT:
-        row.tdot ?? "",
+      TDOT: row.tdot ?? "",
 
-      PQ:
-        row.pq ?? "",
+      PQ: row.pq ?? "",
 
-      "NTX Glow":
-        row.ntxglow ?? "",
+      "NTX Glow": row.ntxglow ?? "",
 
-      OMAC:
-        row.omac ?? ""
+      OMAC: row.omac ?? ""
     }));
 
     // ---------------------------------------------------------
     // CREATE WORKBOOK
     // ---------------------------------------------------------
 
-    const worksheet =
-      XLSX.utils.json_to_sheet(exportRows);
+    const worksheet = XLSX.utils.json_to_sheet(exportRows);
 
     // Set useful column widths
     worksheet["!cols"] = [
@@ -517,17 +487,12 @@ async function downloadPriceTable() {
       { wch: 14 }, // TDOT
       { wch: 14 }, // PQ
       { wch: 14 }, // NTX Glow
-      { wch: 14 }  // OMAC
+      { wch: 14 } // OMAC
     ];
 
-    const workbook =
-      XLSX.utils.book_new();
+    const workbook = XLSX.utils.book_new();
 
-    XLSX.utils.book_append_sheet(
-      workbook,
-      worksheet,
-      "Prices"
-    );
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Prices");
 
     // ---------------------------------------------------------
     // FILE NAME
@@ -537,58 +502,35 @@ async function downloadPriceTable() {
 
     const date =
       `${now.getFullYear()}-` +
-      `${String(
-        now.getMonth() + 1
-      ).padStart(2, "0")}-` +
-      `${String(
-        now.getDate()
-      ).padStart(2, "0")}`;
+      `${String(now.getMonth() + 1).padStart(2, "0")}-` +
+      `${String(now.getDate()).padStart(2, "0")}`;
 
-    const fileName =
-      `Price_Table_${date}.xlsx`;
+    const fileName = `Price_Table_${date}.xlsx`;
 
     // ---------------------------------------------------------
     // DOWNLOAD
     // ---------------------------------------------------------
 
-    XLSX.writeFile(
-      workbook,
-      fileName
-    );
+    XLSX.writeFile(workbook, fileName);
 
-    console.log(
-      `✅ Price table downloaded: ${prices.length} SKUs`
-    );
+    console.log(`✅ Price table downloaded: ${prices.length} SKUs`);
 
     if (button) {
-      button.textContent =
-        `✅ Downloaded ${prices.length} SKUs`;
+      button.textContent = `✅ Downloaded ${prices.length} SKUs`;
 
       setTimeout(() => {
-        button.textContent =
-          "📥 Download Price Table";
+        button.textContent = "📥 Download Price Table";
       }, 3000);
     }
-
   } catch (error) {
+    console.error("Price table download failed:", error);
 
-    console.error(
-      "Price table download failed:",
-      error
-    );
-
-    alert(
-      "❌ Failed to download price table:\n\n" +
-      error.message
-    );
+    alert("❌ Failed to download price table:\n\n" + error.message);
 
     if (button) {
-      button.textContent =
-        "📥 Download Price Table";
+      button.textContent = "📥 Download Price Table";
     }
-
   } finally {
-
     if (button) {
       button.disabled = false;
     }
