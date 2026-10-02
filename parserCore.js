@@ -1,4 +1,5 @@
 // -------- MAIN PARSER --------
+
 function parseOrder(order) {
   const detection = detectBestDealer(order);
   const dealer = detection.dealer;
