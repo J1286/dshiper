@@ -1,8 +1,7 @@
 function parseGeneric(order) {
+  
   const analysis = analyzeOrder(order);
-
   let items;
-
   const analyzedItems = analysis.itemCandidates || [];
   const genericItems = extractItemsGeneric(order);
 
