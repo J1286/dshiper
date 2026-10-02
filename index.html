@@ -22,14 +22,15 @@
 
       <button id="downloadPriceTableButton" onclick="downloadPriceTable()">
         📥 Price Table
-      </button><hr>
+      </button>
+      <hr>
 
       <!-- Dark Mode -->
-    <span class="dark-mode-label">🌙 Dark Mode</span>
-    <label class="price-toggle">
+      <span class="dark-mode-label">🌙 Dark Mode</span>
+      <label class="price-toggle">
         <input type="checkbox" id="darkModeToggle">
         <span class="price-toggle-slider"></span>
-    </label>
+      </label>
       <hr>
 
       <div class="stat">
@@ -83,16 +84,16 @@
       <div id="priceSourcePanel">
         <div class="price-source-row">
 
-    <!-- Price API -->
-    <span class="price-source-label">Price API</span>
+          <!-- Price API -->
+          <span class="price-source-label">Price API</span>
 
-    <label class="price-toggle">
-        <input type="checkbox" id="priceApiToggle" onchange="handlePriceSourceToggle()">
-        <span class="price-toggle-slider"></span>
-    </label>
+          <label class="price-toggle">
+            <input type="checkbox" id="priceApiToggle" onchange="handlePriceSourceToggle()">
+            <span class="price-toggle-slider"></span>
+          </label>
 
-    <span id="priceSourceLabel">ON</span>
-</div>
+          <span id="priceSourceLabel">ON</span>
+        </div>
         <div id="excelBackupControls" style="display:none;">
 
           <input type="file" id="priceFileInput" accept=".xlsx,.xls" style="display:none">
@@ -141,14 +142,9 @@
 
       <!-- Saved Orders -->
       <h2 class="saved-orders-title">
-  	🟩 Saved Orders
-  	<span id="savedOrdersCount"></span>
-  	<button
-  	  id="newSavedOrdersBadge"
-  	  class="new-saved-orders-badge"
-  	  onclick="jumpToNewSavedOrders()"
-  	  style="display: none;"
-  	></button>
+        🟩 Saved Orders
+        <span id="savedOrdersCount"></span>
+        <button id="newSavedOrdersBadge" class="new-saved-orders-badge" onclick="jumpToNewSavedOrders()" style="display: none;"></button>
       </h2>
 
       <input type="text" id="savedSearch" placeholder="Search Order#, Customer, SKU, Dealer..." oninput="filterSavedOrders()" style="width:300px; padding:6px; margin-bottom:10px;">
@@ -268,7 +264,6 @@
   </div>
 
   <div id="temporaryDealerManager" class="temporary-dealer-manager">
-
     <div class="temporary-dealer-manager-panel">
       <div class="temporary-dealer-manager-header">
         <h2>🛠️ Temporary Dealers</h2>
@@ -276,7 +271,6 @@
           ✕
         </button>
       </div>
-
       <hr>
 
       <div id="temporaryDealerManagerOutput">
