@@ -86,10 +86,10 @@ th {
 }
 
 .stat {
-    color: inherit;   
-    font-weight: normal;
-    transition: color .2s, font-weight .2s;
-    margin-bottom: 15px;
+  color: inherit;
+  font-weight: normal;
+  transition: color 0.2s, font-weight 0.2s;
+  margin-bottom: 15px;
 }
 
 .stat strong {
@@ -97,15 +97,15 @@ th {
 }
 
 .stat strong.active {
-    color: black;
-    font-weight: bold;
+  color: black;
+  font-weight: bold;
 }
 
 .manual-check {
-    background: #fff176;
-    color: #c62828;
-    font-weight: bold;
-    border: 2px solid #f57f17;
+  background: #fff176;
+  color: #c62828;
+  font-weight: bold;
+  border: 2px solid #f57f17;
 }
 
 .duplicate-item {
@@ -313,8 +313,7 @@ th {
 
   padding: 22px;
 
-  box-shadow:
-    0 10px 35px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.3);
 }
 
 .temporary-dealer-manager-header {
@@ -429,9 +428,7 @@ th {
   color: #555;
 }
 
-/* =========================
-   DARK MODE
-   ========================= */
+/* DARK MODE */
 
 body.dark-mode {
   background: #181a1b;
