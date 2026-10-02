@@ -1,4 +1,5 @@
 function analyzeOrder(text) {
+  
   const lines = text
     .split("\n")
     .map((line) => line.trim())
