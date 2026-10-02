@@ -1,4 +1,5 @@
 // -------- MAIN PARSER --------
+
 function parseRedlineWrapper(order) {
   const items = extractItemsRedline(order);
   const addr = extractAddressRedline(order);
