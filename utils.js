@@ -1,3 +1,4 @@
+/* --- Debug --- */
 const DEBUG = true;
 const DEBUG_VERBOSE = false;
 
@@ -37,17 +38,17 @@ const SKU_RULES = [
       "LHP-",
       "MFCAT2-",
       "2LC-",
-	  "BKT-",
-	  "LBLH-",
+      "BKT-",
+      "LBLH-",
       "LPS-",
-	  "LB-",
+      "LB-",
       "2LHE-",
-      "LDR-", 
+      "LDR-",
       "LSM-",
       "2LBLH-",
       "RAD3-",
       "LHE-",
-	  "RAD-",
+      "RAD-",
       "2LBCLH-",
       "MAT-",
       "MFCAT3-",
@@ -55,7 +56,7 @@ const SKU_RULES = [
       "2LHES-",
       "4LH-",
       "4LHE-",
-	  "2LCLHP-"
+      "2LCLHP-"
     ],
     suffixes: [
       "-RS",
@@ -93,7 +94,7 @@ const SKU_RULES = [
     ],
 
     allowMissingSeparator: true,
-	allowNumericEnding: true
+    allowNumericEnding: true
   }
 ];
 
@@ -103,7 +104,6 @@ function matchSKUStructure(sku) {
   const value = sku.trim().toUpperCase();
 
   for (const rule of SKU_RULES) {
-
     // IMPORTANT:
     // Check longest prefixes first so LHP- wins over LH-,
     // 2LHP- wins over LHP-, etc.
@@ -150,8 +150,7 @@ function matchSKUStructure(sku) {
 
       for (const suffix of suffixes) {
         const normalizedSuffix = suffix.toUpperCase();
-        const suffixWithoutSeparator =
-          normalizedSuffix.replace(/^[-_]+/, "");
+        const suffixWithoutSeparator = normalizedSuffix.replace(/^[-_]+/, "");
 
         // Normal suffix: -RS
         if (normalized.endsWith(normalizedSuffix)) {
@@ -164,11 +163,9 @@ function matchSKUStructure(sku) {
           rule.allowMissingSeparator &&
           normalized.endsWith(suffixWithoutSeparator)
         ) {
-          const suffixStart =
-            normalized.length - suffixWithoutSeparator.length;
+          const suffixStart = normalized.length - suffixWithoutSeparator.length;
 
-          const charBeforeSuffix =
-            normalized[suffixStart - 1];
+          const charBeforeSuffix = normalized[suffixStart - 1];
 
           if (charBeforeSuffix && !/\d/.test(charBeforeSuffix)) {
             matchedSuffix = normalizedSuffix;
@@ -180,12 +177,10 @@ function matchSKUStructure(sku) {
 
       // Restore missing suffix separator
       if (missingSuffixSeparator && matchedSuffix) {
-        const suffixWithoutSeparator =
-          matchedSuffix.replace(/^[-_]+/, "");
+        const suffixWithoutSeparator = matchedSuffix.replace(/^[-_]+/, "");
 
         normalized =
-          normalized.slice(0, -suffixWithoutSeparator.length) +
-          matchedSuffix;
+          normalized.slice(0, -suffixWithoutSeparator.length) + matchedSuffix;
       }
 
       let numericEnding = "";
@@ -590,8 +585,8 @@ function testSKURegression() {
       input: "LHP-MST10BK-V2-TM",
       expected: "LHP-MST10BK-V2-TM"
     },
-	{
-  	  input: "BKT-L-MST79",
+    {
+      input: "BKT-L-MST79",
       expected: "BKT-L-MST79"
     },
     {
@@ -604,10 +599,7 @@ function testSKURegression() {
     }
   ];
 
-  const lines = [
-    "LT-G35032SMLED-S",
-    "Q-RS"
-  ];
+  const lines = ["LT-G35032SMLED-S", "Q-RS"];
 
   let passed = 0;
 
