@@ -1,4 +1,5 @@
 // -------- GLOBAL --------
+
 let previewOrders = [];
 let savedOrders = [];
 let priceTable = {};
@@ -26,10 +27,7 @@ const blockedItemIDs = new Set([
   "ETA 6-8 WEEKS"
 ]);
 
-const manualCheckDShippers = new Set([
-    "W0640",
-    "W5111"
-]);
+const manualCheckDShippers = new Set(["W0640", "W5111"]);
 
 const PARSER_PLUGINS = {
   redline360: {
@@ -71,7 +69,7 @@ const PARSER_PLUGINS = {
   obsession: {
     parse: parseGeneric,
     confidence: 0.9
-  },
+  }
 };
 
 const GENERIC_RULES = {
