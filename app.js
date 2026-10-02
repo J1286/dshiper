@@ -1,4 +1,5 @@
 // -------- INIT --------
+
 window.onload = function () {
   updateUnknownTable();
   document.getElementById("app").style.display = "block";
@@ -44,7 +45,7 @@ window.onload = function () {
     // Save refreshed prices back to localStorage
     localStorage.setItem("savedOrders", JSON.stringify(savedOrders));
 
-    updateSavedTable(); 
+    updateSavedTable();
   }
 
   // restore temporary dealers
