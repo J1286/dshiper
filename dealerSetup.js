@@ -1,8 +1,7 @@
 function generateDealerChecklist(text) {
+  
   const analysis = analyzeOrder(text);
-
   const dealer = detectBestDealer(text).dealer;
-
   const config = DEALER_CONFIG[dealer];
 
   const checklist = {
@@ -48,11 +47,14 @@ function generateDealerChecklist(text) {
   return checklist;
 }
 
-function generateConfigStub(dealerName, dshipper = "", email = "", thirdParty = false, keyword = "") {
-  const safeName = dealerName
-    .trim()
-    .replace(/\s+/g, "_")
-    .toLowerCase();
+function generateConfigStub(
+  dealerName,
+  dshipper = "",
+  email = "",
+  thirdParty = false,
+  keyword = ""
+) {
+  const safeName = dealerName.trim().replace(/\s+/g, "_").toLowerCase();
 
   return `
 // ===== ADD TO DEALER_CONFIG =====
@@ -201,20 +203,12 @@ function openDealerSetup() {
   <div class="info">
     Analyzer found:
     <br>
-    PO: ${
-      analysis.poCandidates?.[0]?.value || "Not detected"
-    }
+    PO: ${analysis.poCandidates?.[0]?.value || "Not detected"}
     <br>
-    Items: ${
-      analysis.itemCandidates?.length || 0
-    }
+    Items: ${analysis.itemCandidates?.length || 0}
     <br>
     Address:
-    ${
-      analysis.addressCandidate?.addr1
-        ? "✅ Found"
-        : "⚠ Not found"
-    }
+    ${analysis.addressCandidate?.addr1 ? "✅ Found" : "⚠ Not found"}
   </div>
 
   <label>Dealer Name</label>
@@ -399,25 +393,22 @@ function saveTemporaryDealer() {
     return;
   }
 
-  const safeName = dealerName
-    .replace(/\s+/g, "_")
-    .toLowerCase();
+  const safeName = dealerName.replace(/\s+/g, "_").toLowerCase();
 
-  window.temporaryDealerConfig =
-  window.temporaryDealerConfig || {};
+  window.temporaryDealerConfig = window.temporaryDealerConfig || {};
 
-window.temporaryDealerConfig[safeName] = {
-  dealer: safeName,
-  dshipper,
-  email,
-  thirdParty,
-  keyword
-};
+  window.temporaryDealerConfig[safeName] = {
+    dealer: safeName,
+    dshipper,
+    email,
+    thirdParty,
+    keyword
+  };
 
-localStorage.setItem(
-  "temporaryDealerConfig",
-  JSON.stringify(window.temporaryDealerConfig)
-);
+  localStorage.setItem(
+    "temporaryDealerConfig",
+    JSON.stringify(window.temporaryDealerConfig)
+  );
 
   status.textContent = `✅ ${safeName} saved`;
   status.style.color = "green";
@@ -431,9 +422,7 @@ function updateTemporaryDealersDisplay() {
 
   if (!output) return;
 
-  const dealers = Object.entries(
-    window.temporaryDealerConfig || {}
-  );
+  const dealers = Object.entries(window.temporaryDealerConfig || {});
 
   if (!dealers.length) {
     output.innerHTML = `
@@ -507,8 +496,7 @@ function updateTemporaryDealersDisplay() {
 }
 
 function editTemporaryDealer(dealerName) {
-  const dealer =
-    window.temporaryDealerConfig?.[dealerName];
+  const dealer = window.temporaryDealerConfig?.[dealerName];
 
   if (!dealer) {
     alert("Temporary dealer not found.");
@@ -516,55 +504,44 @@ function editTemporaryDealer(dealerName) {
   }
 
   // Open the existing dealer setup area
-  const rawViewer =
-    document.getElementById("rawViewer");
+  const rawViewer = document.getElementById("rawViewer");
 
   if (rawViewer) {
     rawViewer.style.display = "flex";
   }
 
-  document.getElementById("dealerSetupName").value =
-    dealerName;
+  document.getElementById("dealerSetupName").value = dealerName;
 
-  document.getElementById("dealerSetupDshipper").value =
-    dealer.dshipper || "";
+  document.getElementById("dealerSetupDshipper").value = dealer.dshipper || "";
 
-  document.getElementById("dealerSetupEmail").value =
-    dealer.email || "";
+  document.getElementById("dealerSetupEmail").value = dealer.email || "";
 
-  document.getElementById("dealerSetupThirdParty").checked =
-    !!dealer.thirdParty;
+  document.getElementById(
+    "dealerSetupThirdParty"
+  ).checked = !!dealer.thirdParty;
 
-  document.getElementById("dealerSetupKeyword").value =
-    dealer.keyword || "";
+  document.getElementById("dealerSetupKeyword").value = dealer.keyword || "";
 
-  const status =
-    document.getElementById("dealerSetupStatus");
+  const status = document.getElementById("dealerSetupStatus");
 
   if (status) {
-    status.textContent =
-      `✏️ Editing ${dealerName}`;
+    status.textContent = `✏️ Editing ${dealerName}`;
 
     status.style.color = "#1976d2";
   }
 
-  document
-    .getElementById("dealerSetupName")
-    ?.scrollIntoView({
-      behavior: "smooth",
-      block: "center"
-    });
+  document.getElementById("dealerSetupName")?.scrollIntoView({
+    behavior: "smooth",
+    block: "center"
+  });
 }
 
 function deleteTemporaryDealer(dealerName) {
-  const dealer =
-    window.temporaryDealerConfig?.[dealerName];
+  const dealer = window.temporaryDealerConfig?.[dealerName];
 
   if (!dealer) return;
 
-  const confirmed = confirm(
-    `Delete temporary dealer "${dealerName}"?`
-  );
+  const confirmed = confirm(`Delete temporary dealer "${dealerName}"?`);
 
   if (!confirmed) return;
 
@@ -580,8 +557,7 @@ function deleteTemporaryDealer(dealerName) {
 }
 
 function generateTemporaryDealerConfig(dealerName) {
-  const dealer =
-    window.temporaryDealerConfig?.[dealerName];
+  const dealer = window.temporaryDealerConfig?.[dealerName];
 
   if (!dealer) {
     alert("Temporary dealer not found.");
@@ -599,9 +575,7 @@ function generateTemporaryDealerConfig(dealerName) {
   const win = window.open("", "_blank");
 
   if (!win) {
-    alert(
-      "Popup blocked. Please allow popups for this site."
-    );
+    alert("Popup blocked. Please allow popups for this site.");
     return;
   }
 
@@ -642,30 +616,18 @@ function escapeJsString(value) {
 }
 
 function generateDealerConfigFromForm() {
-  const dealerName = document
-    .getElementById("dealerSetupName")
-    .value
-    .trim();
+  const dealerName = document.getElementById("dealerSetupName").value.trim();
 
   const dshipper = document
     .getElementById("dealerSetupDshipper")
-    .value
-    .trim()
+    .value.trim()
     .toUpperCase();
 
-  const email = document
-    .getElementById("dealerSetupEmail")
-    .value
-    .trim();
+  const email = document.getElementById("dealerSetupEmail").value.trim();
 
-  const thirdParty = document
-    .getElementById("dealerSetupThirdParty")
-    .checked;
+  const thirdParty = document.getElementById("dealerSetupThirdParty").checked;
 
-  const keyword = document
-    .getElementById("dealerSetupKeyword")
-    .value
-    .trim();
+  const keyword = document.getElementById("dealerSetupKeyword").value.trim();
 
   if (!dealerName || !dshipper) {
     alert("Dealer name and DShipper ID are required.");
@@ -713,9 +675,7 @@ function getTemporaryDealer(dealerName) {
 
   const normalized = dealerName.trim().toLowerCase();
 
-  return (
-    temporaryDealerConfig[normalized] || null
-  );
+  return temporaryDealerConfig[normalized] || null;
 }
 
 function detectTemporaryDealer(text) {
@@ -728,7 +688,7 @@ function detectTemporaryDealer(text) {
 
     const keywords = String(dealer.keyword || "")
       .split(",")
-      .map(keyword => keyword.trim().toLowerCase())
+      .map((keyword) => keyword.trim().toLowerCase())
       .filter(Boolean);
 
     for (const keyword of keywords) {
@@ -748,8 +708,7 @@ function detectTemporaryDealer(text) {
 }
 
 function openTemporaryDealerManager() {
-  const manager =
-    document.getElementById("temporaryDealerManager");
+  const manager = document.getElementById("temporaryDealerManager");
 
   if (!manager) return;
 
@@ -759,8 +718,7 @@ function openTemporaryDealerManager() {
 }
 
 function closeTemporaryDealerManager() {
-  const manager =
-    document.getElementById("temporaryDealerManager");
+  const manager = document.getElementById("temporaryDealerManager");
 
   if (!manager) return;
 
@@ -768,14 +726,11 @@ function closeTemporaryDealerManager() {
 }
 
 function updateTemporaryDealerManager() {
-  const output =
-    document.getElementById("temporaryDealerManagerOutput");
+  const output = document.getElementById("temporaryDealerManagerOutput");
 
   if (!output) return;
 
-  const dealers = Object.entries(
-    window.temporaryDealerConfig || {}
-  );
+  const dealers = Object.entries(window.temporaryDealerConfig || {});
 
   if (!dealers.length) {
     output.innerHTML = `
@@ -788,7 +743,6 @@ function updateTemporaryDealerManager() {
 
   output.innerHTML = dealers
     .map(([name, config]) => {
-
       return `
         <div class="temporary-dealer-card">
 
@@ -851,7 +805,6 @@ function updateTemporaryDealerManager() {
 
         </div>
       `;
-
     })
     .join("");
 }
