@@ -183,7 +183,6 @@ function saveOrders() {
   updateSavedTable();
 }
 
-
 function jumpToNewSavedOrders() {
   const info = window.newSavedOrders;
 
@@ -197,10 +196,7 @@ function jumpToNewSavedOrders() {
   // Scroll vertically only.
   // This avoids scrollIntoView() changing the horizontal position
   // of the main #app area.
-  const targetY =
-    targetRow.getBoundingClientRect().top +
-    window.scrollY -
-    100;
+  const targetY = targetRow.getBoundingClientRect().top + window.scrollY - 100;
 
   window.scrollTo({
     top: Math.max(0, targetY),
@@ -223,7 +219,6 @@ function jumpToNewSavedOrders() {
   }
 }
 
-
 function updateSavedOrdersBadge() {
   const badge = document.getElementById("newSavedOrdersBadge");
   const NEW_ORDER_BUTTON_THRESHOLD = 5;
@@ -241,12 +236,12 @@ function updateSavedOrdersBadge() {
     return;
   }
 
-  badge.textContent =
-    `🆕 ${info.count} new order${info.count === 1 ? "" : "s"}`;
+  badge.textContent = `🆕 ${info.count} new order${
+    info.count === 1 ? "" : "s"
+  }`;
 
   badge.style.display = "inline-flex";
 }
-
 
 function showToast(message, duration = 2500) {
   const oldToast = document.getElementById("appToast");
@@ -297,8 +292,9 @@ function updateSavedTable() {
   const countEl = document.getElementById("savedOrdersCount");
 
   if (countEl) {
-    countEl.textContent =
-      `${savedOrders.length} order${savedOrders.length === 1 ? "" : "s"}`;
+    countEl.textContent = `${savedOrders.length} order${
+      savedOrders.length === 1 ? "" : "s"
+    }`;
   }
 
   head.innerHTML = "";
@@ -621,5 +617,6 @@ function updateSavedTable() {
 
     body.appendChild(tr);
   });
+  
   updateSavedOrdersBadge();
 }
