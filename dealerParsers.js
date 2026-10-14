@@ -66,7 +66,9 @@ function extractAddressOMACPortal(text) {
   const amountIndex = lines.findIndex(line => /^Amount:/i.test(line));
   const tail = amountIndex >= 0 ? lines.slice(amountIndex + 1) : lines;
 
-  const countryIndex = tail.findIndex(line => /^United States$/i.test(line));
+  const countryIndex = tail.findIndex(line =>
+    /United States/i.test(line.replace(/^[^\w]+/, "").trim())
+  );
   if (countryIndex < 0) return {};
 
   const customerLines = tail.slice(0, countryIndex);
