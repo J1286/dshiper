@@ -31,6 +31,14 @@ function parseNTXGlowWrapper(order) {
 }
 
 function parseOMACWrapper(order) {
+  // Prefer the new portal format when its identifying fields exist.
+  if (/Pending Receipt/i.test(order) && /Unit price:/i.test(order)) {
+    const items = extractItemsOMACPortal(order);
+    const addr = extractAddressOMACPortal(order);
+    return buildOMACPortalRow(order, items, addr);
+  }
+
+  // Fall back to the existing PDF parser.
   const items = extractItemsOMAC(order);
   const addr = extractAddressOMAC(order);
   return buildRow(order, "omac", items, addr);
