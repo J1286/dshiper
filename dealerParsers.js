@@ -31,29 +31,48 @@ function parseNTXGlowWrapper(order) {
 }
 
 function extractItemsOMACPortal(text) {
-  const skuMatch = text.match(/\bSKU:\s*([A-Z0-9-]+)/i);
-  const qtyMatch = text.match(/\bQuantity:\s*(\d+)/i);
-  const priceMatch = text.match(/\bUnit price:\s*([\d,.]+)\s*USD\b/i);
+  const items = [];
 
-  if (!skuMatch) return [];
+  // Each item starts with a SKU line. Capture its quantity and
+  // unit price up to the next SKU or the order's Amount line.
+  const skuRegex = /\bSKU:\s*([A-Z0-9-]+)/gi;
+  const skuMatches = [...text.matchAll(skuRegex)];
 
-  // OMAC portal SKUs start with DRP; remove only that prefix.
-  const sku = skuMatch[1].trim().toUpperCase().replace(/^DRP/, "");
-  const qty = Number(qtyMatch?.[1]) || 1;
-  const item = { sku, qty };
+  for (let i = 0; i < skuMatches.length; i++) {
+    const skuMatch = skuMatches[i];
+    const start = skuMatch.index + skuMatch[0].length;
+    const end =
+      i + 1 < skuMatches.length
+        ? skuMatches[i + 1].index
+        : text.length;
 
-  if (priceMatch) {
-    const rawPrice = priceMatch[1];
-    const normalizedPrice =
-      rawPrice.includes(",") && !rawPrice.includes(".")
-        ? rawPrice.replace(",", ".")
-        : rawPrice.replace(/,/g, "");
+    const itemText = text.slice(start, end);
 
-    const price = Number(normalizedPrice);
-    if (Number.isFinite(price)) item.price = price;
+    const qtyMatch = itemText.match(/\bQuantity:\s*(\d+)/i);
+    const priceMatch = itemText.match(
+      /\bUnit price:\s*([\d,.]+)\s*USD\b/i
+    );
+
+    const sku = skuMatch[1].trim().toUpperCase().replace(/^DRP/, "");
+    const qty = Number(qtyMatch?.[1]) || 1;
+
+    const item = { sku, qty };
+
+    if (priceMatch) {
+      const rawPrice = priceMatch[1];
+      const normalizedPrice =
+        rawPrice.includes(",") && !rawPrice.includes(".")
+          ? rawPrice.replace(",", ".")
+          : rawPrice.replace(/,/g, "");
+
+      const price = Number(normalizedPrice);
+      if (Number.isFinite(price)) item.price = price;
+    }
+
+    items.push(item);
   }
 
-  return [item];
+  return items;
 }
 
 function extractAddressOMACPortal(text) {
