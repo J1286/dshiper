@@ -106,16 +106,18 @@ function buildRow(order, dealer, items, addr) {
     "Deliver To|Products|$"
   );
   
-  const portalPO =
-    dealer === "omac" && /Pending Receipt/i.test(order)
-      ? (order.match(/\bPO-US[\w-]+/i) || [])[0] || ""
-      : "";
+const portalPO =
+  dealer === "omac" &&
+  /\bSKU\s*:/i.test(order) &&
+  /unit\s*price\s*:/i.test(order)
+    ? (order.match(/\bPO\s*-\s*US[\w-]*/i) || [])[0] || ""
+    : "";
 
-  let po =
-    portalPO ||
-    matchFirst(paymentSection, GENERIC_RULES.po) ||
-    matchFirst(order, GENERIC_RULES.po) ||
-    "";
+let po =
+  portalPO ||
+  matchFirst(paymentSection, GENERIC_RULES.po) ||
+  matchFirst(order, GENERIC_RULES.po) ||
+  "";
 
   const row = {
     "DShipper ID": config.dshipper,
