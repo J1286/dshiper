@@ -528,8 +528,10 @@ function scoreDealer(text) {
   if (t.includes("thank you, ntxglow")) scores.ntxglow += 0.5;
 
   // -------- OMAC --------
-  if (t.includes("purchase order")) scores.omac += 0.2;
-  if (t.includes("po-us")) scores.omac += 0.4;
+  if (t.includes("po-us")) scores.omac += 0.5;
+  if (t.includes("pending receipt") && t.includes("unit price:")) {
+  scores.omac += 0.5;
+  }
   if (t.includes("vendor ship to total")) scores.omac += 0.3;
   if (t.includes("item vendor sku item description quantity upc-ean")) {
     scores.omac += 0.3;
