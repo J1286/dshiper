@@ -113,7 +113,7 @@ function buildPriceTable() {
 
 // PRICE API
 
-async function loadPricesForSKUs(skus) {
+async function loadPricesForSKUs(skus, forceRefresh = false) {
   // EXCEL MODE
   if (priceSource === "excel") {
     return true;
@@ -134,7 +134,9 @@ async function loadPricesForSKUs(skus) {
   }
 
   // ONLY REQUEST SKUs WE DON'T ALREADY HAVE
-  const missingSKUs = normalizedSKUs.filter((sku) => !loadedPriceSKUs.has(sku));
+  const missingSKUs = forceRefresh
+    ? normalizedSKUs
+    : normalizedSKUs.filter((sku) => !loadedPriceSKUs.has(sku));
 
   // EVERYTHING ALREADY CACHED
   if (!missingSKUs.length) {
