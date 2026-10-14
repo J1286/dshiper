@@ -144,6 +144,16 @@
       <h2 class="saved-orders-title">
         🟩 Saved Orders
         <span id="savedOrdersCount"></span>
+
+        <button
+          id="refreshSavedPricesButton"
+          type="button"
+          onclick="refreshAllPrices()"
+          style="margin-left: 10px; padding: 5px 9px; cursor: pointer;"
+        >
+        🔄 Refresh Prices
+        </button>
+
         <button id="newSavedOrdersBadge" class="new-saved-orders-badge" onclick="jumpToNewSavedOrders()" style="display: none;"></button>
       </h2>
 
