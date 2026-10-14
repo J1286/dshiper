@@ -110,17 +110,27 @@ function extractAddressOMACPortal(text) {
 }
 
 function parseOMACWrapper(order) {
-  // Use the portal parser for copied order-page text.
-  if (/Pending Receipt/i.test(order) && /Unit price:/i.test(order)) {
-    const items = extractItemsOMACPortal(order);
-    const addr = extractAddressOMACPortal(order);
-    return buildRow(order, "omac", items, addr);
+  // Normalize unusual spaces and invisible characters from clipboard text.
+  const text = String(order || "")
+    .normalize("NFKC")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .replace(/\u00A0/g, " ");
+
+  // Detect portal orders by their combined identifying fields.
+  if (
+    /PO\s*-\s*US[\w-]*/i.test(text) &&
+    /\bSKU\s*:/i.test(text) &&
+    /unit\s*price\s*:/i.test(text)
+  ) {
+    const items = extractItemsOMACPortal(text);
+    const addr = extractAddressOMACPortal(text);
+    return buildRow(text, "omac", items, addr);
   }
 
-  // Keep the existing PDF parser as the fallback.
-  const items = extractItemsOMAC(order);
-  const addr = extractAddressOMAC(order);
-  return buildRow(order, "omac", items, addr);
+  // Existing PDF parser remains the fallback.
+  const items = extractItemsOMAC(text);
+  const addr = extractAddressOMAC(text);
+  return buildRow(text, "omac", items, addr);
 }
 
 // -------- ITEM PARSERS --------
