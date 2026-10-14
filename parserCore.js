@@ -105,8 +105,14 @@ function buildRow(order, dealer, items, addr) {
     "Payment/Shipping",
     "Deliver To|Products|$"
   );
+  
+  const portalPO =
+    dealer === "omac" && /Pending Receipt/i.test(order)
+      ? (order.match(/\bPO-US[\w-]+/i) || [])[0] || ""
+      : "";
 
   let po =
+    portalPO ||
     matchFirst(paymentSection, GENERIC_RULES.po) ||
     matchFirst(order, GENERIC_RULES.po) ||
     "";
