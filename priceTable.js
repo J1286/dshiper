@@ -189,6 +189,15 @@ async function loadPricesForSKUs(skus, forceRefresh = false) {
     priceTable.ntxglow ||= {};
     priceTable.omac ||= {};
 
+    // Remove stale prices for SKUs being force-refreshed
+    if (forceRefresh) {
+      normalizedSKUs.forEach((sku) => {
+        Object.keys(priceTable).forEach((dealer) => {
+        delete priceTable[dealer][sku];
+        });
+      });
+    }
+
     // STORE RETURNED PRICES
     Object.entries(prices).forEach(([sku, row]) => {
       const normalizedSKU = normalizeSKU(sku);
