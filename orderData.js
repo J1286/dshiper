@@ -380,6 +380,97 @@ function updateSavedTable() {
     tr.appendChild(selectTd);
 
     // ACTION BUTTONS
+    
+    // REFRESH PRICES BUTTON
+const refreshBtn = document.createElement("button");
+refreshBtn.className = "action-btn";
+refreshBtn.textContent = "🔄";
+refreshBtn.title = "Refresh prices for this order";
+
+refreshBtn.onclick = async () => {
+  if (editingRow === index) {
+    showToast("Please save the order edits first.");
+    return;
+  }
+
+  const skus = [];
+
+  for (let i = 1; i <= 5; i++) {
+    const sku = savedOrders[index][`Item ID ${i}`];
+    if (sku) skus.push(sku);
+  }
+
+  if (!skus.length) {
+    showToast("No SKUs found in this order.");
+    return;
+  }
+
+  refreshBtn.disabled = true;
+  refreshBtn.textContent = "⏳";
+
+  try {
+    if (priceSource === "excel") {
+      showToast(
+        "Using the currently uploaded Excel price table."
+      );
+    } else {
+      // Force a fresh API request instead of using the SKU cache.
+      skus.forEach((sku) => {
+        loadedPriceSKUs.delete(normalizeSKU(sku));
+      });
+
+      const loaded = await loadPricesForSKUs(skus);
+
+      if (!loaded) {
+        throw new Error("Unable to retrieve current prices.");
+      }
+    }
+
+    const order = savedOrders[index];
+    const dealer = getDealerFromRow(order);
+    let updated = 0;
+    let missing = 0;
+
+    for (let i = 1; i <= 5; i++) {
+      const sku = order[`Item ID ${i}`];
+
+      if (!sku) continue;
+
+      const price = getPrice(dealer, sku);
+
+      if (price !== "") {
+        order[`Price ${i}`] = price;
+        updated++;
+      } else {
+        missing++;
+      }
+    }
+
+    recalculateShipConfirm(order);
+
+    localStorage.setItem(
+      "savedOrders",
+      JSON.stringify(savedOrders)
+    );
+
+    updateSavedTable();
+    updateDashboard();
+
+    showToast(
+      `Updated ${updated} price(s)` +
+      (missing ? `; ${missing} SKU(s) not found.` : ".")
+    );
+  } catch (error) {
+    console.error("Refresh prices failed:", error);
+    showToast("❌ Price refresh failed. Please try again.");
+  } finally {
+    // The table may have been rebuilt, so updateSavedTable()
+    // will recreate the button in its normal state.
+    refreshBtn.disabled = false;
+    refreshBtn.textContent = "🔄";
+  }
+};
+    
     const editBtn = document.createElement("button");
     editBtn.className = "action-btn";
     editBtn.textContent = editingRow === index ? "💾" : "✏️";
@@ -521,6 +612,7 @@ function updateSavedTable() {
 
     actionTd.className = "action-cell";
 
+    actionTd.appendChild(refreshBtn);
     actionTd.appendChild(editBtn);
     actionTd.appendChild(copyBtn);
     actionTd.appendChild(deleteBtn);
