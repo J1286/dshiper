@@ -380,12 +380,11 @@ function updateSavedTable() {
     tr.appendChild(selectTd);
 
     // ACTION BUTTONS
-    
     // REFRESH PRICES BUTTON
-const refreshBtn = document.createElement("button");
-refreshBtn.className = "action-btn";
-refreshBtn.textContent = "🔄";
-refreshBtn.title = "Refresh prices for this order";
+    const refreshBtn = document.createElement("button");
+    refreshBtn.className = "action-btn";
+    refreshBtn.textContent = "🔄";
+    refreshBtn.title = "Refresh prices for this order";
 
 refreshBtn.onclick = async () => {
   if (editingRow === index) {
