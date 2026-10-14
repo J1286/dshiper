@@ -62,19 +62,24 @@ function extractAddressOMACPortal(text) {
     .map(line => line.trim())
     .filter(Boolean);
 
-  // Ignore the product section and start after its Amount line.
+  // Start after the product section.
   const amountIndex = lines.findIndex(line => /^Amount:/i.test(line));
   const tail = amountIndex >= 0 ? lines.slice(amountIndex + 1) : lines;
 
+  // Allow a flag emoji or other leading symbols before the country.
   const countryIndex = tail.findIndex(line =>
     /United States/i.test(line.replace(/^[^\w]+/, "").trim())
   );
+
   if (countryIndex < 0) return {};
 
   const customerLines = tail.slice(0, countryIndex);
   const phoneLine =
-    tail.slice(countryIndex + 1).find(line => /^\+?[\d().\s-]{7,}$/.test(line)) || "";
+    tail.slice(countryIndex + 1).find(line =>
+      /^\+?[\d().\s-]{7,}$/.test(line)
+    ) || "";
 
+  // Find the ZIP / city / state line.
   const cityIndex = customerLines.findIndex(line =>
     /^\d{5}(?:-\d{4})?\s+.+?\s+[A-Z]{2}$/i.test(line)
   );
@@ -85,19 +90,25 @@ function extractAddressOMACPortal(text) {
     /^(\d{5}(?:-\d{4})?)\s+(.+?)\s+([A-Z]{2})$/i
   );
 
+  if (!cityMatch) return {};
+
   const beforeCity = customerLines.slice(0, cityIndex);
-  const addressIndex = beforeCity.findIndex(line => /^\d+\s/.test(line));
 
-  const name =
-    addressIndex > 0
-      ? beforeCity[addressIndex - 1]
-      : beforeCity[0] || "";
+  // The customer name is normally the first line, and all lines
+  // between the name and city line belong to the street address.
+  const name = beforeCity[0] || "";
+  const addressLines = beforeCity.slice(1);
 
-  const addr1 = addressIndex >= 0 ? beforeCity[addressIndex] : "";
-  const addr2 =
-    addressIndex >= 0
-      ? beforeCity.slice(addressIndex + 1).join(" ")
-      : "";
+  let addr1 = "";
+  let addr2 = "";
+
+  if (addressLines.length === 1) {
+    // One street line, whether it starts or ends with a number.
+    addr1 = addressLines[0];
+  } else if (addressLines.length >= 2) {
+    addr1 = addressLines[0];
+    addr2 = addressLines.slice(1).join(" ");
+  }
 
   return {
     name,
