@@ -30,15 +30,94 @@ function parseNTXGlowWrapper(order) {
   return buildRow(order, "ntxglow", items, addr);
 }
 
+function extractItemsOMACPortal(text) {
+  const skuMatch = text.match(/\bSKU:\s*([A-Z0-9-]+)/i);
+  const qtyMatch = text.match(/\bQuantity:\s*(\d+)/i);
+  const priceMatch = text.match(/\bUnit price:\s*([\d,.]+)\s*USD\b/i);
+
+  if (!skuMatch) return [];
+
+  // OMAC portal SKUs start with DRP; remove only that prefix.
+  const sku = skuMatch[1].trim().toUpperCase().replace(/^DRP/, "");
+  const qty = Number(qtyMatch?.[1]) || 1;
+  const item = { sku, qty };
+
+  if (priceMatch) {
+    const rawPrice = priceMatch[1];
+    const normalizedPrice =
+      rawPrice.includes(",") && !rawPrice.includes(".")
+        ? rawPrice.replace(",", ".")
+        : rawPrice.replace(/,/g, "");
+
+    const price = Number(normalizedPrice);
+    if (Number.isFinite(price)) item.price = price;
+  }
+
+  return [item];
+}
+
+function extractAddressOMACPortal(text) {
+  const lines = text
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(Boolean);
+
+  // Ignore the product section and start after its Amount line.
+  const amountIndex = lines.findIndex(line => /^Amount:/i.test(line));
+  const tail = amountIndex >= 0 ? lines.slice(amountIndex + 1) : lines;
+
+  const countryIndex = tail.findIndex(line => /^United States$/i.test(line));
+  if (countryIndex < 0) return {};
+
+  const customerLines = tail.slice(0, countryIndex);
+  const phoneLine =
+    tail.slice(countryIndex + 1).find(line => /^\+?[\d().\s-]{7,}$/.test(line)) || "";
+
+  const cityIndex = customerLines.findIndex(line =>
+    /^\d{5}(?:-\d{4})?\s+.+?\s+[A-Z]{2}$/i.test(line)
+  );
+
+  if (cityIndex < 0) return {};
+
+  const cityMatch = customerLines[cityIndex].match(
+    /^(\d{5}(?:-\d{4})?)\s+(.+?)\s+([A-Z]{2})$/i
+  );
+
+  const beforeCity = customerLines.slice(0, cityIndex);
+  const addressIndex = beforeCity.findIndex(line => /^\d+\s/.test(line));
+
+  const name =
+    addressIndex > 0
+      ? beforeCity[addressIndex - 1]
+      : beforeCity[0] || "";
+
+  const addr1 = addressIndex >= 0 ? beforeCity[addressIndex] : "";
+  const addr2 =
+    addressIndex >= 0
+      ? beforeCity.slice(addressIndex + 1).join(" ")
+      : "";
+
+  return {
+    name,
+    addr1,
+    addr2,
+    city: cityMatch[2].trim(),
+    state: cityMatch[3].toUpperCase(),
+    zip: cityMatch[1],
+    country: "US",
+    phone: phoneLine.replace(/\D/g, "")
+  };
+}
+
 function parseOMACWrapper(order) {
-  // Prefer the new portal format when its identifying fields exist.
+  // Use the portal parser for copied order-page text.
   if (/Pending Receipt/i.test(order) && /Unit price:/i.test(order)) {
     const items = extractItemsOMACPortal(order);
     const addr = extractAddressOMACPortal(order);
-    return buildOMACPortalRow(order, items, addr);
+    return buildRow(order, "omac", items, addr);
   }
 
-  // Fall back to the existing PDF parser.
+  // Keep the existing PDF parser as the fallback.
   const items = extractItemsOMAC(order);
   const addr = extractAddressOMAC(order);
   return buildRow(order, "omac", items, addr);
