@@ -306,17 +306,75 @@ function getPriceSource(row, itemIndex) {
   return map[key]?.[itemIndex] || "";
 }
 
-function refreshAllPrices() {
+
+async function refreshAllPrices() {
+  const button = document.getElementById("refreshSavedPricesButton");
+
   if (!Array.isArray(savedOrders) || !savedOrders.length) {
-    console.warn("No saved orders to refresh.");
+    if (button) {
+      button.textContent = "⚠️ No Saved Orders";
+      setTimeout(() => {
+        button.textContent = "🔄 Refresh Prices";
+      }, 2500);
+    }
     return;
   }
 
-  savedOrders.forEach((row) => {
-    refreshOrderPrices(row);
-  });
+  if (button?.disabled) return;
 
-  updateSavedTable();
+  if (button) {
+    button.disabled = true;
+    button.textContent = "⏳ Refreshing...";
+  }
+
+  try {
+    // Collect current SKUs from all saved orders
+    const skus = [
+      ...new Set(
+        savedOrders.flatMap((row) =>
+          Array.from({ length: 5 }, (_, i) =>
+            (row[`Item ID ${i + 1}`] || "").trim()
+          )
+        ).filter(Boolean)
+      )
+    ];
+
+    // Force a fresh API lookup, bypassing the SKU cache
+    const success = await loadPricesForSKUs(skus, true);
+
+    if (!success) {
+      throw new Error("Price API request failed");
+    }
+
+    // Recalculate after fresh prices have loaded
+    savedOrders.forEach((row) => refreshOrderPrices(row));
+
+    updateSavedTable();
+
+    if (button) {
+      button.textContent = "✅ Prices Updated";
+
+      setTimeout(() => {
+        button.textContent = "🔄 Refresh Prices";
+      }, 2500);
+    }
+  } catch (error) {
+    console.error("Saved order price refresh failed:", error);
+
+    if (button) {
+      button.textContent = "⚠️ Refresh Failed";
+
+      setTimeout(() => {
+        button.textContent = "🔄 Refresh Prices";
+      }, 3000);
+    }
+
+    alert("Unable to refresh prices. Your saved orders have not been recalculated.");
+  } finally {
+    if (button) {
+      button.disabled = false;
+    }
+  }
 }
 
 function matchFirst(text, patterns) {
