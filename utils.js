@@ -160,29 +160,30 @@ function matchSKUStructure(sku) {
           break;
         }
 
-        // PDF may have removed the separator: RS
-        if (
-          rule.allowMissingSeparator &&
-          normalized.endsWith(suffixWithoutSeparator)
-        ) {
-          const suffixStart = normalized.length - suffixWithoutSeparator.length;
+        // PDF may have removed one or more separators within a suffix
+        if (rule.allowMissingSeparator) {
+          const flexibleSuffix = normalizedSuffix.replace(/[-_]/g, "");
 
+        // Match suffix with separators removed, e.g.: SQ-TM → SQTM or G3-GO → G3GO
+        if (normalized.endsWith(flexibleSuffix)) {
+          const suffixStart = normalized.length - flexibleSuffix.length;
           const charBeforeSuffix = normalized[suffixStart - 1];
 
-          if (charBeforeSuffix && !/\d/.test(charBeforeSuffix)) {
-            matchedSuffix = normalizedSuffix;
-            missingSuffixSeparator = true;
-            break;
+        if (charBeforeSuffix && !/\d/.test(charBeforeSuffix)) {
+          matchedSuffix = normalizedSuffix;
+          missingSuffixSeparator = true;
+          break;
           }
         }
       }
+    }
 
-      // Restore missing suffix separator
+      // Restore missing separators within the matched suffix
       if (missingSuffixSeparator && matchedSuffix) {
-        const suffixWithoutSeparator = matchedSuffix.replace(/^[-_]+/, "");
+        const flexibleSuffix = matchedSuffix.replace(/[-_]/g, "");
 
         normalized =
-          normalized.slice(0, -suffixWithoutSeparator.length) + matchedSuffix;
+          normalized.slice(0, -flexibleSuffix.length) + matchedSuffix;
       }
 
       let numericEnding = "";
@@ -594,6 +595,10 @@ function testSKURegression() {
     {
       input: "SPE-RMX-F15007F3H-P-FS",
       expected: "RMX-F15007F3H-P-FS"
+    },
+    {
+      input: "LT-IS25014JMLEDSQTM",
+      expected: "LT-IS25014JMLEDSQ-TM"
     },
     {
       input: "2LHP-A406JM-8V2-TM",
