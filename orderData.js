@@ -221,7 +221,7 @@ function jumpToNewSavedOrders() {
 
 function updateSavedOrdersBadge() {
   const badge = document.getElementById("newSavedOrdersBadge");
-  const NEW_ORDER_BUTTON_THRESHOLD = 5;
+  const NEW_ORDER_BUTTON_THRESHOLD = 10;
 
   if (!badge) return;
 
