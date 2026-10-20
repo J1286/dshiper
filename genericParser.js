@@ -402,8 +402,19 @@ function extractAddressGeneric(text) {
       return false;
     }
 
-    // Normal street address:
+    // Normal street address, including a street number on its own line.
     if (/^\d+\s+[A-Za-z0-9]/.test(t)) {
+      return true;
+    }
+
+    // A street number separated from its street name onto the next line.
+    if (
+      /^\d+$/.test(t) &&
+      index + 1 < lines.length &&
+      /^[A-Za-z][A-Za-z0-9 .'-]*(?:\s+(?:St|Street|Rd|Road|Ave|Avenue|Dr|Drive|Cres|Crescent|Blvd|Boulevard|Ln|Lane|Ct|Court|Way|Trail|Trl|Pkwy|Parkway|Hwy|Highway|Terr|Terrace|Pl|Place|Close|Circle|Cir)\.?)?$/i.test(
+      lines[index + 1].trim()
+      )
+    ) {
       return true;
     }
 
@@ -430,9 +441,18 @@ function extractAddressGeneric(text) {
   if (addr1Index !== -1) {
     addr1 = lines[addr1Index];
 
-    // Anything between addr1 and city/state/zip
-    // is treated as addr2.
-    if (cityIndex > addr1Index + 1) {
+    // Join a standalone street number with the following street name.
+    if (
+      /^\d+$/.test(addr1) &&
+      addr1Index + 1 < cityIndex
+    ) {
+      addr1 = `${addr1} ${lines[addr1Index + 1]}`;
+
+      // Start Addr2 after the street name we just joined.
+      if (cityIndex > addr1Index + 2) {
+        addr2 = lines.slice(addr1Index + 2, cityIndex).join(", ");
+      }
+    } else if (cityIndex > addr1Index + 1) {
       addr2 = lines.slice(addr1Index + 1, cityIndex).join(", ");
     }
   }
