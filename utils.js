@@ -48,6 +48,7 @@ const SKU_RULES = [
       "2LBLH-",
       "RAD3-",
       "LHE-",
+      "RAD3F-",
       "LFP-",
       "RAD-",
       "2LBCLH-",
