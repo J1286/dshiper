@@ -18,10 +18,10 @@ window.temporaryDealerConfig = window.temporaryDealerConfig || {};
 const blockedItemIDs = new Set([
   "HOLD",
   "DISCONTINUED",
-  "WAIT TO RECEIVE",
   "WH3",
   "ETA",
-  "MFY",
+  "SFI/CA3/IDC",
+  "WAIT TO RECEIVE",
   "LAST",
   "BLOCKED",
   "ETA 6-8 WEEKS"
