@@ -151,21 +151,32 @@ function extractAddressOMACPortal(text) {
 
   const beforeCity = customerLines.slice(0, cityIndex);
 
-  // First line is the customer's name.
   const name = beforeCity[0] || "";
 
-  // Everything between the name and city/postal line is the address.
-  const addressLines = beforeCity.slice(1);
+const addressLines = beforeCity.slice(1);
 
-  let addr1 = "";
-  let addr2 = "";
+let addr1 = "";
+let addr2 = "";
 
-  if (addressLines.length === 1) {
-    addr1 = addressLines[0];
-  } else if (addressLines.length >= 2) {
-    addr1 = addressLines[0];
-    addr2 = addressLines.slice(1).join(" ");
-  }
+const streetIndex = addressLines.findIndex(line =>
+  /^\d+\s+/.test(line) ||
+  /^P\.?\s*O\.?\s*Box\b/i.test(line)
+);
+
+if (streetIndex >= 0) {
+  addr1 = addressLines[streetIndex];
+
+  const beforeStreet = addressLines.slice(0, streetIndex);
+
+  const afterStreet = addressLines.slice(streetIndex + 1);
+
+  addr2 = [...beforeStreet, ...afterStreet].join(" ");
+} else if (addressLines.length === 1) {
+  addr1 = addressLines[0];
+} else if (addressLines.length > 1) {
+  addr1 = addressLines[0];
+  addr2 = addressLines.slice(1).join(" ");
+}
 
   return {
     name,
