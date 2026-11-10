@@ -85,44 +85,82 @@ function extractAddressOMACPortal(text) {
   const amountIndex = lines.findIndex(line => /^Amount:/i.test(line));
   const tail = amountIndex >= 0 ? lines.slice(amountIndex + 1) : lines;
 
-  // Allow a flag emoji or other leading symbols before the country.
+  // Find the country line. OMAC may include a flag emoji before it.
   const countryIndex = tail.findIndex(line =>
-    /United States/i.test(line.replace(/^[^\w]+/, "").trim())
+    /^(?:[^\w\s]+\s*)?(United States|Canada)$/i.test(line)
   );
 
   if (countryIndex < 0) return {};
 
+  const countryName = tail[countryIndex]
+    .replace(/^[^\w\s]+/, "")
+    .trim();
+
+  const country = /^Canada$/i.test(countryName) ? "CA" : "US";
+
   const customerLines = tail.slice(0, countryIndex);
+
   const phoneLine =
     tail.slice(countryIndex + 1).find(line =>
       /^\+?[\d().\s-]{7,}$/.test(line)
     ) || "";
 
-  // Find the ZIP / city / state line.
-  const cityIndex = customerLines.findIndex(line =>
-    /^\d{5}(?:-\d{4})?\s+.+?\s+[A-Z]{2}$/i.test(line)
-  );
+  // Find the ZIP/postal-code + city + state/province line.
+  let cityIndex = -1;
+  let cityMatch = null;
 
-  if (cityIndex < 0) return {};
+  // U.S. format:
+  // 29730 Rock Hill SC
+  for (let i = 0; i < customerLines.length; i++) {
+    const match = customerLines[i].match(
+      /^(\d{5}(?:-\d{4})?)\s+(.+?)\s+([A-Z]{2})$/i
+    );
 
-  const cityMatch = customerLines[cityIndex].match(
-    /^(\d{5}(?:-\d{4})?)\s+(.+?)\s+([A-Z]{2})$/i
-  );
+    if (match) {
+      cityIndex = i;
+      cityMatch = {
+        zip: match[1],
+        city: match[2].trim(),
+        state: match[3].toUpperCase()
+      };
+      break;
+    }
+  }
 
-  if (!cityMatch) return {};
+  // Canadian format:
+  // V2V 3L1 Mission BC
+  if (cityIndex < 0) {
+    for (let i = 0; i < customerLines.length; i++) {
+      const match = customerLines[i].match(
+        /^([A-Z]\d[A-Z]\s?\d[A-Z]\d)\s+(.+?)\s+([A-Z]{2})$/i
+      );
+
+      if (match) {
+        cityIndex = i;
+        cityMatch = {
+          zip: match[1].toUpperCase(),
+          city: match[2].trim(),
+          state: match[3].toUpperCase()
+        };
+        break;
+      }
+    }
+  }
+
+  if (cityIndex < 0 || !cityMatch) return {};
 
   const beforeCity = customerLines.slice(0, cityIndex);
 
-  // The customer name is normally the first line, and all lines
-  // between the name and city line belong to the street address.
+  // First line is the customer's name.
   const name = beforeCity[0] || "";
+
+  // Everything between the name and city/postal line is the address.
   const addressLines = beforeCity.slice(1);
 
   let addr1 = "";
   let addr2 = "";
 
   if (addressLines.length === 1) {
-    // One street line, whether it starts or ends with a number.
     addr1 = addressLines[0];
   } else if (addressLines.length >= 2) {
     addr1 = addressLines[0];
@@ -133,10 +171,10 @@ function extractAddressOMACPortal(text) {
     name,
     addr1,
     addr2,
-    city: cityMatch[2].trim(),
-    state: cityMatch[3].toUpperCase(),
-    zip: cityMatch[1],
-    country: "US",
+    city: cityMatch.city,
+    state: cityMatch.state,
+    zip: cityMatch.zip,
+    country,
     phone: phoneLine.replace(/\D/g, "")
   };
 }
