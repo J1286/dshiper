@@ -106,21 +106,23 @@ function extractAddressOMACPortal(text) {
       /^\+?[\d().\s-]{7,}$/.test(line)
     ) || "";
 
-  // -----------------------------
+  // ----------------------------------------
   // Find city / state / ZIP
-  // -----------------------------
-
+  // ----------------------------------------
   let cityIndex = -1;
   let cityMatch = null;
 
+  // Valid U.S. state / territory abbreviations.
+  const usStateCodes =
+    /^(AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY|DC)$/i;
+
   // U.S.:
-  // 77089 Houston TX
   for (let i = 0; i < customerLines.length; i++) {
     const match = customerLines[i].match(
       /^(\d{5}(?:-\d{4})?)\s+(.+?)\s+([A-Z]{2})$/i
     );
 
-    if (match) {
+    if (match && usStateCodes.test(match[3])) {
       cityIndex = i;
       cityMatch = {
         zip: match[1],
@@ -132,7 +134,6 @@ function extractAddressOMACPortal(text) {
   }
 
   // Canada:
-  // V2V 3L1 Mission BC
   if (cityIndex < 0) {
     for (let i = 0; i < customerLines.length; i++) {
       const match = customerLines[i].match(
@@ -164,6 +165,7 @@ function extractAddressOMACPortal(text) {
   let addr1 = "";
   let addr2 = "";
 
+  // Find the actual street address line.
   let streetIndex = addressLines.findIndex(line =>
     /^\d+\s+/.test(line) ||
     /^P\.?\s*O\.?\s*Box\b/i.test(line)
@@ -190,8 +192,8 @@ function extractAddressOMACPortal(text) {
     const beforeStreet = addressLines.slice(0, streetIndex);
     const afterStreet = addressLines.slice(streetIndex + 1);
 
-    // Anything before the street address is usually a company name.
-    // Anything after it is an additional address line.
+    // Anything before the street address is usually
+    // a company name.
     addr2 = [...beforeStreet, ...afterStreet].join(" ").trim();
   }
 
