@@ -85,7 +85,7 @@ function extractAddressOMACPortal(text) {
   const amountIndex = lines.findIndex(line => /^Amount:/i.test(line));
   const tail = amountIndex >= 0 ? lines.slice(amountIndex + 1) : lines;
 
-  // Find the country line. OMAC may include a flag emoji before it.
+  // OMAC may put a flag emoji before the country.
   const countryIndex = tail.findIndex(line =>
     /^(?:[^\w\s]+\s*)?(United States|Canada)$/i.test(line)
   );
@@ -100,17 +100,21 @@ function extractAddressOMACPortal(text) {
 
   const customerLines = tail.slice(0, countryIndex);
 
+  // Phone is normally the first phone-looking line after the country.
   const phoneLine =
     tail.slice(countryIndex + 1).find(line =>
       /^\+?[\d().\s-]{7,}$/.test(line)
     ) || "";
 
-  // Find the ZIP/postal-code + city + state/province line.
+  // -----------------------------
+  // Find city / state / ZIP
+  // -----------------------------
+
   let cityIndex = -1;
   let cityMatch = null;
 
-  // U.S. format:
-  // 29730 Rock Hill SC
+  // U.S.:
+  // 77089 Houston TX
   for (let i = 0; i < customerLines.length; i++) {
     const match = customerLines[i].match(
       /^(\d{5}(?:-\d{4})?)\s+(.+?)\s+([A-Z]{2})$/i
@@ -127,7 +131,7 @@ function extractAddressOMACPortal(text) {
     }
   }
 
-  // Canadian format:
+  // Canada:
   // V2V 3L1 Mission BC
   if (cityIndex < 0) {
     for (let i = 0; i < customerLines.length; i++) {
@@ -151,32 +155,55 @@ function extractAddressOMACPortal(text) {
 
   const beforeCity = customerLines.slice(0, cityIndex);
 
-  const name = beforeCity[0] || "";
+  if (!beforeCity.length) return {};
 
-const addressLines = beforeCity.slice(1);
+  const name = beforeCity[0];
 
-let addr1 = "";
-let addr2 = "";
+  const addressLines = beforeCity.slice(1);
 
-const streetIndex = addressLines.findIndex(line =>
-  /^\d+\s+/.test(line) ||
-  /^P\.?\s*O\.?\s*Box\b/i.test(line)
-);
+  let addr1 = "";
+  let addr2 = "";
 
-if (streetIndex >= 0) {
-  addr1 = addressLines[streetIndex];
+  let streetIndex = addressLines.findIndex(line =>
+    /^\d+\s+/.test(line) ||
+    /^P\.?\s*O\.?\s*Box\b/i.test(line)
+  );
 
-  const beforeStreet = addressLines.slice(0, streetIndex);
+  if (
+    streetIndex >= 0 &&
+    /^\d+$/.test(addressLines[streetIndex]) &&
+    streetIndex + 1 < addressLines.length
+  ) {
+    addr1 =
+      `${addressLines[streetIndex]} ${addressLines[streetIndex + 1]}`.trim();
 
-  const afterStreet = addressLines.slice(streetIndex + 1);
+    const beforeStreet = addressLines.slice(0, streetIndex);
+    const afterStreet = addressLines.slice(streetIndex + 2);
 
-  addr2 = [...beforeStreet, ...afterStreet].join(" ");
-} else if (addressLines.length === 1) {
-  addr1 = addressLines[0];
-} else if (addressLines.length > 1) {
-  addr1 = addressLines[0];
-  addr2 = addressLines.slice(1).join(" ");
-}
+    addr2 = [...beforeStreet, ...afterStreet].join(" ").trim();
+  }
+
+  // Normal street / PO Box address.
+  else if (streetIndex >= 0) {
+    addr1 = addressLines[streetIndex];
+
+    const beforeStreet = addressLines.slice(0, streetIndex);
+    const afterStreet = addressLines.slice(streetIndex + 1);
+
+    // Anything before the street address is usually a company name.
+    // Anything after it is an additional address line.
+    addr2 = [...beforeStreet, ...afterStreet].join(" ").trim();
+  }
+
+  // Fallback if we can't identify a street address.
+  else if (addressLines.length === 1) {
+    addr1 = addressLines[0];
+  }
+
+  else if (addressLines.length > 1) {
+    addr1 = addressLines[0];
+    addr2 = addressLines.slice(1).join(" ").trim();
+  }
 
   return {
     name,
