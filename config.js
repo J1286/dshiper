@@ -72,11 +72,6 @@ const PARSER_PLUGINS = {
   }
 };
 
-const portalPO =
-  dealer === "omac" && /Pending Receipt/i.test(order)
-    ? (order.match(/\bPO-[A-Za-z0-9-]+\b/i) || [])[0] || ""
-    : "";
-
 const GENERIC_RULES = {
   po: [
     /^\s*Order\s+ID\s*:\s*([A-Za-z0-9-]+)\s*$/im,
