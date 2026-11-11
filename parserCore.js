@@ -107,10 +107,8 @@ function buildRow(order, dealer, items, addr) {
   );
   
 const portalPO =
-  dealer === "omac" &&
-  /\bSKU\s*:/i.test(order) &&
-  /unit\s*price\s*:/i.test(order)
-    ? (order.match(/\bPO\s*-\s*US[\w-]*/i) || [])[0] || ""
+  dealer === "omac" && /Pending Receipt/i.test(order)
+    ? (order.match(/\bPO-[A-Za-z0-9-]+\b/i) || [])[0] || ""
     : "";
 
 let po =
