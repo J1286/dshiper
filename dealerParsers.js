@@ -228,7 +228,7 @@ function parseOMACWrapper(order) {
 
   // Detect portal orders by their combined identifying fields.
   if (
-    /PO\s*-\s*US[\w-]*/i.test(text) &&
+    /PO\s*-\s*[\w-]+/i.test(text) &&
     /\bSKU\s*:/i.test(text) &&
     /unit\s*price\s*:/i.test(text)
   ) {
