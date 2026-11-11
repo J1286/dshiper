@@ -86,6 +86,12 @@ const GENERIC_RULES = {
     /Order\s*#\s*([A-Za-z0-9-]+)/i,
     /#\s*PO[-\s]*([A-Za-z0-9-]+)/i
   ],
+  
+  const portalPO =
+  dealer === "omac" && /Pending Receipt/i.test(order)
+    ? (order.match(/\bPO-[A-Za-z0-9-]+\b/i) || [])[0] || ""
+    : "";
+
   phone: [
     /Phone:\s*([0-9().\-\s]+)/i,
     /\bT:\s*([0-9().\-\s]+)/i,
