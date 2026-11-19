@@ -195,6 +195,7 @@ for (let i = 0; i < lines.length; i++) {
   debugLog("V2 PHONE:", result.phoneCandidates);
   debugLog("V2 EMAIL:", result.emailCandidates);
   debugLog("V2 ADDRESS:", result.addressCandidates);
+  debugLog("V2 STRUCTURED ADDRESS:", result.address);
 
   return result;
 }
