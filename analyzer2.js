@@ -279,16 +279,43 @@ function detectAddressCandidatesV2(lines, shipToSection) {
       ? shipToSection.lines
       : lines;
 
-  for (let i = 0; i < searchLines.length; i++) {
-    const raw = searchLines[i];
+  const provinces = {
+    "alberta": "AB",
+    "british columbia": "BC",
+    "manitoba": "MB",
+    "new brunswick": "NB",
+    "newfoundland and labrador": "NL",
+    "newfoundland": "NL",
+    "northwest territories": "NT",
+    "nova scotia": "NS",
+    "nunavut": "NU",
+    "ontario": "ON",
+    "prince edward island": "PE",
+    "quebec": "QC",
+    "saskatchewan": "SK",
+    "yukon": "YT",
+    "ab": "AB", "bc": "BC", "mb": "MB",
+    "nb": "NB", "nl": "NL", "nt": "NT",
+    "ns": "NS", "nu": "NU", "on": "ON",
+    "pe": "PE", "qc": "QC", "sk": "SK",
+    "yt": "YT"
+  };
 
-    // Normalize the line and remove phone numbers before address analysis
-    let line = raw
-      .replace(/\+?1[-.\s]?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g, "")
+  // Remove phone numbers and normalize whitespace
+  function cleanLineV2(value) {
+    return String(value || "")
+      .replace(/\+?1?[-.\s]?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g, "")
       .replace(/\s+/g, " ")
       .trim();
+  }
 
-    // Detect country, even when attached to other text
+  for (let i = 0; i < searchLines.length; i++) {
+    const raw = searchLines[i];
+    const line = cleanLineV2(raw);
+
+    if (!line) continue;
+
+    // Country
     const countryMatch = line.match(
       /(united states of america|united states|u\.s\.a\.|usa|canada)\b/i
     );
@@ -303,11 +330,126 @@ function detectAddressCandidatesV2(lines, shipToSection) {
         line: i,
         score: 1
       });
-
-      line = line.replace(countryMatch[0], "").trim();
     }
 
-    // Detect US city, state and ZIP
+    // Canadian postal code
+    const postalMatch = line.match(
+      /\b([A-Z]\d[A-Z])\s?(\d[A-Z]\d)\b/i
+    );
+
+    if (postalMatch) {
+      const postalCode =
+        `${postalMatch[1]} ${postalMatch[2]}`.toUpperCase();
+
+      candidates.push({
+        type: "postalCode",
+        value: postalCode,
+        line: i,
+        score: 0.95
+      });
+
+      // Remove postal code and parse the remaining city/province
+      const beforePostal = line
+        .slice(0, postalMatch.index)
+        .replace(/[, ]+$/, "")
+        .trim();
+
+      const parts = beforePostal
+        .split(",")
+        .map(part => part.trim())
+        .filter(Boolean);
+
+      if (parts.length >= 2) {
+        const provinceKey =
+          normalizeSemanticTextV2(parts[parts.length - 1]);
+
+        const province = provinces[provinceKey];
+
+        if (province) {
+          const city = parts.slice(0, -1).join(", ");
+
+          candidates.push({
+            type: "city",
+            value: city,
+            line: i,
+            score: 0.95
+          });
+
+          candidates.push({
+            type: "province",
+            value: province,
+            raw: parts[parts.length - 1],
+            line: i,
+            score: 0.95
+          });
+
+          candidates.push({
+            type: "cityProvincePostal",
+            value: `${city}, ${province}, ${postalCode}`,
+            city,
+            province,
+            postalCode,
+            line: i,
+            score: 1
+          });
+        }
+      }
+    }
+
+    // Street address
+    const streetMatch = line.match(
+      /(?:^|\s)(\d{1,6}\s+.+)$/i
+    );
+
+    if (
+      streetMatch &&
+      GENERIC_CONFIG_V2.addressPatterns.street.some(pattern =>
+        pattern.test(streetMatch[1])
+      )
+    ) {
+      candidates.push({
+        type: "street",
+        value: streetMatch[1],
+        line: i,
+        score: 0.9
+      });
+
+      // Look for recipient immediately before the street
+      for (let j = i - 1; j >= 0; j--) {
+        const possibleName = cleanLineV2(searchLines[j]);
+
+        if (
+          possibleName &&
+          !/^(customer information|ship to|shipping address)$/i.test(possibleName) &&
+          !/\d{5}/.test(possibleName) &&
+          !/\b[A-Z]\d[A-Z]\s?\d[A-Z]\d\b/i.test(possibleName)
+        ) {
+          candidates.push({
+            type: "recipient",
+            value: possibleName,
+            line: j,
+            score: 0.85
+          });
+
+          break;
+        }
+      }
+    }
+
+    // Standalone apartment / unit identifier, e.g. G1, Apt 3B, Suite 205
+    if (
+      /^(?:apt\.?|unit|suite|ste\.?)\s*#?\s*[A-Z0-9-]+$/i.test(line) ||
+      /^[A-Z]\d[A-Z0-9-]*$/i.test(line)
+    ) {
+      candidates.push({
+        type: "unit",
+        value: line,
+        line: i,
+        score: 0.8
+      });
+    }
+
+    // US city/state/ZIP
     const zipMatch = line.match(
       /(\d{5}(?:-\d{4})?)\s*$/
     );
@@ -315,16 +457,12 @@ function detectAddressCandidatesV2(lines, shipToSection) {
     if (zipMatch) {
       const beforeZip = line.slice(0, zipMatch.index).trim();
 
-      // Handle concatenated street direction + city:
-      // Cartwright Loop NWWilliston ND 58801
       const compactCityMatch = beforeZip.match(
-        /(?:NW|NE|SW|SE|N|S|E|W)([A-Z][a-z]+(?:[ .'-]+[A-Z][a-z]+)*)\s+([A-Z]{2})$/ 
+        /(?:NW|NE|SW|SE|N|S|E|W)([A-Z][a-z]+(?:[ .'-]+[A-Z][a-z]+)*)\s+([A-Z]{2})$/
       );
 
-      // Handle normally separated city and state:
-      // Williston ND 58801
       const normalCityMatch = beforeZip.match(
-        /([A-Z][a-z]+(?:[ .'-]+[A-Z][a-z]+)*)\s+([A-Z]{2})$/ 
+        /([A-Z][a-z]+(?:[ .'-]+[A-Z][a-z]+)*)\s+([A-Z]{2})$/
       );
 
       const cityMatch = compactCityMatch || normalCityMatch;
@@ -332,11 +470,10 @@ function detectAddressCandidatesV2(lines, shipToSection) {
       if (cityMatch) {
         const city = cityMatch[1];
         const state = cityMatch[2];
-        const cityStateZip = `${city} ${state} ${zipMatch[1]}`;
 
         candidates.push({
           type: "cityStateZip",
-          value: cityStateZip,
+          value: `${city} ${state} ${zipMatch[1]}`,
           city,
           state,
           zip: zipMatch[1],
@@ -349,10 +486,9 @@ function detectAddressCandidatesV2(lines, shipToSection) {
           cityMatch.index
         );
 
-        // Restore the directional suffix removed from the street
         if (compactCityMatch) {
           const direction = beforeZip.match(
-            /(NW|NE|SW|SE|N|S|E|W)(?=[A-Z][a-z])/ 
+            /(NW|NE|SW|SE|N|S|E|W)(?=[A-Z][a-z])/
           );
 
           if (direction) {
@@ -360,7 +496,6 @@ function detectAddressCandidatesV2(lines, shipToSection) {
           }
         }
 
-        // Find the beginning of the street address
         const streetStart = streetAndName.search(
           /\d{1,6}\s+/
         );
@@ -393,20 +528,6 @@ function detectAddressCandidatesV2(lines, shipToSection) {
           }
         }
       }
-    }
-
-    // Canadian postal code
-    const postalMatch = line.match(
-      /\b[A-Z]\d[A-Z]\s?\d[A-Z]\d\b/i
-    );
-
-    if (postalMatch) {
-      candidates.push({
-        type: "postalCode",
-        value: postalMatch[0].toUpperCase(),
-        line: i,
-        score: 0.9
-      });
     }
   }
 
