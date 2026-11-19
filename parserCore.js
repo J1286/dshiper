@@ -46,6 +46,28 @@ function safeParseOrder(order) {
   }
 
   const row = result[0] || {};
+  
+  // Use Analyzer V2 for shipping address when enabled
+  const useAnalyzerV2 =
+    document.getElementById("analyzerV2Toggle")?.checked === true;
+
+  if (useAnalyzerV2) {
+    const v2Result = analyzeOrderV2(order);
+    const addr = v2Result.address;
+
+    if (addr && addr.addr1 && addr.city) {
+      row["Ship Name"] = addr.name || row["Ship Name"] || "";
+      row["Ship Addr1"] = addr.addr1;
+      row["Ship Addr2"] = addr.addr2 || "";
+      row["Ship City"] = addr.city;
+      row["Ship State"] = addr.state || "";
+      row["Ship Zip"] = addr.zip || "";
+      row["Ship Country"] = addr.country || row["Ship Country"] || "";
+      row["Ship Phone"] = addr.phone || row["Ship Phone"] || "";
+    }
+
+    debugLog("ANALYZER V2 ADDRESS OVERRIDE:", addr);
+  }
 
   const itemCount = Object.keys(row).filter(
     (k) => k.includes("Item ID") && row[k]
