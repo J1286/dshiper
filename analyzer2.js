@@ -186,6 +186,8 @@ for (let i = 0; i < lines.length; i++) {
     result.sections.shipTo
   );
 
+  result.address = buildStructuredAddressV2(result);
+
   debugLog("===== ANALYZER 2.0 =====");
   debugLog("V2 KEYWORDS:", result.keywords);
   debugLog("V2 SECTIONS:", result.sections);
