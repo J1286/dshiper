@@ -436,6 +436,18 @@ function detectAddressCandidatesV2(lines, shipToSection) {
       }
     }
 
+    // Postal box / PO Box
+    if (
+      /^(?:(?:P\.?\s*O\.?\s*)?Box\s+\d+[A-Z0-9-]*|Post Office Box\s+\d+[A-Z0-9-]*)$/i.test(line)
+    ) {
+      candidates.push({
+        type: "box",
+        value: line,
+        line: i,
+        score: 0.95
+      });
+    }
+
     // Standalone apartment / unit identifier, e.g. G1, Apt 3B, Suite 205
     if (
       /^(?:apt\.?|unit|suite|ste\.?)\s*#?\s*[A-Z0-9-]+$/i.test(line) ||
@@ -532,6 +544,120 @@ function detectAddressCandidatesV2(lines, shipToSection) {
   }
 
   return candidates;
+}
+
+
+function buildStructuredAddressV2(result) {
+  const section = result.sections.shipTo;
+  const lines = section?.lines || [];
+  const candidates = result.addressCandidates || [];
+
+  function isNoise(line) {
+    return (
+      !line ||
+      /^(customer information|ship to|shipping address|thanks[,!]?|best regards[,!]?)$/i.test(line) ||
+      /^(?:po\s*(?:#|number|no\.?)?|purchase order)\s*[:#]/i.test(line) ||
+      /^(?:t|tel|telephone|phone)\s*:/i.test(line) ||
+      /@/.test(line) ||
+      /\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/.test(line)
+    );
+  }
+
+  const cleanLines = lines
+    .map(line => String(line || "").trim())
+    .filter(Boolean);
+
+  const street = candidates.find(c => c.type === "street");
+  const locality = candidates.find(
+    c => c.type === "cityProvincePostal" ||
+         c.type === "cityStateZip"
+  );
+  const country = candidates.find(c => c.type === "country");
+
+  const address = {
+    name: "",
+    addr1: street?.value || "",
+    addr2Lines: [],
+    addr2: "",
+    city: locality?.city || "",
+    state: locality?.province || locality?.state || "",
+    zip: locality?.postalCode || locality?.zip || "",
+    country: country?.value || "",
+    phone: ""
+  };
+
+  // --------------------------------
+  // 1. Identify recipient
+  // --------------------------------
+
+  const recipientCandidate = candidates.find(
+    c => c.type === "recipient"
+  );
+
+  // Joined address: recipient and street are on the same line.
+  if (
+    recipientCandidate &&
+    street &&
+    recipientCandidate.line === street.line
+  ) {
+    address.name = recipientCandidate.value;
+  } else if (street) {
+    // Multiline address: first meaningful line before street.
+    const beforeStreet = cleanLines
+      .slice(0, street.line)
+      .filter(line => !isNoise(line));
+
+    if (beforeStreet.length) {
+      address.name = beforeStreet[0];
+
+      // Any remaining lines are additional address information.
+      address.addr2Lines.push(...beforeStreet.slice(1));
+    }
+  } else if (recipientCandidate) {
+    address.name = recipientCandidate.value;
+  }
+
+  // --------------------------------
+  // 2. Collect additional address lines
+  // --------------------------------
+
+  if (street && locality) {
+    // Collect lines between street and city/postal information.
+    if (locality.line > street.line) {
+      const betweenLines = cleanLines
+        .slice(street.line + 1, locality.line)
+        .filter(line => !isNoise(line));
+
+      address.addr2Lines.push(...betweenLines);
+    }
+  }
+
+  // --------------------------------
+  // 3. Remove duplicates and format addr2
+  // --------------------------------
+
+  address.addr2Lines = [
+    ...new Set(address.addr2Lines)
+  ];
+
+  address.addr2 = address.addr2Lines.join(", ");
+
+  // --------------------------------
+  // 4. Extract phone from Ship To section
+  // --------------------------------
+
+  for (const line of cleanLines) {
+    const phoneMatch = line.match(
+      /(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/
+    );
+
+    if (phoneMatch) {
+      address.phone = phoneMatch[0].replace(/\D/g, "");
+      break;
+    }
+  }
+
+  return address;
 }
 
 
