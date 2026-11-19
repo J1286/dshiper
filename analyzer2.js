@@ -290,7 +290,7 @@ function detectAddressCandidatesV2(lines, shipToSection) {
 
     // Detect country, even when attached to other text
     const countryMatch = line.match(
-      /\b(united states of america|united states|u\.s\.a\.|usa|canada)\b/i
+      /(united states of america|united states|u\.s\.a\.|usa|canada)\b/i
     );
 
     if (countryMatch) {
@@ -362,7 +362,7 @@ function detectAddressCandidatesV2(lines, shipToSection) {
 
         // Find the beginning of the street address
         const streetStart = streetAndName.search(
-          /\b\d{1,6}\s+/
+          /\d{1,6}\s+/
         );
 
         if (streetStart >= 0) {
