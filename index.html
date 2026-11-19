@@ -111,9 +111,22 @@
       </div>
 
       <h2>🟦 New Orders: <span id="newOrdersCount">0</span></h2>
-      <textarea id="input" rows="10" placeholder="Paste order 	data here"></textarea><br>
+      <textarea id="input" rows="10" placeholder="Paste order data here"></textarea><br>
+
+      <!-- Analyzer V2 Toggle -->
+      <div class="price-source-row" style="margin: 8px 0;">
+        <span class="price-source-label">Analyzer V2</span>
+
+        <label class="price-toggle">
+          <input type="checkbox" id="analyzerV2Toggle">
+          <span class="price-toggle-slider"></span>
+        </label>
+
+        <span id="analyzerV2Label">OFF</span>
+      </div>
 
       <button onclick="addOrders()">Add Orders</button>
+
       <button onclick="clearPreview()">Clear Input</button>
 
       <!-- Preview Orders -->
