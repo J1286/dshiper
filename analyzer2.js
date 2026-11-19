@@ -65,30 +65,50 @@ function analyzeOrderV2(text) {
     }
   }
 
-  // --------------------------------
-  // 2. Detect PO candidates
-  // --------------------------------
+// --------------------------------
+// 2. Detect PO candidates
+// --------------------------------
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+for (let i = 0; i < lines.length; i++) {
+  const line = lines[i];
 
-    const match =
-      line.match(
-        /\b(?:purchase\s+order|po)\s*(?:number|no\.?|#)?\s*:?\s*([A-Z0-9][A-Z0-9-]{3,})\b/i
-      ) ||
-      line.match(
-        /\b(?:order\s+(?:number|no\.?|#|id))\s*:?\s*([A-Z0-9][A-Z0-9-]{3,})\b/i
-      );
+  // Ignore PO DATE and similar non-PO labels
+  if (/^\s*PO\s+DATE\s*$/i.test(line)) {
+    continue;
+  }
 
-    if (match) {
+  // PO number on the same line
+  const inlineMatch = line.match(
+    /\b(?:purchase\s+order|po)\s*(?:number|no\.?|#)?\s*:?\s*([A-Z0-9][A-Z0-9-]{3,})\b/i
+  );
+
+  if (inlineMatch) {
+    result.poCandidates.push({
+      value: inlineMatch[1].toUpperCase(),
+      line: i,
+      raw: line,
+      score: 1
+    });
+
+    continue;
+  }
+
+  // PO number on the following line
+  if (
+    /^\s*(?:purchase\s+order|po(?:\s*(?:number|no\.?|#))?)\s*:?\s*$/i.test(line)
+  ) {
+    const nextLine = lines[i + 1] || "";
+
+    if (/^[A-Z0-9][A-Z0-9-]{3,}$/i.test(nextLine)) {
       result.poCandidates.push({
-        value: match[1].toUpperCase(),
-        line: i,
-        raw: line,
+        value: nextLine.toUpperCase(),
+        line: i + 1,
+        raw: nextLine,
         score: 1
       });
     }
   }
+}
 
   // --------------------------------
   // 3. Detect phone candidates
