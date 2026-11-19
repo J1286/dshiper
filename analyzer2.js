@@ -283,8 +283,9 @@ function detectAddressCandidatesV2(lines, shipToSection) {
     const raw = searchLines[i];
 
     // Normalize the line and remove phone numbers before address analysis
-    let line = normalizeSemanticTextV2(raw)
+    let line = raw
       .replace(/\+?1[-.\s]?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g, "")
+      .replace(/\s+/g, " ")
       .trim();
 
     // Detect country, even when attached to other text
