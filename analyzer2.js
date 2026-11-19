@@ -594,8 +594,24 @@ function buildStructuredAddressV2(result) {
   // --------------------------------
 
   const recipientCandidate = candidates.find(
-    c => c.type === "recipient"
-  );
+  c => c.type === "recipient"
+);
+
+if (street) {
+  const beforeStreet = cleanLines
+    .slice(0, street.line)
+    .filter(line => !isNoise(line));
+
+  if (beforeStreet.length) {
+    // The first meaningful line is the recipient.
+    address.name = beforeStreet[0];
+
+    // Everything else before the street belongs in addr2.
+    address.addr2Lines.push(...beforeStreet.slice(1));
+  }
+} else if (recipientCandidate) {
+  address.name = recipientCandidate.value;
+}
 
   // Joined address: recipient and street are on the same line.
   if (
