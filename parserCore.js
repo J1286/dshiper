@@ -60,6 +60,7 @@ debugLog("V1 ADDRESS:", {
 });
 
 const comparisonV2 = analyzeOrderV2(order);
+window.lastV2Comparison = comparisonV2;
 debugLog("V2 ADDRESS:", comparisonV2.address);
   
   // Use Analyzer V2 for shipping address when enabled
