@@ -116,38 +116,38 @@ function extractAddressOMACPortal(text) {
   const usStateCodes =
     /^(AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY|DC)$/i;
 
+  
   // U.S.:
-for (let i = 0; i < customerLines.length; i++) {
-  const line = customerLines[i];
+  for (let i = 0; i < customerLines.length; i++) {
+    const line = customerLines[i];
 
-  let match = line.match(
-    /^(.+?)\s+([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/i
-  );
+    let match = line.match(
+      /^(.+?)\s+([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/i
+    );
 
-  if (match && usStateCodes.test(match[2])) {
-    cityIndex = i;
-    cityMatch = {
-      zip: match[3],
-      city: match[1].trim(),
-      state: match[2].toUpperCase()
-    };
-    break;
+    if (match && usStateCodes.test(match[2])) {
+      cityIndex = i;
+      cityMatch = {
+        zip: match[3],
+        city: match[1].trim(),
+        state: match[2].toUpperCase()
+      };
+      continue;
+    }
+
+    match = line.match(
+      /^(\d{5}(?:-\d{4})?)\s+(.+?)\s+([A-Z]{2})$/i
+    );
+
+    if (match && usStateCodes.test(match[3])) {
+      cityIndex = i;
+      cityMatch = {
+        zip: match[1],
+        city: match[2].trim(),
+        state: match[3].toUpperCase()
+      };
+    }
   }
-
-  match = line.match(
-    /^(\d{5}(?:-\d{4})?)\s+(.+?)\s+([A-Z]{2})$/i
-  );
-
-  if (match && usStateCodes.test(match[3])) {
-    cityIndex = i;
-    cityMatch = {
-      zip: match[1],
-      city: match[2].trim(),
-      state: match[3].toUpperCase()
-    };
-    break;
-  }
-}
 
   // Canada:
   if (cityIndex < 0) {
