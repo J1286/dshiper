@@ -38,6 +38,10 @@ function safeParseOrder(order) {
   lastDetection = detection;
 
   let result;
+  console.log("PARSER ROUTE DEBUG:", {
+  detectedDealer,
+  hasPlugin: !!PARSER_PLUGINS[detectedDealer]
+});
 
   if (PARSER_PLUGINS[detectedDealer]) {
     result = parseOrder(order);
@@ -173,12 +177,6 @@ const row = {
   "Tr.Orig.No.": po,
   "Cust. PO No.": po
 };
-  console.log("BUILDROW PO DEBUG:", {
-  dealer,
-  po,
-  trOrigNo: row["Tr.Orig.No."],
-  custPO: row["Cust. PO No."]
-});
 
   const MAX_ITEMS = 5;
 
