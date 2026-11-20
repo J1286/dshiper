@@ -34,7 +34,9 @@ function parseGeneric(order) {
   );
 
   let po =
-    analysis.poCandidates?.[0]?.value ||
+    analysis.poCandidates
+      ?.find(candidate => !/^(DATE|NUMBER|NO\.?)$/i.test(candidate.value))
+      ?.value ||
     matchFirst(paymentSection, GENERIC_RULES.po) ||
     matchFirst(order, GENERIC_RULES.po) ||
     "";
