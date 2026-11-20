@@ -399,8 +399,16 @@ function detectAddressCandidatesV2(lines, shipToSection) {
       }
     }
 
+    debugLog("V2 STREET DEBUG:", {
+      raw,
+      line,
+      searchLines,
+      index: i
+    });
+    
     // Street address
     const streetMatch = line.match(
+      debugLog("V2 STREET MATCH:", streetMatch?.[1]);
       /(\d{1,6}\s+.+)$/i
     );
 
