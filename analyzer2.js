@@ -544,6 +544,35 @@ function detectAddressCandidatesV2(lines, shipToSection) {
         }
       }
     }
+
+    // US city/state and ZIP on separate lines
+    if (!zipMatch && i + 1 < searchLines.length) {
+      const nextLine = cleanLineV2(searchLines[i + 1]);
+
+      const separateLocalityMatch = line.match(
+        /^(.+?),\s*([A-Z]{2})$/i
+      );
+
+      const separateZipMatch = nextLine.match(
+        /^(\d{5}(?:-\d{4})?)$/
+      );
+
+      if (separateLocalityMatch && separateZipMatch) {
+        const city = separateLocalityMatch[1].trim();
+        const state = separateLocalityMatch[2].toUpperCase();
+        const zip = separateZipMatch[1];
+
+        candidates.push({
+          type: "cityStateZip",
+          value: `${city} ${state} ${zip}`,
+          city,
+          state,
+          zip,
+          line: i,
+          score: 0.95
+        });
+      }
+    }
   }
 
   return candidates;
