@@ -415,7 +415,7 @@ function detectAddressCandidatesV2(lines, shipToSection) {
 
     if (
       streetMatch &&
-      !/\b\d{5}(?:-\d{4})?\b/.test(line) &&
+      !/\b\d{5}(?:-\d{4})?/.test(line) &&
       GENERIC_CONFIG_V2.addressPatterns.street.some(pattern =>
         pattern.test(streetMatch[1])
       )
