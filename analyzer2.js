@@ -606,7 +606,38 @@ function detectAddressCandidatesV2(lines, shipToSection) {
           }
         }
       }
+
+      // US city/full state name/ZIP
+      const fullStateMatch = beforeZip.match(
+        new RegExp(
+        `^(.+?),?\\s+(${Object.keys(usStates)
+          .sort((a, b) => b.length - a.length)
+          .join("|")})$`,
+        "i"
+      )
+    );
+
+    if (fullStateMatch) {
+      const city = fullStateMatch[1].trim();
+      const stateName = fullStateMatch[2].trim();
+
+      const state = usStates[
+        Object.keys(usStates).find(
+          key => key.toLowerCase() === stateName.toLowerCase()
+        )
+      ];
+
+      candidates.push({
+        type: "cityStateZip",
+        value: `${city} ${state} ${zipMatch[1]}`,
+        city,
+        state,
+        zip: zipMatch[1],
+        line: i,
+        score: 0.95
+      });
     }
+   }
 
     // US city/state and ZIP on separate lines
     if (!zipMatch && i + 1 < searchLines.length) {
