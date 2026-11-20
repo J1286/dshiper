@@ -68,7 +68,7 @@ debugLog("V2 ADDRESS:", comparisonV2.address);
 
   if (useAnalyzerV2) {
     const v2Result = analyzeOrderV2(order);
-    const addr = v2Result.address;
+    const addr = comparisonV2.address;
 
     if (addr && addr.addr1 && addr.city) {
       row["Ship Name"] = addr.name || row["Ship Name"] || "";
