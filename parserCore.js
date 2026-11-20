@@ -68,7 +68,6 @@ debugLog("V2 ADDRESS:", comparisonV2.address);
     document.getElementById("analyzerV2Toggle")?.checked === true;
 
   if (useAnalyzerV2) {
-    const v2Result = analyzeOrderV2(order);
     const addr = comparisonV2.address;
 
     if (addr && addr.addr1 && addr.city) {
@@ -83,6 +82,15 @@ debugLog("V2 ADDRESS:", comparisonV2.address);
     }
 
     debugLog("ANALYZER V2 ADDRESS OVERRIDE:", addr);
+    
+    // Use Analyzer V2 PO when available
+    const po = comparisonV2.poCandidates?.[0]?.value;
+
+    if (po) {
+      row["Cust. PO No."] = po;
+    }
+
+    debugLog("ANALYZER V2 PO OVERRIDE:", po);
   }
 
   const itemCount = Object.keys(row).filter(
