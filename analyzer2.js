@@ -415,6 +415,7 @@ function detectAddressCandidatesV2(lines, shipToSection) {
 
     if (
       streetMatch &&
+      !/\b\d{5}(?:-\d{4})?\b/.test(line) &&
       GENERIC_CONFIG_V2.addressPatterns.street.some(pattern =>
         pattern.test(streetMatch[1])
       )
@@ -475,7 +476,7 @@ function detectAddressCandidatesV2(lines, shipToSection) {
 
     // US city/state/ZIP
     const zipMatch = line.match(
-      /(\d{5}(?:-\d{4})?)\s*$/
+      /(\d{5}(?:-\d{4})?)(?=\s*(?:united states(?: of america)?|usa|u\.s\.a\.)?$)/i
     );
 
     if (zipMatch) {
