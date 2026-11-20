@@ -468,7 +468,7 @@ function detectAddressCandidatesV2(lines, shipToSection) {
 
     if (
       streetMatch &&
-      !/\b\d{5}(?:-\d{4})?/.test(line) &&
+      !/\b\d{5}(?:-\d{4})?(?=\s*(?:united states(?: of america)?|usa|u\.s\.a\.)?$)/i.test(line) &&
       GENERIC_CONFIG_V2.addressPatterns.street.some(pattern =>
         pattern.test(streetMatch[1])
       )
