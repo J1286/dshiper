@@ -163,11 +163,16 @@ let po =
   matchFirst(order, GENERIC_RULES.po) ||
   "";
 
-  const row = {
-    "DShipper ID": config.dshipper,
-    "Tr.Orig.No.": po,
-    "Cust. PO No.": po
-  };
+// Avoid treating PO DATE as a PO number
+if (/^DATE$/i.test(po)) {
+  po = "";
+}
+
+const row = {
+  "DShipper ID": config.dshipper,
+  "Tr.Orig.No.": po,
+  "Cust. PO No.": po
+};
 
   const MAX_ITEMS = 5;
 
