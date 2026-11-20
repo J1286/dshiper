@@ -173,6 +173,12 @@ const row = {
   "Tr.Orig.No.": po,
   "Cust. PO No.": po
 };
+  console.log("BUILDROW PO DEBUG:", {
+  dealer,
+  po,
+  trOrigNo: row["Tr.Orig.No."],
+  custPO: row["Cust. PO No."]
+});
 
   const MAX_ITEMS = 5;
 
