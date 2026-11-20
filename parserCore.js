@@ -46,6 +46,21 @@ function safeParseOrder(order) {
   }
 
   const row = result[0] || {};
+
+  // Compare V1 and V2 shipping addresses
+debugLog("V1 ADDRESS:", {
+  name: row["Ship Name"],
+  addr1: row["Ship Addr1"],
+  addr2: row["Ship Addr2"],
+  city: row["Ship City"],
+  state: row["Ship State"],
+  zip: row["Ship Zip"],
+  country: row["Ship Country"],
+  phone: row["Ship Phone"]
+});
+
+const comparisonV2 = analyzeOrderV2(order);
+debugLog("V2 ADDRESS:", comparisonV2.address);
   
   // Use Analyzer V2 for shipping address when enabled
   const useAnalyzerV2 =
