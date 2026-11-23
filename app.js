@@ -15,6 +15,22 @@ window.onload = function () {
 
   handlePriceSourceToggle();
 
+  const analyzerV2Toggle = document.getElementById("analyzerV2Toggle");
+
+  if (analyzerV2Toggle) {
+    const saved = localStorage.getItem("analyzerV2Enabled");
+
+    analyzerV2Toggle.checked =
+      saved === null ? true : saved === "true";
+
+    analyzerV2Toggle.addEventListener("change", () => {
+      localStorage.setItem(
+        "analyzerV2Enabled",
+        analyzerV2Toggle.checked
+      );
+    });
+  }
+
   // Initialize dark mode
   const darkModeToggle = document.getElementById("darkModeToggle");
   const savedDarkMode = localStorage.getItem("darkMode") === "true";
