@@ -471,27 +471,50 @@ function detectAddressCandidatesV2(lines, shipToSection) {
         score: 0.9
       });
 
-      // Look for recipient immediately before the street
-      for (let j = i - 1; j >= 0; j--) {
+      // Look for recipient before the street
+      let recipientIndex = -1;
+
+      // With a detected Ship To section, use its first meaningful line.
+      if (shipToSection && searchLines.length) {
+        for (let j = 0; j < i; j++) {
         const possibleName = cleanLineV2(searchLines[j]);
 
-        if (
-          possibleName &&
-          !/^(customer information|ship to|shipping address)$/i.test(possibleName) &&
-          !/\d{5}/.test(possibleName) &&
-          !/\b[A-Z]\d[A-Z]\s?\d[A-Z]\d\b/i.test(possibleName)
-        ) {
-          candidates.push({
-            type: "recipient",
-            value: possibleName,
-            line: j,
-            score: 0.85
-          });
-
-          break;
-        }
+      if (
+        possibleName &&
+        !/^(customer information|ship to|shipping address)$/i.test(possibleName) &&
+        !/\d{5}/.test(possibleName) &&
+        !/\b[A-Z]\d[A-Z]\s?\d[A-Z]\d\b/i.test(possibleName)
+      ) {
+        recipientIndex = j;
+      break;
       }
     }
+  } else {
+    // Without a Ship To section, retain the existing nearest-line behavior.
+    for (let j = i - 1; j >= 0; j--) {
+      const possibleName = cleanLineV2(searchLines[j]);
+
+      if (
+        possibleName &&
+        !/^(customer information|ship to|shipping address)$/i.test(possibleName) &&
+        !/\d{5}/.test(possibleName) &&
+        !/\b[A-Z]\d[A-Z]\s?\d[A-Z]\d\b/i.test(possibleName)
+      ) {
+        recipientIndex = j;
+        break;
+      }
+    }
+  }
+
+  if (recipientIndex >= 0) {
+    candidates.push({
+      type: "recipient",
+      value: cleanLineV2(searchLines[recipientIndex]),
+      line: recipientIndex,
+      score: 0.85
+    });
+  }
+ }
 
     // Postal box / PO Box
     if (
