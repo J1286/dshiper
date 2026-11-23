@@ -68,10 +68,13 @@ function safeParseOrder(order) {
   debugLog("V2 ADDRESS:", comparisonV2.address);
   
   // Use Analyzer V2 for shipping address when enabled
+  const useAnalyzerV2 =
+  document.getElementById("analyzerV2Toggle")?.checked === true;
+
+if (useAnalyzerV2) {
   const addr = comparisonV2.address;
 
-  // V2 is now the primary address parser.
-  // V1 remains as the fallback if V2 cannot produce a usable address.
+  // V2 is primary
   if (addr && addr.addr1 && addr.city) {
     row["Ship Name"] = addr.name || row["Ship Name"] || "";
     row["Ship Addr1"] = addr.addr1;
@@ -87,7 +90,7 @@ function safeParseOrder(order) {
     debugLog("ANALYZER V2 ADDRESS FAILED — USING V1:", addr);
   }
 
-  // V2 PO detection is also preferred when available.
+  // V2 PO detection is preferred when available
   const po = comparisonV2.poCandidates?.[0]?.value;
 
   if (po) {
@@ -95,6 +98,7 @@ function safeParseOrder(order) {
   }
 
   debugLog("ANALYZER V2 PO OVERRIDE:", po);
+}
 
   const itemCount = Object.keys(row).filter(
     (k) => k.includes("Item ID") && row[k]
