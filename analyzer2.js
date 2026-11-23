@@ -703,51 +703,26 @@ function buildStructuredAddressV2(result) {
     phone: ""
   };
 
-  // --------------------------------
-  // 1. Identify recipient
-  // --------------------------------
+    // --------------------------------
+    // 1. Identify recipient
+    // --------------------------------
 
   const recipientCandidate = candidates.find(
-  c => c.type === "recipient"
-);
+    c => c.type === "recipient"
+  );
 
-if (street) {
-  const beforeStreet = cleanLines
-    .slice(0, street.line)
-    .filter(line => !isNoise(line));
-
-  if (beforeStreet.length) {
-    // The first meaningful line is the recipient.
-    address.name = beforeStreet[0];
-
-    // Everything else before the street belongs in addr2.
-    address.addr2Lines.push(...beforeStreet.slice(1));
-  }
-} else if (recipientCandidate) {
-  address.name = recipientCandidate.value;
-}
-
-  // Joined address: recipient and street are on the same line.
-  if (
-    recipientCandidate &&
-    street &&
-    recipientCandidate.line === street.line
-  ) {
+  if (recipientCandidate) {
     address.name = recipientCandidate.value;
-  } else if (street) {
-    // Multiline address: first meaningful line before street.
-    const beforeStreet = cleanLines
-      .slice(0, street.line)
-      .filter(line => !isNoise(line));
 
-    if (beforeStreet.length) {
-      address.name = beforeStreet[0];
+    // Lines between recipient and street are additional address info.
+    if (street && street.line > recipientCandidate.line) {
+      const beforeStreet = lines
+        .slice(recipientCandidate.line + 1, street.line)
+        .map(line => String(line || "").trim())
+        .filter(line => !isNoise(line));
 
-      // Any remaining lines are additional address information.
-      address.addr2Lines.push(...beforeStreet.slice(1));
+      address.addr2Lines.push(...beforeStreet);
     }
-  } else if (recipientCandidate) {
-    address.name = recipientCandidate.value;
   }
 
   // --------------------------------
