@@ -52,50 +52,49 @@ function safeParseOrder(order) {
   const row = result[0] || {};
 
   // Compare V1 and V2 shipping addresses
-debugLog("V1 ADDRESS:", {
-  name: row["Ship Name"],
-  addr1: row["Ship Addr1"],
-  addr2: row["Ship Addr2"],
-  city: row["Ship City"],
-  state: row["Ship State"],
-  zip: row["Ship Zip"],
-  country: row["Ship Country"],
-  phone: row["Ship Phone"]
-});
+  debugLog("V1 ADDRESS:", {
+    name: row["Ship Name"],
+    addr1: row["Ship Addr1"],
+    addr2: row["Ship Addr2"],
+    city: row["Ship City"],
+    state: row["Ship State"],
+    zip: row["Ship Zip"],
+    country: row["Ship Country"],
+    phone: row["Ship Phone"]
+  });
 
-const comparisonV2 = analyzeOrderV2(order);
-window.lastV2Comparison = comparisonV2;
-debugLog("V2 ADDRESS:", comparisonV2.address);
+  const comparisonV2 = analyzeOrderV2(order);
+  window.lastV2Comparison = comparisonV2;
+  debugLog("V2 ADDRESS:", comparisonV2.address);
   
   // Use Analyzer V2 for shipping address when enabled
-  const useAnalyzerV2 =
-    document.getElementById("analyzerV2Toggle")?.checked === true;
+  const addr = comparisonV2.address;
 
-  if (useAnalyzerV2) {
-    const addr = comparisonV2.address;
-
-    if (addr && addr.addr1 && addr.city) {
-      row["Ship Name"] = addr.name || row["Ship Name"] || "";
-      row["Ship Addr1"] = addr.addr1;
-      row["Ship Addr2"] = addr.addr2 || "";
-      row["Ship City"] = addr.city;
-      row["Ship State"] = addr.state || "";
-      row["Ship Zip"] = addr.zip || "";
-      row["Ship Country"] = addr.country || row["Ship Country"] || "";
-      row["Ship Phone"] = addr.phone || row["Ship Phone"] || "";
-    }
+  // V2 is now the primary address parser.
+  // V1 remains as the fallback if V2 cannot produce a usable address.
+  if (addr && addr.addr1 && addr.city) {
+    row["Ship Name"] = addr.name || row["Ship Name"] || "";
+    row["Ship Addr1"] = addr.addr1;
+    row["Ship Addr2"] = addr.addr2 || "";
+    row["Ship City"] = addr.city;
+    row["Ship State"] = addr.state || "";
+    row["Ship Zip"] = addr.zip || "";
+    row["Ship Country"] = addr.country || row["Ship Country"] || "";
+    row["Ship Phone"] = addr.phone || row["Ship Phone"] || "";
 
     debugLog("ANALYZER V2 ADDRESS OVERRIDE:", addr);
-    
-    // Use Analyzer V2 PO when available
-    const po = comparisonV2.poCandidates?.[0]?.value;
-
-    if (po) {
-      row["Cust. PO No."] = po;
-    }
-
-    debugLog("ANALYZER V2 PO OVERRIDE:", po);
+  } else {
+    debugLog("ANALYZER V2 ADDRESS FAILED — USING V1:", addr);
   }
+
+  // V2 PO detection is also preferred when available.
+  const po = comparisonV2.poCandidates?.[0]?.value;
+
+  if (po) {
+    row["Cust. PO No."] = po;
+  }
+
+  debugLog("ANALYZER V2 PO OVERRIDE:", po);
 
   const itemCount = Object.keys(row).filter(
     (k) => k.includes("Item ID") && row[k]
