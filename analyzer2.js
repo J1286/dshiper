@@ -757,8 +757,9 @@ if (street) {
   if (street && locality) {
     // Collect lines between street and city/postal information.
     if (locality.line > street.line) {
-      const betweenLines = cleanLines
+      const betweenLines = lines
         .slice(street.line + 1, locality.line)
+        .map(line => String(line || "").trim())
         .filter(line => !isNoise(line));
 
       address.addr2Lines.push(...betweenLines);
