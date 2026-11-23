@@ -666,7 +666,7 @@ function detectAddressCandidatesV2(lines, shipToSection) {
 
 function buildStructuredAddressV2(result) {
   const section = result.sections.shipTo;
-  const lines = section?.lines || [];
+  const lines = section?.lines || result.lines || [];
   const candidates = result.addressCandidates || [];
 
   function isNoise(line) {
