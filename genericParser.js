@@ -247,6 +247,11 @@ function extractItemsGeneric(text) {
     // skip noise
     if (/phone|email|invoice|tracking|account/i.test(line)) continue;
 
+    // PO/order reference is not an item SKU
+    if (/^\s*(?:PO|PURCHASE\s+ORDER)\s*(?:#|NO\.?|NUMBER)?\s*:/i.test(line)) {
+      continue;
+    }
+
     // ---- strong patterns first ----
     let match =
       line.match(/QTY[:\s]*(\d+)\s*[-:]\s*([A-Z0-9-]+)/i) ||
