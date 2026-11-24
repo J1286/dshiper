@@ -728,7 +728,8 @@ function detectAddressCandidatesV2(lines, shipToSection) {
     });
   }
 }
-
+    }
+    
     // US city/state and ZIP on separate lines
     if (!zipMatch && i + 1 < searchLines.length) {
       const nextLine = cleanLineV2(searchLines[i + 1]);
