@@ -185,8 +185,11 @@ function matchSKUStructure(sku) {
       if (missingSuffixSeparator && matchedSuffix) {
         const flexibleSuffix = matchedSuffix.replace(/[-_]/g, "");
 
-        normalized =
-          normalized.slice(0, -flexibleSuffix.length) + matchedSuffix;
+        const beforeSuffix = normalized
+          .slice(0, -flexibleSuffix.length)
+          .replace(/[-_]$/, "");
+
+        normalized = beforeSuffix + matchedSuffix;
       }
 
       let numericEnding = "";
