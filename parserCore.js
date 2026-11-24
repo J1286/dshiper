@@ -72,7 +72,29 @@ function safeParseOrder(order) {
   document.getElementById("analyzerV2Toggle")?.checked === true;
 
 if (useAnalyzerV2) {
-  const addr = comparisonV2.address;
+  let addr = comparisonV2.address;
+
+  // Pelican POs ship directly to Pelican's warehouse.
+  if (
+    detectedDealer === "pelican" &&
+    (!addr || !addr.addr1 || !addr.city)
+  ) {
+    const pelicanWarehouse = extractAddressPelicanWarehouse(order);
+
+    if (
+      pelicanWarehouse.addr1 &&
+      pelicanWarehouse.city &&
+      pelicanWarehouse.state &&
+      pelicanWarehouse.zip
+    ) {
+      addr = pelicanWarehouse;
+
+      debugLog(
+        "ANALYZER V2 PELICAN WAREHOUSE FALLBACK:",
+        addr
+      );
+    }
+  }
 
   // V2 is primary
   if (addr && addr.addr1 && addr.city) {
