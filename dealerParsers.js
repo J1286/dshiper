@@ -370,7 +370,7 @@ function extractItemsZ1(text) {
 
     // ---- inline SKU + qty ----
     const inlineMatch = line.match(
-      /([A-Z]{2,5}-[A-Z0-9-]{4,})\s+(\d+)\s+\$\d+\.\d{2}/i
+      /([A-Z0-9]{2,6}-[A-Z0-9-]{4,})\s+(\d+)\s+\$\d+\.\d{2}/i
     );
 
     if (inlineMatch) {
