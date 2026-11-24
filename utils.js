@@ -415,7 +415,7 @@ function normalizeSKU(sku) {
     .toUpperCase();
 
   // Remove known non-SKU vendor/order wrappers
-  clean = clean.replace(/^(?:SPECDTUNING|SPECD|SPE)[-_]?/i, "");
+  clean = clean.replace(/^(?:SPECDTUNING|SPECD|SPE|SCD)[-_]?/i, "");
 
   const structure = matchSKUStructure(clean);
 
