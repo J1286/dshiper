@@ -383,33 +383,57 @@ function extractAddressPelicanWarehouse(text) {
     return {};
   }
 
-  const addr1 = lines[warehouseIndex + 1] || "";
-  const cityLine = lines[warehouseIndex + 2] || "";
+  // Pelican's PO is a two-column layout
+  const firstColumn = (line) => {
+    return String(line || "")
+      .split(/\s{2,}/)[0]
+      .trim();
+  };
+
+  const warehouseName = firstColumn(lines[warehouseIndex]);
+
+  const addr1 = firstColumn(lines[warehouseIndex + 1]);
+  const cityLine = firstColumn(lines[warehouseIndex + 2]);
 
   const match = cityLine.match(
     /^(.+?),\s*([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/i
   );
 
   if (!addr1 || !match) {
+    debugLog("PELICAN WAREHOUSE ADDRESS FAILED:", {
+      warehouseName,
+      addr1,
+      cityLine
+    });
+
     return {};
   }
 
-  const phone =
-    lines
-      .slice(warehouseIndex + 3)
-      .find((line) =>
-        /^\+?[\d().\s-]{7,}$/.test(line)
-      ) || "";
+  // Look for the warehouse phone after the address.
+  let phone = "";
+
+  for (
+    let i = warehouseIndex + 3;
+    i < Math.min(warehouseIndex + 8, lines.length);
+    i++
+  ) {
+    const candidate = firstColumn(lines[i]);
+
+    if (/^\+?[\d().\s-]{7,}$/.test(candidate)) {
+      phone = candidate.replace(/\D/g, "");
+      break;
+    }
+  }
 
   return {
-    name: "Pelican Parts Warehouse",
+    name: warehouseName || "Pelican Parts Warehouse",
     addr1,
     addr2: "",
     city: match[1].trim(),
     state: normalizeState(match[2]),
     zip: match[3],
     country: "US",
-    phone: phone.replace(/\D/g, "")
+    phone
   };
 }
 
