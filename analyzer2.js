@@ -226,12 +226,37 @@ function detectSectionV2(lines, startKeywords, endLabels) {
     }
   }
 
-  return {
-    startLine,
-    endLine,
-    lines: lines.slice(startLine + 1, endLine)
-  };
-}
+    const firstLine = lines[startLine] || "";
+    const startKeyword = startKeywords[0]?.label || "";
+
+    const inlineContent = startKeyword
+      ? firstLine
+          .replace(
+            new RegExp(
+              `^\\s*${escapeRegexV2(startKeyword)}\\s*[:\\-]?\\s*`,
+              "i"
+            ),
+            ""
+          )
+          .trim()
+      : "";
+
+    const sectionLines = [];
+
+    // Keep the content that appears on the same line as the label.
+    if (inlineContent) {
+      sectionLines.push(inlineContent);
+    }
+
+    // Then keep the normal lines following the section header.
+    sectionLines.push(...lines.slice(startLine + 1, endLine));
+
+    return {
+      startLine,
+      endLine,
+      lines: sectionLines
+    };
+  }
 
 
 // --------------------------------
