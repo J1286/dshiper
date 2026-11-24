@@ -667,7 +667,7 @@ function detectAddressCandidatesV2(lines, shipToSection) {
         ];
 
         const commaCityMatch = city.match(
-          /^(.+)\s+([^,]+),$/
+          /^(.+)\s+([A-Z][a-z.'-]*)$/
         );
 
         if (commaCityMatch) {
