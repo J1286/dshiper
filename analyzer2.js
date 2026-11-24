@@ -79,7 +79,7 @@ for (let i = 0; i < lines.length; i++) {
 
   // PO number on the same line
   const inlineMatch = line.match(
-    /\b(?:purchase\s+order|po)\s*(?:number|no\.?|#)?\s*:?\s*([A-Z0-9][A-Z0-9-]{3,})\b/i
+    /\b(?:purchase\s+order|po)\b\s*(?:number|no\.?|#)?\s*:?\s*([A-Z0-9][A-Z0-9-]{3,})\b/i
   );
 
   if (inlineMatch) {
