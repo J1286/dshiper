@@ -21,10 +21,27 @@ function parseGeneric(order) {
     });
   }
 
-  const addr =
-    analysis.addressCandidate && analysis.addressCandidate.addr1
-      ? analysis.addressCandidate
-      : extractAddressGeneric(order);
+  let addr =
+  analysis.addressCandidate && analysis.addressCandidate.addr1
+    ? analysis.addressCandidate
+    : extractAddressGeneric(order);
+
+  const detectionForAddress = detectBestDealer(order);
+
+  if (detectionForAddress.dealer === "pelican") {
+    const pelicanWarehouse = extractAddressPelicanWarehouse(order);
+
+  if (
+    pelicanWarehouse.addr1 &&
+    pelicanWarehouse.city &&
+    pelicanWarehouse.state &&
+    pelicanWarehouse.zip
+  ) {
+    addr = pelicanWarehouse;
+
+    debugLog("PELICAN WAREHOUSE ADDRESS OVERRIDE:", addr);
+  }
+}
 
   const subject = order.match(/Subject:\s*(.*)/i)?.[1] || "";
   const paymentSection = getSection(
@@ -345,6 +362,57 @@ function extractLabeledSKU(text) {
 
   return "";
 }
+
+
+function extractAddressPelicanWarehouse(text) {
+  const lines = String(text || "")
+    .split(/\r?\n/)
+    .map((line) =>
+      line
+        .replace(/^\s*\*\s*/, "")
+        .replace(/\s*\*\s*$/, "")
+        .trim()
+    )
+    .filter(Boolean);
+
+  const warehouseIndex = lines.findIndex((line) =>
+    /Pelican Parts Warehouse/i.test(line)
+  );
+
+  if (warehouseIndex === -1) {
+    return {};
+  }
+
+  const addr1 = lines[warehouseIndex + 1] || "";
+  const cityLine = lines[warehouseIndex + 2] || "";
+
+  const match = cityLine.match(
+    /^(.+?),\s*([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/i
+  );
+
+  if (!addr1 || !match) {
+    return {};
+  }
+
+  const phone =
+    lines
+      .slice(warehouseIndex + 3)
+      .find((line) =>
+        /^\+?[\d().\s-]{7,}$/.test(line)
+      ) || "";
+
+  return {
+    name: "Pelican Parts Warehouse",
+    addr1,
+    addr2: "",
+    city: match[1].trim(),
+    state: normalizeState(match[2]),
+    zip: match[3],
+    country: "US",
+    phone: phone.replace(/\D/g, "")
+  };
+}
+
 
 function extractAddressGeneric(text) {
   const block = extractBlock(
