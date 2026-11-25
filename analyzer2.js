@@ -777,10 +777,10 @@ if (fullStateMatch) {
         zip: zipMatch[1],
         line: i,
         score: 0.95
-      });
-    }
-  }
-}
+            });
+          }
+        }
+      }
     }
     
     // US city/state and ZIP on separate lines
