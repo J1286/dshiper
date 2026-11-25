@@ -646,6 +646,7 @@ function scoreDealer(text) {
   // -------- Pelican --------
   if (t.includes("pelican")) scores.pelican += 0.9;
   if (t.includes("drop-ship sub po")) scores.pelican += 0.3;
+  if (t.includes("drop-ship these parts")) scores.pelican += 0.8;
 
   // -------- Obsession --------
   if (t.includes("auto obsession")) scores.obsession += 0.9;
