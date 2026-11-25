@@ -647,52 +647,57 @@ function detectAddressCandidatesV2(lines, shipToSection) {
       }
 
       // US city/full state name/ZIP
-      const fullStateMatch = beforeZip.match(
-        new RegExp(
-          `^(.+?),?\\s+(${Object.keys(usStates)
-            .sort((a, b) => b.length - a.length)
-            .join("|")})$`,
-          "i"
-        )
-      );
+const commaFullStateMatch = beforeZip.match(
+  new RegExp(
+    `^(.+?),\\s*(${Object.keys(usStates)
+      .sort((a, b) => b.length - a.length)
+      .join("|")})$`,
+    "i"
+  )
+);
 
-      if (fullStateMatch) {
-        let city = fullStateMatch[1].trim();
-        const stateName = fullStateMatch[2].trim();
+const noCommaFullStateMatch = beforeZip.match(
+  new RegExp(
+    `^(.+?)\\s+(${Object.keys(usStates)
+      .sort((a, b) => b.length - a.length)
+      .join("|")})$`,
+    "i"
+  )
+);
 
-        const state = usStates[
-          Object.keys(usStates).find(
-            key => key.toLowerCase() === stateName.toLowerCase()
-          )
-        ];
+const fullStateMatch =
+  commaFullStateMatch || noCommaFullStateMatch;
 
-        const commaCityMatch = city.match(
-          /^(.+)\s+([A-Z][a-z.'-]*)$/
-        );
+if (fullStateMatch) {
+  let city = fullStateMatch[1].trim();
+  const stateName = fullStateMatch[2].trim();
 
-        if (commaCityMatch) {
-          const beforeCity = commaCityMatch[1].trim();
-          city = commaCityMatch[2].trim();
+  const state = usStates[
+    Object.keys(usStates).find(
+      key => key.toLowerCase() === stateName.toLowerCase()
+    )
+  ];
 
-          candidates.push({
-            type: "cityStateZip",
-            value: `${city} ${state} ${zipMatch[1]}`,
-            city,
-            state,
-            zip: zipMatch[1],
-            line: i,
-            score: 0.95
-          });
+  if (commaFullStateMatch) {
+    candidates.push({
+      type: "cityStateZip",
+      value: `${city} ${state} ${zipMatch[1]}`,
+      city,
+      state,
+      zip: zipMatch[1],
+      line: i,
+      score: 0.95
+    });
 
     // Split recipient from street.
-    const streetStart = beforeCity.search(/\d{1,6}\s+/);
+    const streetStart = beforeZip.search(/\d{1,6}\s+/);
 
     if (streetStart >= 0) {
-      const recipient = beforeCity
+      const recipient = beforeZip
         .slice(0, streetStart)
         .trim();
 
-      const street = beforeCity
+      const street = beforeZip
         .slice(streetStart)
         .trim();
 
@@ -715,17 +720,65 @@ function detectAddressCandidatesV2(lines, shipToSection) {
       }
     }
   } else {
-    // Existing full-state behavior for formats without
-    // a comma separating the city from the state.
-    candidates.push({
-      type: "cityStateZip",
-      value: `${city} ${state} ${zipMatch[1]}`,
-      city,
-      state,
-      zip: zipMatch[1],
-      line: i,
-      score: 0.95
-    });
+    const commaCityMatch = city.match(
+      /^(.+)\s+([A-Z][a-z.'-]*)$/
+    );
+
+    if (commaCityMatch) {
+      const beforeCity = commaCityMatch[1].trim();
+      city = commaCityMatch[2].trim();
+
+      candidates.push({
+        type: "cityStateZip",
+        value: `${city} ${state} ${zipMatch[1]}`,
+        city,
+        state,
+        zip: zipMatch[1],
+        line: i,
+        score: 0.95
+      });
+
+      // Split recipient from street.
+      const streetStart = beforeCity.search(/\d{1,6}\s+/);
+
+      if (streetStart >= 0) {
+        const recipient = beforeCity
+          .slice(0, streetStart)
+          .trim();
+
+        const street = beforeCity
+          .slice(streetStart)
+          .trim();
+
+        if (recipient) {
+          candidates.push({
+            type: "recipient",
+            value: recipient,
+            line: i,
+            score: 0.9
+          });
+        }
+
+        if (street) {
+          candidates.push({
+            type: "street",
+            value: street,
+            line: i,
+            score: 0.95
+          });
+        }
+      }
+    } else {
+      candidates.push({
+        type: "cityStateZip",
+        value: `${city} ${state} ${zipMatch[1]}`,
+        city,
+        state,
+        zip: zipMatch[1],
+        line: i,
+        score: 0.95
+      });
+    }
   }
 }
     }
