@@ -479,7 +479,7 @@ function detectAddressCandidatesV2(lines, shipToSection) {
 
     // Street address
     const streetMatch = line.match(
-      /(\d{1,6}\s+.+)$/i
+      /(?:^|\s)(\d{1,6}\s+.+)$/i
     );
 
     if (
